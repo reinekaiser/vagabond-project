@@ -1,0 +1,16 @@
+/mvnw text eol=lf
+*.cmd text eol=crlf
+
+# Maven wrapper scripts
+/mvnw text eol=lf
+/mvnw.cmd text eol=crlf
+
+# Java source
+*.java text eol=lf
+*.properties text eol=lf
+*.yml text eol=lf
+*.xml text eol=lf
+
+# Logs and OS files
+*.log text eol=lf
+.DS_Store text eol=lf
