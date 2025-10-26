@@ -20,21 +20,21 @@ function App() {
     const { user } = useSelector((state) => state.auth);
     console.log("User in App:", user);
 
-    useEffect(() => {
-        if (user?._id) {
-            const socket = connectSocket(user._id, user.role);
-            socket.on("connect", () => {
-                console.log("Connected with ID:", socket.id);
-            });
-            socket.on("getOnlineUsers", (users) => {
-                dispatch(setOnlineUsers(users));
-                console.log("Online users", users);
-            });
-        }
-        return () => {
-            disconnectSocket();
-        };
-    }, [user?._id]);
+    // useEffect(() => {
+    //     if (user?._id) {
+    //         const socket = connectSocket(user._id, user.role);
+    //         socket.on("connect", () => {
+    //             console.log("Connected with ID:", socket.id);
+    //         });
+    //         socket.on("getOnlineUsers", (users) => {
+    //             dispatch(setOnlineUsers(users));
+    //             console.log("Online users", users);
+    //         });
+    //     }
+    //     return () => {
+    //         disconnectSocket();
+    //     };
+    // }, [user?._id]);
 
     return (
         <>
@@ -44,13 +44,13 @@ function App() {
                     <Route path="/" element={<PublicRoutes></PublicRoutes>} />
                     <Route path="/sign-in" element={<SignIn />} />
                     <Route path="/sign-up" element={<SignUp />} />
-                    <Route
+                    {/* <Route
                         path="/forgot-password"
                         element={<ForgotPassword />}
                     />
                     <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/admin/*" element={<AdminRoutes />} />
-                    <Route path="/user/*" element={<UserRoutes />} />
+                    <Route path="/user/*" element={<UserRoutes />} /> */}
                     <Route path="*" element={<PublicRoutes />} />
                 </Routes>
             </BrowserRouter>
