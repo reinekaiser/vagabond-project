@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CancellationPolicy {
+public class TicketCancellationPolicy {
     private Boolean isReschedule;
     private String reschedulePolicy;
     private Boolean isRefund;

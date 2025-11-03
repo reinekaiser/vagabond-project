@@ -34,7 +34,7 @@ public class Ticket {
     private String voucherValidity;
 
     private RedemptionPolicy redemptionPolicy;
-    private CancellationPolicy cancellationPolicy;
+    private TicketCancellationPolicy cancellationPolicy;
 
     private String termsAndConditions;
 

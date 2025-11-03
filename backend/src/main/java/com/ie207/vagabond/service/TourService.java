@@ -277,10 +277,10 @@ public class TourService {
                 .build();
     }
 
-    private CancellationPolicy mapToCancellationPolicyEntity(CancellationPolicyRequest request) {
+    private TicketCancellationPolicy mapToCancellationPolicyEntity(CancellationPolicyRequest request) {
         if (request == null) return null;
 
-        return CancellationPolicy.builder()
+        return TicketCancellationPolicy.builder()
                 .isReschedule(request.getIsReschedule())
                 .reschedulePolicy(request.getReschedulePolicy())
                 .isRefund(request.getIsRefund())
