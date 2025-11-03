@@ -1,10 +1,11 @@
 package com.ie207.vagabond.service;
 
-import com.ie207.vagabond.model.Hotel;
-import com.ie207.vagabond.model.HotelRoomType;
-import com.ie207.vagabond.model.Room;
+import com.ie207.vagabond.model.*;
+import com.ie207.vagabond.repository.CityRepository;
+import com.ie207.vagabond.repository.HotelFacilityRepository;
 import com.ie207.vagabond.repository.HotelRepository;
 import com.ie207.vagabond.repository.HotelRoomTypeRepository;
+import com.ie207.vagabond.request.HotelRequest;
 import com.ie207.vagabond.request.RoomRequest;
 import com.ie207.vagabond.request.RoomTypeRequest;
 import com.ie207.vagabond.response.HotelFilterResponse;
@@ -24,6 +25,8 @@ public class HotelService {
     private final HotelRoomTypeRepository hotelRoomTypeRepository;
     private MongoTemplate mongoTemplate;
     private final CloudinaryService cloudinaryService;
+    private final CityRepository cityRepository;
+    private final HotelFacilityRepository hotelFacilityRepository;
 
 //    get hotel
     public Hotel getHotelById(String hotelId) throws Exception {
@@ -291,6 +294,137 @@ public class HotelService {
             return "Xóa loại phòng và khách sạn vì khách sạn không còn phòng";
         }
         return "Xóa loại phòng thành công";
+    }
+
+    //hotel
+    @Transactional
+    public Hotel addHotel (HotelRequest hotel) throws Exception {
+        if (hotel.getName() == null || hotel.getName().isEmpty()
+                || hotel.getAddress() == null || hotel.getAddress().isEmpty()
+                || hotel.getCityId() == null || hotel.getCityId().isEmpty()
+                || hotel.getDescription() == null || hotel.getDescription().isEmpty()
+                || hotel.getRooms() <= 0
+                || hotel.getRoomTypes() == null || hotel.getRoomTypes().isEmpty()) {
+            throw new IllegalArgumentException("Thiếu thông tin bắt buộc hoặc chưa có loại phòng");
+        }
+
+        City city = cityRepository.findById(hotel.getCityId())
+                .orElseThrow(() -> new Exception("City not found"));
+
+        List<HotelRoomType> roomTypeList = new ArrayList<>();
+        for (RoomTypeRequest roomTypeRequest : hotel.getRoomTypes()) {
+            if (roomTypeRequest.getRooms() == null || roomTypeRequest.getRooms().isEmpty()) {
+                throw new IllegalArgumentException("Loại phòng " + roomTypeRequest.getName() + " chưa có phòng nào");
+            }
+            HotelRoomType roomType = new HotelRoomType();
+            roomType.setName(roomTypeRequest.getName());
+            roomType.setArea(roomTypeRequest.getArea());
+            roomType.setView(roomTypeRequest.getView());
+            roomType.setRoomFacilities(roomTypeRequest.getRoomFacilities());
+            roomType.setImg(roomTypeRequest.getImg());
+
+            List<Room> roomList = new ArrayList<>();
+            for (Room room : roomTypeRequest.getRooms()) {
+                Room newRoom = new Room(
+                        room.getBedType(),
+                        room.getServeBreakfast(),
+                        room.getMaxOfGuest(),
+                        room.getNumberOfRoom(),
+                        room.getPrice(),
+                        room.getCancellationPolicy()
+                );
+                roomList.add(newRoom);
+            }
+            roomType.setRooms(roomList);
+            hotelRoomTypeRepository.save(roomType);
+            roomTypeList.add(roomType);
+        }
+
+        Hotel newHotel = new Hotel();
+        newHotel.setName(hotel.getName());
+        newHotel.setDescription(hotel.getDescription());
+        newHotel.setAddress(hotel.getAddress());
+        newHotel.setCity(city);
+        newHotel.setLat(hotel.getLat());
+        newHotel.setLng(hotel.getLng());
+        newHotel.setRooms(hotel.getRooms());
+        newHotel.setPolicies(hotel.getPolicies());
+        newHotel.setImg(hotel.getImg());
+        newHotel.setRoomTypes(roomTypeList);
+
+        if (hotel.getServiceFacilities() != null && !hotel.getServiceFacilities().isEmpty()) {
+            List<HotelFacility> facilities = hotelFacilityRepository.findAllById(hotel.getServiceFacilities());
+            newHotel.setServiceFacilities(facilities);
+        }
+        hotelRepository.save(newHotel);
+
+        return newHotel;
+    };
+
+    @Transactional
+    public Hotel updateHotel (String hotelId, HotelRequest hotel) throws Exception {
+        Hotel updateHotel = hotelRepository.findById(hotelId)
+                .orElseThrow(() -> new Exception("Hotel not found"));
+
+        if (hotel.getCityId() != null || !hotel.getCityId().isEmpty()){
+            City city = cityRepository.findById(hotel.getCityId())
+                    .orElseThrow(() -> new Exception("City not found"));
+            updateHotel.setCity(city);
+        }
+
+        if (hotel.getName() != null && !hotel.getName().isEmpty()) updateHotel.setName(hotel.getName());
+        if (hotel.getDescription() != null && !hotel.getDescription().isEmpty()) updateHotel.setDescription(hotel.getDescription());
+        if (hotel.getAddress() != null && !hotel.getAddress().isEmpty()) updateHotel.setAddress(hotel.getAddress());
+        if (hotel.getImg() != null && !hotel.getImg().isEmpty()) updateHotel.setImg(hotel.getImg());
+        if (hotel.getRooms() > 0) updateHotel.setRooms(hotel.getRooms());
+        if (hotel.getLat() != 0) updateHotel.setLat(hotel.getLat());
+        if (hotel.getLng() != 0) updateHotel.setLng(hotel.getLng());
+        if (hotel.getPolicies() != null) updateHotel.setPolicies(hotel.getPolicies());
+
+        if (hotel.getServiceFacilities() != null && !hotel.getServiceFacilities().isEmpty()) {
+            updateHotel.setServiceFacilities(hotelFacilityRepository.findAllById(hotel.getServiceFacilities()));
+        }
+
+        hotelRepository.save(updateHotel);
+        return updateHotel;
+    }
+
+    @Transactional
+    public String deleteHotel (String hotelId) throws Exception {
+        Hotel hotel = hotelRepository.findById(hotelId)
+                .orElseThrow(() -> new Exception("Hotel not found"));
+
+        if (hotel.getImg() != null && !hotel.getImg().isEmpty()) {
+            for (String publicId : hotel.getImg()) {
+                try {
+                    cloudinaryService.deleteImage(publicId);
+                } catch (Exception e) {
+                    System.err.println("Failed to delete image from Cloudinary: " + publicId);
+                }
+            }
+        }
+
+        if (hotel.getRoomTypes() != null && !hotel.getRoomTypes().isEmpty()) {
+            for (HotelRoomType roomType : hotel.getRoomTypes()) {
+                if (roomType.getImg() != null && !roomType.getImg().isEmpty()) {
+                    for (String publicId : roomType.getImg()) {
+                        try {
+                            cloudinaryService.deleteImage(publicId);
+                        } catch (Exception e) {
+                            System.err.println("Failed to delete image from Cloudinary: " + publicId);
+                        }
+                    }
+                }
+                try {
+                    hotelRoomTypeRepository.deleteById(roomType.get_id());
+                } catch (Exception e) {
+                    System.err.println("Không xoá được roomType: " + roomType.get_id());
+                }
+            }
+        }
+
+        hotelRepository.deleteById(hotelId);
+        return "Xóa khách sạn thành công";
     }
 
     public boolean checkAndDeleteHotel(String hotelId) throws IOException {
