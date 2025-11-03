@@ -4,23 +4,9 @@ import { apiSlice } from "./apiSlice";
 export const cityApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getCities: builder.query({
-            query: () => {
-                const token = localStorage.getItem('token');
-                return {
-                    url: `${CITY_URL}`,
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                };
-            },
-            transformResponse: (response) => {
-                if (response && response.data) {
-                    return response.data;
-                }
-                return response;
-            },
-            providesTags: ['Cities']
+            query: () => ({
+                url: `${CITY_URL}/`
+            })
         }),
         createCity: builder.mutation({
             query: (formData) => {
