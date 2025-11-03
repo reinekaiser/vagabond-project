@@ -10,38 +10,52 @@ import { TbReceiptDollar } from "react-icons/tb";
 import { MdOutlineFastfood } from "react-icons/md";
 import { MdOutlinePets } from "react-icons/md";
 import { useGetCitiesQuery } from '../redux/api/cityApiSlice';
+import { useGetFacilitiesQuery } from '../redux/api/hotelApiSlice';
+import { Box, CircularProgress } from '@mui/material';
 
-const HotelInformation = ({ finalData }) => {
+const HotelInformation = ({ finalData, allFacilities  }) => {
     const cityDt = finalData.city?._id || finalData.cityName;
-        
     const [groupedFacilities, setGroupedFacilities] = useState({});
     const { data: cities, isLoading: isCitiesLoading } = useGetCitiesQuery();
     const [cityOptions, setCitiesOptions] = useState([]);
 
     useEffect(() => {
-        if ( finalData.serviceFacilities) {
-            const groupedFacilities = finalData?.serviceFacilities?.reduce((acc, cur) => {
-                const categoryName = cur.category.name;
-                if (!acc[categoryName]) {
-                    acc[categoryName] = [];
+        if (finalData.serviceFacilities && finalData.serviceFacilities.length > 0) {
+            let facilities = [];
+            if (typeof finalData.serviceFacilities[0] === "string") {
+                if (allFacilities) {
+                    facilities = allFacilities.filter(fac =>
+                        finalData.serviceFacilities.includes(fac._id)
+                    );
                 }
-
+            }
+            else {
+                facilities = finalData.serviceFacilities;
+            }
+            const grouped = facilities.reduce((acc, cur) => {
+                const categoryName = cur?.category?.name || "Khác";
+                if (!acc[categoryName]) acc[categoryName] = [];
                 acc[categoryName].push(cur.name);
                 return acc;
             }, {});
-            setGroupedFacilities(groupedFacilities)
+            setGroupedFacilities(grouped);
         }
 
         if (!isCitiesLoading && cities) {
             const ct = cities.map(city => ({
-                _id: city._id, // dùng ObjectId
+                _id: city._id,
                 name: city.name
             }));
-            setCitiesOptions(ct)
+            setCitiesOptions(ct);
         }
-    }, [finalData.serviceFacilities, cities, isCitiesLoading])
+    }, [finalData.serviceFacilities, allFacilities, cities, isCitiesLoading]);
 
-    if (isCitiesLoading) return <div>Loading...</div>;
+    console.log(cityOptions);
+
+    if (isCitiesLoading)
+        return <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+            <CircularProgress />
+        </Box>;
     const stripHtml = (html) => html.replace(/<[^>]*>?/gm, '').trim();
 
     return (
@@ -59,9 +73,9 @@ const HotelInformation = ({ finalData }) => {
                         <p className='flex items-center text-[16px]'>
                             <FaBuilding className='text-blue-700 text-[14px] mx-1' /> {finalData.rooms} phòng
                         </p>
-                        <p className='flex items-center text-[14px]'>
-                            <MdRoom className='text-red-500 text-[20px] mx-1' /> {finalData.address},  
-                            {cityOptions.find(city => String(city._id) === String(cityDt))?.name}
+                        <p className='flex items-center text-[16px]'>
+                            <MdRoom className='text-red-500 text-[20px] mx-1' /> {finalData.address},{" "}
+                            {cityOptions.find(city => String(city._id) === String(finalData?.cityId))?.name}
                         </p>
                     </div>
                     <p className='text-[16px] text-gray-500'>

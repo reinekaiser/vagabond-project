@@ -2,6 +2,7 @@ package com.ie207.vagabond.controller;
 
 import com.ie207.vagabond.model.Hotel;
 import com.ie207.vagabond.model.HotelRoomType;
+import com.ie207.vagabond.request.HotelRequest;
 import com.ie207.vagabond.request.RoomRequest;
 import com.ie207.vagabond.request.RoomTypeRequest;
 import com.ie207.vagabond.response.ApiResponse;
@@ -158,6 +159,45 @@ public class HotelController {
             e.printStackTrace();
             ApiResponse errorResponse = new ApiResponse(e.getMessage(), false);
             return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+
+    //hotel
+    @PostMapping("/")
+    public ResponseEntity<Hotel> addHotel (@RequestBody HotelRequest hotel) {
+        try {
+            Hotel newHotel = hotelService.addHotel(hotel);
+            return ResponseEntity.ok(newHotel);
+        } catch (Exception e){
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
+    @PutMapping("/update/{hotelId}")
+    public ResponseEntity<Hotel> updateHotel (
+            @PathVariable String hotelId, @RequestBody HotelRequest hotel
+    ) {
+        try {
+            Hotel updatedHotel = hotelService.updateHotel(hotelId, hotel);
+            return ResponseEntity.ok(updatedHotel);
+        } catch (Exception e){
+            e.printStackTrace();
+            System.err.println(">>> [API] Update failed: " + e.getMessage());
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
+    @DeleteMapping("/delete/{hotelId}")
+    public ResponseEntity<ApiResponse> deleteHotel (
+            @PathVariable String hotelId
+    ) {
+        try {
+            String message = hotelService.deleteHotel(hotelId);
+            return ResponseEntity.ok(new ApiResponse(message, true));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(null);
         }
     }
 }

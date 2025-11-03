@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
 import {
-    useCreateRoomMutation, useCreateRoomTypeMutation, useDeleteHotelMutation,
+    useCreateRoomMutation, useCreateRoomTypeMutation,
     useDeleteRoomMutation, useDeleteRoomTypeMutation, useGetHotelByIdQuery,
     useGetRoomTypesQuery, useUpdateRoomMutation, useUpdateRoomTypeMutation
 } from '../../redux/api/hotelApiSlice';
@@ -39,7 +39,6 @@ const HotelDetails = () => {
     const [createRoom, { isLoading: isAddingRoom }] = useCreateRoomMutation();
     const [updateRoom, { isLoading: isUpdatingRoom }] = useUpdateRoomMutation();
     const [deleteRoom, { isLoading: isDeletingRoom }] = useDeleteRoomMutation();
-    const [deleteHotel, { isLoading: isDeletingHotel }] = useDeleteHotelMutation();
     const [uploadHotelImages, { isLoading: isUploadLoading, isError: isUploadError, isSuccess }] = useUploadImagesMutation();
 
     const [newRoomType, setNewRoomType] = useState({});
@@ -281,19 +280,6 @@ const HotelDetails = () => {
             messageApi.destroy('updateRoomType');
         }
     }, [isUpdatingRoomType]);
-
-    useEffect(() => {
-        if (isDeletingHotel) {
-            messageApi.open({
-                key: 'deleteHotel',
-                type: 'loading',
-                content: 'Đang xoá...',
-                duration: 0,
-            });
-        } else {
-            messageApi.destroy('deleteHotel');
-        }
-    }, [isDeletingHotel]);
 
     useEffect(() => {
         if (isUploadLoading) {

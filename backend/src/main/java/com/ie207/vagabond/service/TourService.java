@@ -440,7 +440,7 @@ public class TourService {
 
         return cities.stream()
                 .map(city -> CitySuggestion.builder()
-                        .id(city.getId())
+                        .id(city.get_id())
                         .name(city.getName())
                         .build())
                 .collect(Collectors.toList());

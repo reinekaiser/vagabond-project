@@ -1,19 +1,25 @@
 import { useSelector } from "react-redux";
-import { Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 
-const ProtectedRoutes = ({ allowedRoles }) => {
+const ProtectedRoute = ({ allowedRoles }) => {
     const { user } = useSelector((state) => state.auth);
+    const location = useLocation();
     if (!user) {
+        return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+
+    if (user.role?.toUpperCase() === "ADMIN" && !location.pathname.startsWith("/admin")) {
+        return <Navigate to="/admin/dashboard" replace />;
+    }
+
+    if (
+        allowedRoles &&
+        !allowedRoles.map((r) => r.toUpperCase()).includes(user.role?.toUpperCase())
+    ) {
         return <Navigate to="/" replace />;
     }
 
-    if (allowedRoles && !allowedRoles.includes(user.role)) {
-        return <Navigate to="/" replace />;
-    }
-
-    return (
-        <Outlet/>
-    );
+    return <Outlet />;
 };
 
-export default ProtectedRoutes;
+export default ProtectedRoute;

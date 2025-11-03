@@ -15,6 +15,7 @@ import UploadImg from '../../components/UploadImg';
 import { PET_POLICIES } from '../../constants/hotel';
 import { useGetCitiesQuery } from '../../redux/api/cityApiSlice';
 import { toast } from "react-toastify";
+import { Box, CircularProgress } from '@mui/material';
 
 const UpdateHotel = () => {
     const navigate = useNavigate();
@@ -42,7 +43,7 @@ const UpdateHotel = () => {
             img: [],
             description: "",
             address: "",
-            cityName: undefined,
+            cityId: undefined,
             lat: undefined,
             lng: undefined,
             rooms: undefined,
@@ -67,11 +68,11 @@ const UpdateHotel = () => {
                 img: hotelData.img || [],
                 description: hotelData.description || "",
                 address: hotelData.address || "",
-                cityName: hotelData.city?._id || undefined,
+                cityId: hotelData.city?._id || undefined,
                 lat: hotelData.lat || undefined,
                 lng: hotelData.lng || undefined,
                 rooms: hotelData.rooms || undefined,
-                serviceFacilities: hotelData.serviceFacilities || [],
+                serviceFacilities: hotelData.serviceFacilities?.map(f => f._id) || [],
                 policies: {
                     timeCheckin: hotelData.policies?.timeCheckin || "12:30",
                     timeCheckout: hotelData.policies?.timeCheckout || "12:30",
@@ -93,6 +94,8 @@ const UpdateHotel = () => {
             setCitiesOptions(ct)
         }
     }, [hotelData, reset, cities, isCitiesLoading]);
+
+    console.log(getValues());
 
     const handleImagesChange = async ({ newImages, deletedExisting }) => {
         if (deletedExisting) {
@@ -139,6 +142,7 @@ const UpdateHotel = () => {
 
         try {
             const res = await updateHotel({ hotelId: param._id, hotel: getValues() }).unwrap();
+            console.log("Update hotel response:", res);
             toast.success("Sửa khách sạn thành công");
             navigate("/admin/manage-hotels");
         } catch (error) {
@@ -175,7 +179,7 @@ const UpdateHotel = () => {
                 duration: 2,
             })
         }
-        
+
 
     }, [isUploadLoading, isUploadError, isSuccess]);
 
@@ -201,7 +205,9 @@ const UpdateHotel = () => {
     return (
         <div>
             {(isLoadingHotel || isLoadingFacilities || isCitiesLoading) ? (
-                <div className='p-8'>Đang tải dữ liệu khách sạn...</div>
+                <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+                    <CircularProgress />
+                </Box>
             ) : (
                 <div className='bg-softBlue min-h-screen p-4 md:p-8'>
                     {contextMessageHolder}
@@ -245,7 +251,7 @@ const UpdateHotel = () => {
                                 <div className='flex gap-5 mb-3'>
                                     <FormSelect
                                         label={"Thành phố"}
-                                        name={"cityName"}
+                                        name={"cityId"}
                                         control={control}
                                         options={cityOptions}
                                         placeholder={"Chọn thành phố"}
