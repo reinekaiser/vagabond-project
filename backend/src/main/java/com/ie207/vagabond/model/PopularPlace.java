@@ -1,17 +1,16 @@
 package com.ie207.vagabond.model;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class PopularPlace {
-    @Id
-    private String _id;          // ánh xạ từ _id
     private String name;
-    private String description = "";
-    private String img = "";
+    private String description;
+    private String image;
 }

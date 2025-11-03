@@ -5,11 +5,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
-public class PopularQuestion {
-    private String question;
-    private String answer;
+public class RefundPolicy {
+    private List<RefundPercentage> refundPercentage;
+    private String description;
 }

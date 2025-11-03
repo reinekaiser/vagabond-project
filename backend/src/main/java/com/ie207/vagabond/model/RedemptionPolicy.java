@@ -6,10 +6,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
-public class PopularQuestion {
-    private String question;
-    private String answer;
+public class RedemptionPolicy {
+    private String method;
+    private String location;
 }
+

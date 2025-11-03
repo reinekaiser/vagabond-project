@@ -9,7 +9,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class PopularQuestion {
-    private String question;
-    private String answer;
+public class PriceInfo {
+    private String priceType;
+    private String notes;
+    private Integer price;
+    private Integer minPerBooking;
+    private Integer maxPerBooking;
 }
