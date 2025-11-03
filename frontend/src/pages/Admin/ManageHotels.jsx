@@ -3,18 +3,14 @@ import { IoSearch } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 import { useDeleteHotelMutation, useGetFacilitiesQuery, useGetHotelsQuery, useGetRoomTypesQuery } from '../../redux/api/hotelApiSlice';
 import { FaPlus } from "react-icons/fa6";
-import { Select, Pagination, Modal } from "antd";
+import { Select, Pagination, Modal, Drawer, Dropdown, Slider, message } from "antd";
 import ImageGalleryFromCloudinary from '../../components/ImageGalleryFromCloudinary';
-import { MdRoom } from "react-icons/md";
+import { MdRoom, MdFilterList, MdDeleteForever } from "react-icons/md";
 import { LuCircleDollarSign } from "react-icons/lu";
 import { HiDotsVertical } from "react-icons/hi";
 import { TbEyeEdit } from "react-icons/tb";
-import { MdDeleteForever } from "react-icons/md";
-import { Drawer, Dropdown, Slider } from "antd";
-import { MdFilterList } from "react-icons/md";
 import ExpandableCheckbox from '../../components/ExpandableCheckbox';
 import { ROOM_FACILITIES_OPTIONS } from '../../constants/hotel';
-import { message } from 'antd';
 import { toast } from "react-toastify";
 import { Box, CircularProgress } from '@mui/material';
 
@@ -22,15 +18,18 @@ const { Option } = Select;
 
 const ManageHotels = () => {
     const navigate = useNavigate();
+
     const [search, setSearch] = useState('');
     const [searched, setSearched] = useState(false);
+
     const [fcFilter, setFcFilter] = useState([]);
     const [fcRoomFilter, setRoomFcFilter] = useState([]);
     const [priceRange, setPriceRange] = useState([0, 10000000]);
     const [sort, setSort] = useState('');
-    const [page, setPage] = useState();
+    const [page, setPage] = useState(1);
     const [facilities, setFacilities] = useState([]);
     const [openFilter, setOpenFilter] = useState(false);
+
     const { data: hotels = [], isLoading, refetch } = useGetHotelsQuery({
         minPrice: priceRange[0],
         maxPrice: priceRange[1],
@@ -38,21 +37,18 @@ const ManageHotels = () => {
         roomFacilities: fcRoomFilter,
         sort: sort,
         page: page,
-    }, {
-        refetchOnMountOrArgChange: true,
-    });
+    }, { refetchOnMountOrArgChange: true, });
+
     useEffect(() => {
         if (!isLoading && hotels) {
             setPage(hotels.currentPage);
         }
-    }, [hotels]);
+    }, [isLoading, hotels]);
     const handleChangePage = (newPage) => {
         setPage(newPage);
     };
 
     const { data: facilitiesData, isLoading: isFacilitiesLoading } = useGetFacilitiesQuery();
-
-
     const handleFacilitiesFilter = (selectedFacilities) => {
         setFcFilter(selectedFacilities);
     }
@@ -68,7 +64,6 @@ const ManageHotels = () => {
             setFacilities(fc);
         }
     }, [isFacilitiesLoading, facilitiesData]);
-
 
     const showDrawer = () => setOpenFilter(true);
     const onClose = () => setOpenFilter(false);
@@ -97,7 +92,7 @@ const ManageHotels = () => {
     }
 
     // console.log(priceRange[0], priceRange[1], fcFilter, fcRoomFilter, sort);
-    console.log(hotels)
+    // console.log(hotels)
     return (
         <div>
             <div className='bg-softBlue min-h-screen p-4 md:p-8'>
@@ -248,7 +243,6 @@ const ManageHotels = () => {
                                         current={page}
                                         onChange={handleChangePage}
                                     />
-
                                 </div>
                             )}
                         </div>
@@ -323,12 +317,12 @@ const HotelCard = ({ hotel, refetch }) => {
                             <span className="text-red-500 text-[20px] mx-1 mt-[2px] shrink-0">
                                 <MdRoom />
                             </span>
-                            <span>
+                            <span className='text-gray-600'>
                                 {hotel.address}, {hotel.city?.name}
                             </span>
                         </p>
                     </div>
-                    <p className='flex items-center text-[14px] mb-2'>
+                    <p className='flex items-center text-[14px] mb-2 text-gray-600'>
                         <LuCircleDollarSign className='text-blue-500 text-[19px] mx-1' />
                         {Number(minPrice).toLocaleString("vi-VN")} ₫
                     </p>

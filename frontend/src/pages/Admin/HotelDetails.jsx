@@ -1,39 +1,38 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
-import { useCreateRoomMutation, useCreateRoomTypeMutation, useDeleteHotelMutation, useDeleteRoomMutation, useDeleteRoomTypeMutation, useGetHotelByIdQuery, useGetRoomTypesQuery, useUpdateRoomMutation, useUpdateRoomTypeMutation } from '../../redux/api/hotelApiSlice';
+import {
+    useCreateRoomMutation, useCreateRoomTypeMutation, useDeleteHotelMutation,
+    useDeleteRoomMutation, useDeleteRoomTypeMutation, useGetHotelByIdQuery,
+    useGetRoomTypesQuery, useUpdateRoomMutation, useUpdateRoomTypeMutation
+} from '../../redux/api/hotelApiSlice';
 import HotelInformation from '../../components/HotelInformation';
 import ImageGalleryFromCloudinary from '../../components/ImageGalleryFromCloudinary';
-import { FaAngleLeft } from "react-icons/fa6";
-import { MdEdit } from "react-icons/md";
-import { IoMdCheckmarkCircleOutline } from "react-icons/io";
-import { BiArea } from "react-icons/bi";
-import { PiMountainsDuotone } from "react-icons/pi";
-import { FaAngleRight } from "react-icons/fa6";
-import { TbCoffeeOff } from "react-icons/tb";
-import { TbCoffee } from "react-icons/tb";
-import { MdOutlineCheckCircle } from "react-icons/md";
-import { MdOutlineDoNotDisturbOn } from "react-icons/md";
-import { IoMdClose } from "react-icons/io";
-import { Modal, Dropdown, Tooltip } from "antd";
+import { FaAngleLeft, FaAngleRight, FaCircleCheck, } from "react-icons/fa6";
+import { MdEdit, MdOutlineCheckCircle, MdOutlineDoNotDisturbOn, MdOutlineAddHome, MdDeleteForever, } from "react-icons/md";
+import { IoMdCheckmarkCircleOutline, IoMdClose } from "react-icons/io";
 import { IoBedOutline } from "react-icons/io5";
 import { MdOutlinePeopleAlt } from "react-icons/md";
-import { FaCircleCheck } from "react-icons/fa6";
+import { BiArea } from "react-icons/bi";
+import { PiMountainsDuotone } from "react-icons/pi";
+import { TbCoffee, TbCoffeeOff } from "react-icons/tb";
 import { LuCircleDollarSign } from "react-icons/lu";
-import { MdOutlineAddHome } from "react-icons/md";
 import { HiDotsVertical } from "react-icons/hi";
-import { MdDeleteForever } from "react-icons/md";
+import { Modal, Dropdown, Tooltip } from "antd";
 import RoomTypeModal from '../../components/RoomTypeModal';
 import RoomModal from '../../components/RoomModal';
 import { toast } from "react-toastify";
 import { message } from 'antd';
 import { Box, CircularProgress } from '@mui/material';
+import { useUploadImagesMutation } from '../../redux/api/uploadApiSlice';
 
 
 const HotelDetails = () => {
     const param = useParams();
     const navigate = useNavigate();
+
     const { data: hotel, isLoading: isHotelLoading } = useGetHotelByIdQuery(param._id);
     const { data: roomTypesData, isLoading: isLoadingRoomTypes, refetch: refetchHotel } = useGetRoomTypesQuery(param._id);
+
     const [createRoomType, { isLoading: isAddingRoomType }] = useCreateRoomTypeMutation();
     const [updateRoomType, { isLoading: isUpdatingRoomType }] = useUpdateRoomTypeMutation();
     const [deleteRoomType, { isLoading: isDeletingRoomType }] = useDeleteRoomTypeMutation();
@@ -41,27 +40,33 @@ const HotelDetails = () => {
     const [updateRoom, { isLoading: isUpdatingRoom }] = useUpdateRoomMutation();
     const [deleteRoom, { isLoading: isDeletingRoom }] = useDeleteRoomMutation();
     const [deleteHotel, { isLoading: isDeletingHotel }] = useDeleteHotelMutation();
+    const [uploadHotelImages, { isLoading: isUploadLoading, isError: isUploadError, isSuccess }] = useUploadImagesMutation();
 
     const [newRoomType, setNewRoomType] = useState({});
     const [newRoom, setNewRoom] = useState([]);
     const [isRoomTypeModalVisible, setIsRoomTypeModalVisible] = useState(false);
     const [isRoomModalVisible, setIsRoomModalVisible] = useState(false);
     const [editingRoomType, setEditingRoomType] = useState(null);
-    const [editingRoomTypeIndex, setEditingRoomTypeIndex] = useState(null);
+    const [editingRoomTypeId, setEditingRoomTypeId] = useState(null);
     const [editingRoom, setEditingRoom] = useState(null);
     const [editingRoomIndex, setEditingRoomIndex] = useState(null);
     const [modalKey, setModalKey] = useState(100);
     const [modalRoomKey, setModalRoomKey] = useState(0);
+    const [isDeleteRoomTypeModalVisible, setDeleteRoomTypeModalVisible] = useState(false);
+    const [selectedRoomTypeId, setSelectedRoomTypeId] = useState(null);
+    const [isDeleteRoomModalVisible, setDeleteRoomModalVisible] = useState(false);
+    const [selectedRoomInfo, setSelectedRoomInfo] = useState(null); // { roomTypeId, roomId, roomTypeName }
 
+    // room type
     const handleOpenModalRoomType = () => {
         setEditingRoomType(null);
-        setEditingRoomTypeIndex(null);
+        setEditingRoomTypeId(null);
         setModalKey((prev) => prev + 1)
         setIsRoomTypeModalVisible(true)
     }
     const handleCloseModalRoomType = () => {
         setEditingRoomType(null);
-        setEditingRoomTypeIndex(null);
+        setEditingRoomTypeId(null);
         setIsRoomTypeModalVisible(false);
     }
     const handleAddRoomType = (newRoomType) => {
@@ -72,39 +77,47 @@ const HotelDetails = () => {
     const handleAddRoomForRoomType = async (newRoom) => {
         setNewRoom(prev => [...prev, newRoom]);
         const updatedRooms = newRoomType.rooms ? [...newRoomType.rooms, newRoom] : [newRoom];
+        let uploadedImgs = [];
+        if (newRoomType.img && newRoomType.img.length > 0) {
+            try {
+                uploadedImgs = await uploadHotelImages({ data: newRoomType.img }).unwrap();
+            } catch (err) {
+                console.error(err);
+                return;
+            }
+        }
         const roomTypeData = {
             ...newRoomType,
+            img: uploadedImgs,
             rooms: updatedRooms
         }
-
-        console.log("addroomtype - ", param._id);
-        console.log(roomTypeData);
+        // console.log("addroomtype - ", param._id);
+        // console.log(roomTypeData);
         try {
             const res = await createRoomType({ hotelId: param._id, roomType: roomTypeData }).unwrap();
-            toast.success("Thêm loại phòng và phòng thành công");
+            console.log(res);
             await refetchHotel();
+            handleCloseRoomModal();
+            handleCloseModalRoomType();
+            toast.success("Thêm loại phòng và phòng thành công");
         } catch (error) {
             toast.error("Thêm loại phòng và phòng thất bại");
             console.error("Error adding room type:", error);
         }
-        handleCloseRoomModal();
-        handleCloseModalRoomType();
     }
-
-    const [isDeleteRoomTypeModalVisible, setDeleteRoomTypeModalVisible] = useState(false);
-    const [selectedRoomTypeId, setSelectedRoomTypeId] = useState(null);
     const showDeleteRoomTypeModal = (roomTypeId) => {
         setSelectedRoomTypeId(roomTypeId);
         setDeleteRoomTypeModalVisible(true);
     };
     const confirmDeleteRoomType = async () => {
         try {
+            // console.log("deleteroomtype - ", selectedRoomTypeId);
             const res = await deleteRoomType({
                 hotelId: param._id,
                 roomTypeId: selectedRoomTypeId,
             }).unwrap();
-            toast.success(res.message);
             await refetchHotel();
+            toast.success(res.message);
         } catch (error) {
             toast.error("Xoá loại phòng và phòng thất bại");
             console.error("Error delete room type:", error);
@@ -114,34 +127,35 @@ const HotelDetails = () => {
         }
     };
     const handleEditRoomType = (roomType, roomTypeId) => {
-        setEditingRoomTypeIndex(roomTypeId);
+        setEditingRoomTypeId(roomTypeId);
         setEditingRoomType(roomType);
         setModalKey((prev) => prev + 1)
         setIsRoomTypeModalVisible(true);
     }
     const handleUpdateRoomType = async (updatedRoomType) => {
-        console.log("updateroomtype - ", param._id, "-", editingRoomTypeIndex);
-        console.log(updatedRoomType);
+        // console.log("updateroomtype - ", param._id, "-", editingRoomTypeId);
+        // console.log(updatedRoomType);
         try {
-            const res = await updateRoomType({ hotelId: param._id, roomTypeId: editingRoomTypeIndex, roomType: updatedRoomType }).unwrap();
-            toast.success("Cập nhật loại phòng thành công");
+            const res = await updateRoomType({ hotelId: param._id, roomTypeId: editingRoomTypeId, roomType: updatedRoomType }).unwrap();
+            console.log(res);
             await refetchHotel();
+            handleCloseModalRoomType();
+            toast.success("Cập nhật loại phòng thành công");
         } catch (error) {
             toast.error("Cập nhật loại phòng thất bại");
             console.error("Error updating room type:", error);
         }
-        handleCloseModalRoomType()
     }
 
     //room
     const handleOpenRoomModal = (roomType, roomTypeId) => {
-        setEditingRoomTypeIndex(roomTypeId)
+        setEditingRoomTypeId(roomTypeId)
         setEditingRoomType(roomType)
         setModalRoomKey((prev) => prev + 1)
         setIsRoomModalVisible(true)
     }
     const handleCloseRoomModal = () => {
-        setEditingRoomTypeIndex(null);
+        setEditingRoomTypeId(null);
         setEditingRoomType(null);
         setEditingRoomIndex(null);
         setEditingRoom(null)
@@ -152,22 +166,22 @@ const HotelDetails = () => {
             handleAddRoomForRoomType(newRoom);
         }
         else {
-            console.log("addroom - ", editingRoomTypeIndex);
-            console.log(newRoom);
+            // console.log("addroom - ", editingRoomTypeId);
+            // console.log(newRoom);
             try {
-                const res = await createRoom({ hotelId: param._id, roomTypeId: editingRoomTypeIndex, room: newRoom }).unwrap();
-                toast.success("Thêm phòng thành công");
+                const res = await createRoom({ hotelId: param._id, roomTypeId: editingRoomTypeId, room: newRoom }).unwrap();
                 await refetchHotel();
+                handleCloseRoomModal();
+                toast.success("Thêm phòng thành công");
             } catch (error) {
                 toast.error("Thêm phòng thất bại");
                 console.error("Error adding room:", error);
 
             }
-            handleCloseRoomModal();
         }
     }
     const handleEditRoom = (roomTypeId, roomType, roomId, room) => {
-        setEditingRoomTypeIndex(roomTypeId);
+        setEditingRoomTypeId(roomTypeId);
         setEditingRoomType(roomType);
         setEditingRoomIndex(roomId);
         setEditingRoom(room)
@@ -175,21 +189,18 @@ const HotelDetails = () => {
         setIsRoomModalVisible(true)
     }
     const handleUpdateRoom = async (updatedRoom) => {
-        console.log("updateroom - ", param._id, "-", editingRoomTypeIndex, "-", editingRoomIndex)
-        console.log(updatedRoom);
+        // console.log("updateroom - ", param._id, "-", editingRoomTypeId, "-", editingRoomIndex)
+        // console.log(updatedRoom);
         try {
-            const res = await updateRoom({ hotelId: param._id, roomTypeId: editingRoomTypeIndex, roomId: editingRoomIndex, room: updatedRoom }).unwrap();
-            toast.success("Cập nhật phòng thành công");
+            const res = await updateRoom({ hotelId: param._id, roomTypeId: editingRoomTypeId, roomId: editingRoomIndex, room: updatedRoom }).unwrap();
             await refetchHotel();
+            handleCloseRoomModal()
+            toast.success("Cập nhật phòng thành công");
         } catch (error) {
             toast.error("Cập nhật phòng thất bại");
             console.error("Error updating room:", error);
-
         }
-        handleCloseRoomModal()
     }
-    const [isDeleteRoomModalVisible, setDeleteRoomModalVisible] = useState(false);
-    const [selectedRoomInfo, setSelectedRoomInfo] = useState(null); // { roomTypeId, roomId, roomTypeName }
     const showDeleteRoomModal = (roomTypeId, roomType, roomId) => {
         setSelectedRoomInfo({
             roomTypeId,
@@ -201,13 +212,14 @@ const HotelDetails = () => {
     const confirmDeleteRoom = async () => {
         try {
             const { roomTypeId, roomId } = selectedRoomInfo;
+            // console.log("deleteroom - ", roomTypeId, "-", roomId);
             const res = await deleteRoom({
                 hotelId: param._id,
                 roomTypeId,
                 roomId,
             }).unwrap();
-            toast.success(res.message);
             await refetchHotel();
+            toast.success(res.message);
         } catch (error) {
             toast.error("Xoá phòng thất bại");
             console.error("Error delete room:", error);
@@ -218,7 +230,6 @@ const HotelDetails = () => {
     };
 
     const [messageApi, contextMessageHolder] = message.useMessage();
-
     useEffect(() => {
         if (isDeletingRoom) {
             messageApi.open({
@@ -284,6 +295,33 @@ const HotelDetails = () => {
         }
     }, [isDeletingHotel]);
 
+    useEffect(() => {
+        if (isUploadLoading) {
+            messageApi.open({
+                key: 'uploading',
+                type: 'loading',
+                content: 'Đang tải ảnh lên...',
+                duration: 0,
+            });
+        }
+        if (isUploadError) {
+            messageApi.open({
+                key: 'uploading',
+                type: 'error',
+                content: 'Tải ảnh thất bại!',
+                duration: 2,
+            });
+        }
+        if (isSuccess) {
+            messageApi.open({
+                key: 'uploading',
+                type: 'success',
+                content: 'Thêm ảnh thành công!',
+                duration: 2,
+            })
+        }
+    }, [isUploadLoading, isUploadError, isSuccess]);
+
     if (isHotelLoading || isLoadingRoomTypes) {
         return (
             <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
@@ -324,6 +362,7 @@ const HotelDetails = () => {
                     </div>
                     <HotelInformation finalData={hotel} />
 
+                    {/* Danh sách phòng và loại phòng */}
                     <div className='flex items-center mb-4'>
                         <div className="flex items-center space-x-2">
                             <div className="w-2 h-7 bg-orange-500 rounded"></div>
@@ -339,6 +378,7 @@ const HotelDetails = () => {
                     </div>
 
                     <RoomTypeModal
+                        isIncludedRoom={true}
                         visible={isRoomTypeModalVisible}
                         onCancel={handleCloseModalRoomType}
                         key={modalKey || 'roomTypeModal'}
@@ -358,8 +398,11 @@ const HotelDetails = () => {
 
                     {roomTypesData.map((roomType, index) => (
                         <RoomTypeCard key={index} roomType={roomType} images={hotel.img}
-                            handleEditRoomType={handleEditRoomType} handleDeleteRoomType={showDeleteRoomTypeModal} handleOpenRoomModal={handleOpenRoomModal}
-                            handleEditRoom={handleEditRoom} handleDeleteRoom={showDeleteRoomModal}
+                            handleEditRoomType={handleEditRoomType}
+                            handleDeleteRoomType={showDeleteRoomTypeModal}
+                            handleOpenRoomModal={handleOpenRoomModal}
+                            handleEditRoom={handleEditRoom}
+                            handleDeleteRoom={showDeleteRoomModal}
                         />
                     ))}
 
@@ -386,8 +429,6 @@ const HotelDetails = () => {
                         <p>Bạn có chắc chắn muốn xoá phòng này trong loại phòng "{selectedRoomInfo?.roomTypeName}"?</p>
                     </Modal>
                 </div>
-                
-
             </div>
         </div>
     );

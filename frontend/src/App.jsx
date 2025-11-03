@@ -13,6 +13,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setOnlineUsers } from "./redux/features/authSlice";
 import { connectSocket, disconnectSocket } from "./Utils/socket";
 import ScrollToTop from "./components/ScrollToTop";
+import { useGetFacilitiesByCategoryQuery, useGetFacilitiesQuery, useGetHotelByIdQuery, useGetHotelsQuery, useGetRoomTypesQuery } from "./redux/api/hotelApiSlice";
 
 function App() {
 
@@ -20,37 +21,37 @@ function App() {
     const { user } = useSelector((state) => state.auth);
     console.log("User in App:", user);
 
-    useEffect(() => {
-        if (user?._id) {
-            const socket = connectSocket(user._id, user.role);
-            socket.on("connect", () => {
-                console.log("Connected with ID:", socket.id);
-            });
-            socket.on("getOnlineUsers", (users) => {
-                dispatch(setOnlineUsers(users));
-                console.log("Online users", users);
-            });
-        }
-        return () => {
-            disconnectSocket();
-        };
-    }, [user?._id]);
+    // useEffect(() => {
+    //     if (user?._id) {
+    //         const socket = connectSocket(user._id, user.role);
+    //         socket.on("connect", () => {
+    //             console.log("Connected with ID:", socket.id);
+    //         });
+    //         socket.on("getOnlineUsers", (users) => {
+    //             dispatch(setOnlineUsers(users));
+    //             console.log("Online users", users);
+    //         });
+    //     }
+    //     return () => {
+    //         disconnectSocket();
+    //     };
+    // }, [user?._id]);
 
     return (
         <>
             <BrowserRouter>
                 <ScrollToTop />
                 <Routes>
-                    <Route path="/" element={<PublicRoutes></PublicRoutes>} />
+                    <Route path="/*" element={<PublicRoutes></PublicRoutes>} />
                     <Route path="/sign-in" element={<SignIn />} />
                     <Route path="/sign-up" element={<SignUp />} />
-                    <Route
+                    {/* <Route
                         path="/forgot-password"
                         element={<ForgotPassword />}
-                    />
-                    <Route path="/reset-password" element={<ResetPassword />} />
+                    /> */}
+                    {/* <Route path="/reset-password" element={<ResetPassword />} /> */}
                     <Route path="/admin/*" element={<AdminRoutes />} />
-                    <Route path="/user/*" element={<UserRoutes />} />
+                    {/* <Route path="/user/*" element={<UserRoutes />} /> */}
                     <Route path="*" element={<PublicRoutes />} />
                 </Routes>
             </BrowserRouter>

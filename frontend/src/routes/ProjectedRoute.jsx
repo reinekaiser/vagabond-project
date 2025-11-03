@@ -1,54 +1,19 @@
-import { Navigate, Outlet } from "react-router-dom";
-import { useState, useEffect } from "react";
-import authService from "../services/authService";
-import CircularProgress from "@mui/material/CircularProgress";
-import Box from "@mui/material/Box";
+import { useSelector } from "react-redux";
+import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 
-const ProtectedRoute = ({ requireAdmin = false, requiredRole = null, redirectTo = "/sign-in" }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthorized, setIsAuthorized] = useState(false);
+const ProtectedRoutes = ({ allowedRoles }) => {
+    const { user } = useSelector((state) => state.auth);
+    if (!user) {
+        return <Navigate to="/" replace />;
+    }
 
-  useEffect(() => {
-    const checkAuth = () => {
-      const authenticated = authService.isAuthenticated();
-      
-      if (!authenticated) {
-        setIsAuthorized(false);
-        setIsLoading(false);
-        return;
-      }
-      
-      if (requireAdmin) {
-        setIsAuthorized(authenticated && authService.isAdmin());
-      } else if (requiredRole) {
-        // Check if user has the specific required role
-        const userRole = authService.getUserRole();
-        setIsAuthorized(authenticated && userRole === requiredRole);
-      } else {
-        // If no specific role is required, just check authentication
-        setIsAuthorized(authenticated);
-      }
-      
-      setIsLoading(false);
-    };
+    if (allowedRoles && !allowedRoles.includes(user.role)) {
+        return <Navigate to="/" replace />;
+    }
 
-    checkAuth();
-  }, [requireAdmin, requiredRole]);
-
-  if (isLoading) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-      >
-        <CircularProgress />
-      </Box>
+        <Outlet/>
     );
-  }
-
-  return isAuthorized ? <Outlet /> : <Navigate to={redirectTo} replace />;
 };
 
-export default ProtectedRoute;
+export default ProtectedRoutes;

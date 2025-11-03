@@ -7,14 +7,16 @@ import { GrLocation } from "react-icons/gr";
 import UserDropdown from "./UserDropdown";
 import { logout } from "../redux/features/authSlice";
 import { useGetCitiesQuery } from "../redux/api/cityApiSlice";
+import { useLogoutMutation } from "../redux/api/authApiSlice";
 
 export const MainHeader = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [showDropdown, setShowDropdown] = useState(false);
     const dropdownRef = useRef(null);
-
     const { user } = useSelector((state) => state.auth);
+
+    const [ logoutApi ] = useLogoutMutation();
 
     // Handle click outside to close dropdown
     useEffect(() => {
@@ -30,18 +32,21 @@ export const MainHeader = () => {
         };
     }, []);
 
-    const handleLogout = () => {
-        localStorage.removeItem("token");
-        dispatch(logout());
-        navigate("/");
+    const handleLogout = async () => {
+        try {
+            await logoutApi().unwrap();
+        } catch (err) {
+            console.error("Logout API failed:", err);
+        } finally {
+            dispatch(logout());
+            navigate("/");
+        }
     };
 
     const { data: cities, isCitiesLoading, error } = useGetCitiesQuery();
     if (error) console.error("Error fetching cities:", error);
-    if (isCitiesLoading) return <div></div>;
-
     const [cityOptions, setCityOptions] = useState([]);
-
+    
     useEffect(() => {
         if (!isCitiesLoading && cities) {
             const first_ct = cities.map((city) => ({
@@ -49,7 +54,7 @@ export const MainHeader = () => {
                 name: city.name,
                 img: city.img[0],
             }));
-            const final = Array(3).fill(first_ct).flat();
+            const final = Array(20).fill(first_ct).flat();
             setCityOptions(final.slice(0, 12));
         }
     }, [cities, isCitiesLoading]);
@@ -78,6 +83,7 @@ export const MainHeader = () => {
             </div>
         );
     }
+    if (isCitiesLoading) return <div></div>;
 
     return (
         <header className="top-0 sticky bg-white border-b z-50">
@@ -163,7 +169,7 @@ export const MainHeader = () => {
                                                     className="flex gap-2 items-center"
                                                 >
                                                     <img
-                                                        src={city.img}
+                                                        src={city.img || "/images/about/budapest.jpg"}
                                                         alt=""
                                                         className="w-12 h-12 rounded-full"
                                                     />

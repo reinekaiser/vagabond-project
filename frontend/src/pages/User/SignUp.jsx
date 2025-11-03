@@ -1,13 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaFacebook, FaEye, FaEyeSlash } from "react-icons/fa";
-import { GoogleLogin } from "@react-oauth/google";
-import authService from "../../services/authService";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { toast } from "react-toastify";
+import { useDispatch } from "react-redux";
+import { setCredentials } from "../../redux/features/authSlice";
+import { useLazyGetUserQuery, useRegisterMutation, useSendOtpMutation } from "../../redux/api/authApiSlice";
 
 const SignUp = () => {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const [showPassword, setShowPassword] = useState(false);
+    const [agreeTerms, setAgreeTerms] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [otpSent, setOtpSent] = useState(false);
+
+    const [sendOtp] = useSendOtpMutation();
+    const [register] = useRegisterMutation();
+    const [getUser, { data: userData, error, isLoading }] = useLazyGetUserQuery();
+
     const [formData, setFormData] = useState({
         email: "",
         password: "",
@@ -15,7 +25,6 @@ const SignUp = () => {
         firstName: "",
         lastName: "",
     });
-    const [loading, setLoading] = useState(false);
 
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
@@ -27,91 +36,57 @@ const SignUp = () => {
             [e.target.name]: e.target.value,
         });
     };
-
-    const handleGoogleSuccess = async (credentialResponse) => {
-        try {
-            // TODO: Implement Google signup with backend
-            console.log("Google Sign Up Success:", credentialResponse);
-            toast.success("Đăng ký với Google thành công!");
-            navigate("/sign-in");
-        } catch (error) {
-            toast.error("Đăng ký với Google thất bại");
-        }
-    };
-
-    const handleGoogleError = () => {
-        toast.error("Đăng ký với Google thất bại");
-    };
-
-    const handleSubmit = async (e) => {
+    const handleSendOtp = async (e) => {
         e.preventDefault();
 
-        // Validate password match
         if (formData.password !== formData.confirmPassword) {
             toast.error("Mật khẩu xác nhận không khớp");
             return;
         }
-
-        // Validate password length
         if (formData.password.length < 6) {
             toast.error("Mật khẩu phải có ít nhất 6 ký tự");
             return;
         }
-
-        // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(formData.email)) {
             toast.error("Email không hợp lệ");
             return;
         }
-
-        setLoading(true);
+        if (!agreeTerms) {
+            toast.error("Vui lòng đồng ý với Điều khoản dịch vụ và Chính sách bảo mật trước khi đăng ký");
+            return;
+        }
         try {
-            // Remove confirmPassword before sending to API
-            const { confirmPassword, ...registerData } = formData;
-
-            // Explicitly set role to 'user'
-            registerData.role = "user";
-
-            const response = await authService.register(registerData);
-
-            if (response && response.success) {
-                toast.success("Đăng ký thành công! Vui lòng đăng nhập.");
-                // Delay navigation slightly to allow toast to be seen
-                setTimeout(() => {
-                    navigate("/sign-in");
-                }, 1500);
-            } else {
-                toast.error(response?.message || "Đăng ký thất bại");
-            }
-        } catch (error) {
-            console.error("Registration error details:", error);
-
-            // Handle specific error types
-            if (error.response) {
-                // Server responded with an error status
-                const errorMessage =
-                    error.response.data?.message || "Đăng ký thất bại";
-                toast.error(errorMessage);
-
-                if (error.response.status === 404) {
-                    console.error(
-                        "API endpoint not found. Check server routes."
-                    );
-                    toast.error(
-                        "Lỗi kết nối với máy chủ. Vui lòng thử lại sau."
-                    );
-                }
-            } else if (error.request) {
-                // Request was made but no response received
-                console.error("No response received from server");
-                toast.error(
-                    "Không nhận được phản hồi từ máy chủ. Vui lòng kiểm tra kết nối mạng."
-                );
-            } else {
-                // Error setting up the request
-                toast.error("Đã xảy ra lỗi khi gửi yêu cầu đăng ký.");
-            }
+            setLoading(true);
+            const res = await sendOtp({ email: formData.email }).unwrap();
+            toast.success("Mã OTP đã được gửi tới email của bạn!");
+            setOtpSent(true);
+        } catch (err) {
+            toast.error(err?.data?.message || "Gửi OTP thất bại!");
+        } finally {
+            setLoading(false);
+        }
+    };
+    const handleVerifyOtp = async (otpValue) => {
+        if (!otpValue) {
+            toast.error("Vui lòng nhập mã OTP");
+            return;
+        }
+        try {
+            setLoading(true);
+            await register({
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+                email: formData.email,
+                password: formData.password,
+                otp: otpValue,
+            }).unwrap();
+            const userData = await getUser();
+            dispatch(setCredentials(userData.data));
+            toast.success("Đăng ký thành công!");
+            navigate("/");
+        } catch (err) {
+            toast.error("Xác thực OTP thất bại! " + err);
         } finally {
             setLoading(false);
         }
@@ -123,135 +98,113 @@ const SignUp = () => {
             style={{ backgroundImage: "url('/images/login/background.png')" }}
         >
             <div></div>
-            <div className="w-full items-center justify-center">
-                <div className="bg-white w-[1/2] h-full justify-center rounded-lg shadow-xl p-8 mx-auto">
+            <div className="w-full min-h-screen flex items-center justify-center bg-white">
+                <div className="w-full p-8">
                     <h1 className="text-2xl font-bold text-center mb-2">
-                        Sign up
+                        Đăng ký
                     </h1>
-
                     <p className="text-center mb-6">
-                        Already have an account?{" "}
+                        Đã có tài khoản?{" "}
                         <Link
                             to="/sign-in"
                             className="text-[#27B5FC] hover:underline"
                         >
-                            Log in
+                            Đăng nhập
                         </Link>
                     </p>
-
-                    {/* <div className="w-2/3 mx-auto mb-6 flex justify-center">
-                        <div style={{ width: "320px" }}>
-                            <GoogleLogin
-                                onSuccess={handleGoogleSuccess}
-                                onError={handleGoogleError}
-                                size="large"
-                                width="100%"
-                                text="signup_with"
-                                shape="pill"
-                                logo_alignment="center"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="flex w-2/3 mx-auto items-center mb-6">
-                        <div className="flex-grow h-px bg-gray-300"></div>
-                        <div className="mx-4 text-gray-500">OR</div>
-                        <div className="flex-grow h-px bg-gray-300"></div>
-                    </div> */}
-
-                    <form onSubmit={handleSubmit} className="w-2/3 mx-auto">
-                        <div className="mb-4">
-                            <label
-                                htmlFor="firstName"
-                                className="block text-sm font-medium text-gray-700 mb-1"
-                            >
-                                First Name
-                            </label>
-                            <input
-                                type="text"
-                                id="firstName"
-                                name="firstName"
-                                value={formData.firstName}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required
-                            />
-                        </div>
-                        <div className="mb-4">
-                            <label
-                                htmlFor="lastName"
-                                className="block text-sm font-medium text-gray-700 mb-1"
-                            >
-                                Last Name
-                            </label>
-                            <input
-                                type="text"
-                                id="lastName"
-                                name="lastName"
-                                value={formData.lastName}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required
-                            />
-                        </div>
-                        <div className="mb-4">
-                            <label
-                                htmlFor="email"
-                                className="block text-sm font-medium text-gray-700 mb-1"
-                            >
-                                Your email
-                            </label>
-                            <input
-                                type="email"
-                                id="email"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required
-                            />
-                        </div>
-
-                        <div className="mb-4">
-                            <label
-                                htmlFor="password"
-                                className="block text-sm font-medium text-gray-700 mb-1"
-                            >
-                                Create password
-                            </label>
-                            <div className="relative">
+                    {!otpSent ? (
+                        <form onSubmit={handleSendOtp} className="w-2/3 mx-auto">
+                            <div className="mb-4">
+                                <label
+                                    htmlFor="firstName"
+                                    className="block text-sm font-medium text-gray-700 mb-1"
+                                >
+                                    Họ
+                                </label>
                                 <input
-                                    type={showPassword ? "text" : "password"}
-                                    id="password"
-                                    name="password"
-                                    value={formData.password}
+                                    type="text"
+                                    id="firstName"
+                                    name="firstName"
+                                    value={formData.firstName}
                                     onChange={handleChange}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     required
                                 />
-                                <button
-                                    type="button"
-                                    onClick={togglePasswordVisibility}
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 flex items-center"
-                                >
-                                    {showPassword ? (
-                                        <FaEyeSlash className="mr-1" />
-                                    ) : (
-                                        <FaEye className="mr-1" />
-                                    )}
-                                    <span>Hide</span>
-                                </button>
                             </div>
-                        </div>
+                            <div className="mb-4">
+                                <label
+                                    htmlFor="lastName"
+                                    className="block text-sm font-medium text-gray-700 mb-1"
+                                >
+                                    Tên
+                                </label>
+                                <input
+                                    type="text"
+                                    id="lastName"
+                                    name="lastName"
+                                    value={formData.lastName}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    required
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label
+                                    htmlFor="email"
+                                    className="block text-sm font-medium text-gray-700 mb-1"
+                                >
+                                    Email
+                                </label>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    required
+                                />
+                            </div>
 
-                        <div className="mb-6">
-                            <label
-                                htmlFor="confirmPassword"
-                                className="block text-sm font-medium text-gray-700 mb-1"
-                            >
-                                Confirm password
-                            </label>
-                            <div className="relative">
+                            <div className="mb-4">
+                                <label
+                                    htmlFor="password"
+                                    className="block text-sm font-medium text-gray-700 mb-1"
+                                >
+                                    Mật khẩu
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        id="password"
+                                        name="password"
+                                        value={formData.password}
+                                        onChange={handleChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={togglePasswordVisibility}
+                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 flex items-center"
+                                    >
+                                        {showPassword ? (
+                                            <FaEyeSlash className="mr-1" />
+                                        ) : (
+                                            <FaEye className="mr-1" />
+                                        )}
+                                        <span>{showPassword ? "Ẩn" : "Hiện"}</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="mb-4">
+                                <label
+                                    htmlFor="confirmPassword"
+                                    className="block text-sm font-medium text-gray-700 mb-1"
+                                >
+                                    Nhập lại mật khẩu
+                                </label>
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     id="confirmPassword"
@@ -261,63 +214,122 @@ const SignUp = () => {
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     required
                                 />
-                                <button
-                                    type="button"
-                                    onClick={togglePasswordVisibility}
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 flex items-center"
-                                >
-                                    {showPassword ? (
-                                        <FaEyeSlash className="mr-1" />
-                                    ) : (
-                                        <FaEye className="mr-1" />
-                                    )}
-                                    <span>Hide</span>
-                                </button>
                             </div>
-                        </div>
 
-                        <div className="mb-6">
-                            <div className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    id="terms"
-                                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                    required
-                                />
-                                <label
-                                    htmlFor="terms"
-                                    className="ml-2 block text-sm text-gray-700"
-                                >
-                                    I agree to the{" "}
-                                    <Link
-                                        to="/terms"
-                                        className="text-blue-600 hover:underline"
+                            <div className="mb-6">
+                                <div className="flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        id="terms"
+                                        checked={agreeTerms}
+                                        onChange={(e) => setAgreeTerms(e.target.checked)}
+                                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                    />
+                                    <label
+                                        htmlFor="terms"
+                                        className="ml-2 block text-sm text-gray-700"
                                     >
-                                        Terms of Service
-                                    </Link>{" "}
-                                    and{" "}
-                                    <Link
-                                        to="/privacy"
-                                        className="text-blue-600 hover:underline"
-                                    >
-                                        Privacy Policy
-                                    </Link>
-                                </label>
+                                        Đồng ý với{" "}
+                                        <Link
+                                            to="/terms"
+                                            className="text-blue-600 hover:underline"
+                                        >
+                                            điều khoản dịch vụ
+                                        </Link>{" "}
+                                        và{" "}
+                                        <Link
+                                            to="/privacy"
+                                            className="text-blue-600 hover:underline"
+                                        >
+                                            chính sách bảo mật
+                                        </Link>
+                                    </label>
+                                </div>
                             </div>
-                        </div>
 
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full py-2.5 bg-[#27B5FC] text-white rounded-full hover:bg-[#27B5FC]/80 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                        >
-                            {loading ? "Creating account..." : "Create account"}
-                        </button>
-                    </form>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full py-2.5 bg-[#27B5FC] text-white rounded-full hover:bg-[#27B5FC]/80"
+                            >
+                                {loading ? "Đang gửi OTP..." : "Gửi mã xác thực"}
+                            </button>
+                        </form>
+                    ) : (
+                        <OtpInputForm handleVerifyOtp={handleVerifyOtp} handleSendOtp={handleSendOtp} loading={loading} />
+                    )}
                 </div>
             </div>
         </div>
     );
 };
+
+const OtpInputForm = ({ handleVerifyOtp, handleSendOtp, loading }) => {
+    const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+    const inputsRef = useRef([]);
+
+    const handleChange = (value, index) => {
+        if (/^[0-9]?$/.test(value)) {
+            const newOtp = [...otp];
+            newOtp[index] = value;
+            setOtp(newOtp);
+
+            if (value && index < 5) {
+                inputsRef.current[index + 1].focus();
+            }
+        }
+    };
+    const handleKeyDown = (e, index) => {
+        if (e.key === "Backspace" && !otp[index] && index > 0) {
+            inputsRef.current[index - 1].focus();
+        }
+    };
+    const onSubmit = (e) => {
+        e.preventDefault();
+        const otpValue = otp.join("");
+        handleVerifyOtp(otpValue);
+    };
+    return (
+        <form onSubmit={onSubmit} className="w-2/3 mx-auto">
+            <h2 className="text-lg text-center font-semibold mb-4">
+                Nhập mã OTP được gửi tới email
+            </h2>
+
+            <div className="flex justify-between mb-6">
+                {otp.map((digit, index) => (
+                    <input
+                        key={index}
+                        ref={(el) => (inputsRef.current[index] = el)}
+                        type="text"
+                        maxLength="1"
+                        value={digit}
+                        onChange={(e) => handleChange(e.target.value, index)}
+                        onKeyDown={(e) => handleKeyDown(e, index)}
+                        className="w-12 h-12 border border-gray-300 rounded-md text-center text-xl font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                ))}
+            </div>
+
+            <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-2.5 bg-[#27B5FC] text-white rounded-full hover:bg-[#27B5FC]/80"
+            >
+                {loading ? "Đang xác thực..." : "Xác nhận OTP"}
+            </button>
+
+            <p className="text-center text-sm mt-4 text-gray-600">
+                Không nhận được mã?{" "}
+                <button
+                    type="button"
+                    onClick={handleSendOtp}
+                    className="text-[#27B5FC] hover:underline"
+                >
+                    Gửi lại
+                </button>
+            </p>
+        </form>
+    );
+}
 
 export default SignUp;

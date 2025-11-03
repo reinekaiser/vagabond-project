@@ -26,21 +26,15 @@ const PublicRoutes = () => {
     return (
         <Routes>
             <Route
-                element={
-                    user?.role == "user" || user?.role == undefined ? (
-                        <Layout />
-                    ) : (
-                        <Navigate to="/sign-in" />
-                    )
-                }
+                element={<Layout />}
             >
                 <Route index element={<Home />} />
-                <Route
+                {/* <Route
                     path="search"
                     element={<SearchResults></SearchResults>}
-                ></Route>
+                ></Route> */}
                 <Route path="hotels" element={<HotelSearch />} />
-                <Route
+                {/* <Route
                     path="tour/:_id"
                     element={<TourDetails></TourDetails>}
                 ></Route>
@@ -48,13 +42,13 @@ const PublicRoutes = () => {
                 <Route
                     path="city/:cityId"
                     element={<CityDetail></CityDetail>}
-                ></Route>
+                ></Route> */}
                 <Route path="hotels/search" element={<HotelSearchResults />} />
                 <Route path="hotels/:_id" element={<HotelDetails />} />
                 <Route path="about" element={<About />} />
                 <Route path="contact" element={<Contact />} />
             </Route>
-            <Route
+            {/* <Route
                 path="tour/:_id/:_ticketId"
                 element={<TicketSelection></TicketSelection>}
             ></Route>
@@ -87,7 +81,7 @@ const PublicRoutes = () => {
             <Route
                 path="/tour-checkout-payos-success"
                 element={<TourCheckOutPayOSSuccess/>}
-            />
+            /> */}
 
         </Routes>
     );

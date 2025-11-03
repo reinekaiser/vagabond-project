@@ -9,21 +9,18 @@ import { RiCoinsFill } from "react-icons/ri";
 import { TbReceiptDollar } from "react-icons/tb";
 import { MdOutlineFastfood } from "react-icons/md";
 import { MdOutlinePets } from "react-icons/md";
-import { useGetFacilitiesFromIdsQuery } from '../redux/api/hotelApiSlice';
 import { useGetCitiesQuery } from '../redux/api/cityApiSlice';
 
 const HotelInformation = ({ finalData }) => {
     const cityDt = finalData.city?._id || finalData.cityName;
-    console.log(finalData)
         
-    const { data: facilitiyIds, isLoading } = useGetFacilitiesFromIdsQuery(finalData.serviceFacilities);
     const [groupedFacilities, setGroupedFacilities] = useState({});
     const { data: cities, isLoading: isCitiesLoading } = useGetCitiesQuery();
     const [cityOptions, setCitiesOptions] = useState([]);
 
     useEffect(() => {
-        if (!isLoading && facilitiyIds) {
-            const groupedFacilities = facilitiyIds.reduce((acc, cur) => {
+        if ( finalData.serviceFacilities) {
+            const groupedFacilities = finalData?.serviceFacilities?.reduce((acc, cur) => {
                 const categoryName = cur.category.name;
                 if (!acc[categoryName]) {
                     acc[categoryName] = [];
@@ -42,9 +39,9 @@ const HotelInformation = ({ finalData }) => {
             }));
             setCitiesOptions(ct)
         }
-    }, [facilitiyIds, isLoading, cities, isCitiesLoading])
+    }, [finalData.serviceFacilities, cities, isCitiesLoading])
 
-    if (isLoading || isCitiesLoading) return <div>Loading...</div>;
+    if (isCitiesLoading) return <div>Loading...</div>;
     const stripHtml = (html) => html.replace(/<[^>]*>?/gm, '').trim();
 
     return (
@@ -80,10 +77,10 @@ const HotelInformation = ({ finalData }) => {
                 <div className='pl-5 space-y-3'>
                     {Object.entries(groupedFacilities).map(([category, items]) => (
                         <div key={category} className="mb-4">
-                            <h3 className="font-semibold text-lg mb-2">{category}</h3>
+                            <h3 className="font-semibold text-lg mb-3">{category}</h3>
                             <div className='grid grid-cols-2'>
                                 {items.map((item, index) => (
-                                    <p key={index} className='flex items-center text-gray-600'>
+                                    <p key={index} className='flex items-center text-gray-600 mb-2'>
                                         <IoMdCheckmarkCircleOutline className='ml-1 mr-3 text-[18px]' />
                                         {item}
                                     </p>
