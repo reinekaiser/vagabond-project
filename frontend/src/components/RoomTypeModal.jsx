@@ -10,6 +10,7 @@ import UploadImg from "./UploadImg";
 import { useUploadImagesMutation, useDeleteImageMutation } from '../redux/api/uploadApiSlice'
 
 const RoomTypeModal = ({
+  isIncludedRoom,
   visible,
   onCancel,
   onAddRoomType,
@@ -41,7 +42,7 @@ const RoomTypeModal = ({
       rooms: []
     }
   })
-
+  // console.log("editingRoomType - ", editingRoomType?.rooms?.length);
   const treeData = [
     {
       title: "Chọn tất cả",
@@ -98,16 +99,27 @@ const RoomTypeModal = ({
       // console.log("roomtype - ", getValues())
     }
     else {
-      if (roomTypeImagesBase64.length > 0) {
-        const uploadedImgs = await uploadImagesToCloudinary(roomTypeImagesBase64);
-        const allImgs = [...getValues("img"), ...uploadedImgs]
-        setValue("img", allImgs, { shouldValidate: true });
+      if (isIncludedRoom) {
+        const roomTypeData = {
+          ...newRoomType,
+          img: roomTypeImgs.map(img => img.base64),
+        };
+        onAddRoomType(roomTypeData);
+        // setRoomTypeImages([]);
+        // setRoomTypeImagesBase64([]);
+        setUploadKey(prev => prev + 1);
+      } else {
+        if (roomTypeImagesBase64.length > 0) {
+          const uploadedImgs = await uploadImagesToCloudinary(roomTypeImagesBase64);
+          const allImgs = [...getValues("img"), ...uploadedImgs]
+          setValue("img", allImgs, { shouldValidate: true });
+        }
+        onAddRoomType(getValues())
+        setRoomTypeImages([]);
+        setRoomTypeImagesBase64([]);
+        setUploadKey(prev => prev + 1);
+        // console.log("roomtype - ", getValues())
       }
-      onAddRoomType(getValues())
-      setRoomTypeImages([]);
-      setRoomTypeImagesBase64([]);
-      setUploadKey(prev => prev + 1);
-      // console.log("roomtype - ", getValues())
     }
   }
   useEffect(() => {
@@ -131,7 +143,7 @@ const RoomTypeModal = ({
       messageApi.open({
         key: 'uploading',
         type: 'success',
-        content: 'Thêm loại phòng thành công!',
+        content: 'Thêm thành công!',
         duration: 2,
       })
     }
@@ -186,7 +198,7 @@ const RoomTypeModal = ({
           errors={errors}
           placeholder={"Nhập tên loại phòng"}
           className="mb-3"
-          validationRules = {{required: "Tên là bắt buộc"}}
+          validationRules={{ required: "Tên là bắt buộc" }}
         />
         <FormInput
           label={"Diện tích (m²)"}
@@ -196,7 +208,7 @@ const RoomTypeModal = ({
           errors={errors}
           placeholder={"Nhập diện tích phòng"}
           className="mb-3"
-          validationRules = {{required: "Diện tích là bắt buộc"}}
+          validationRules={{ required: "Diện tích là bắt buộc" }}
         />
         <FormSelect
           label={"Hướng phòng"}
@@ -247,13 +259,20 @@ const RoomTypeModal = ({
           />
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-4">
+          {/* {!editingRoomType && (
+            <button
+              className="border-2 p-2 border-blue-500 text-blue-500 rounded"
+            >
+              Thêm phòng
+            </button>
+          )} */}
+
           <button
             type="submit"
             className="bg-blue-500 text-white p-2 rounded"
           >
-            {editingRoomType ? "Sửa loại phòng" : "Thêm loại phòng"}
-
+            {editingRoomType ? "Sửa loại phòng" : "Thêm phòng cho loại phòng"}
           </button>
         </div>
       </form>

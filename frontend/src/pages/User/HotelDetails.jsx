@@ -4,12 +4,12 @@ import { DatePicker, message, Drawer } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import {
     useGetHotelByIdQuery,
-    useGetFacilitiesFromIdsQuery,
     useGetAvailableRoomsQuery,
 } from "../../redux/api/hotelApiSlice";
 import { FaAngleLeft } from "react-icons/fa6";
 import { PiCity } from "react-icons/pi";
-import { LuMapPin } from "react-icons/lu";
+import { LuMapPin, LuHotel } from "react-icons/lu";
+import { GrLocation } from "react-icons/gr";
 import { IoMdClose } from "react-icons/io";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
@@ -18,9 +18,8 @@ import dayjs from "dayjs";
 import weekday from "dayjs/plugin/weekday";
 import localeData from "dayjs/plugin/localeData";
 import customParseFormat from "dayjs/plugin/customParseFormat";
-import { FaBuilding } from "react-icons/fa6";
+import { FaBuilding, FaAngleRight } from "react-icons/fa6";
 import HotelInformation from "../../components/HotelInformation";
-import { FaAngleRight } from "react-icons/fa6";
 import ImageGalleryFromCloudinary from "../../components/ImageGalleryFromCloudinary";
 import { CLOUDINARY_BASE_URL } from "../../constants/hotel";
 import RoomTypesInformation from "../../components/RoomTypesInfomation";
@@ -38,13 +37,17 @@ const HotelDetails = () => {
     const navigate = useNavigate();
     const param = useParams();
     const [searchParams] = useSearchParams();
+    const initType = searchParams.get("type");
     const initLocation = searchParams.get("location");
     const initCheckIn = searchParams.get("checkIn");
     const initCheckOut = searchParams.get("checkOut");
     const initRooms = parseInt(searchParams.get("rooms"));
     const initAdults = parseInt(searchParams.get("adults"));
 
-    const [location, setLocation] = useState(initLocation || "");
+    const [location, setLocation] = useState({
+        type: initType || '',
+        name: initLocation || ''
+    });
     const [checkIn, setCheckIn] = useState(
         initCheckIn ? dayjs(initCheckIn, dateFormat) : null
     );
@@ -58,30 +61,29 @@ const HotelDetails = () => {
     const { data: hotel, isLoading: isHotelLoading } = useGetHotelByIdQuery(
         param._id
     );
-    const skip = !hotel?.serviceFacilities?.length;
-    const { data: facilities, isLoading: isFacilitiesLoading } =
-        useGetFacilitiesFromIdsQuery(hotel?.serviceFacilities, { skip });
-    const { data: availableRooms, isLoading: isAvaiRoomsLoading } =
-        useGetAvailableRoomsQuery({
-            id: param._id,
-            checkInDate: checkIn?.toISOString(),
-            checkOutDate: checkOut?.toISOString(),
-            numRooms: rooms,
-            numAdults: adults,
-        });
 
-    // console.log(availableRooms)
+    // const { data: availableRooms, isLoading: isAvaiRoomsLoading } =
+    //     useGetAvailableRoomsQuery({
+    //         id: param._id,
+    //         checkInDate: checkIn?.toISOString(),
+    //         checkOutDate: checkOut?.toISOString(),
+    //         numRooms: rooms,
+    //         numAdults: adults,
+    //     });
+
+    console.log(hotel)
 
     const showDrawer = () => setOpenDetails(true);
     const onClose = () => setOpenDetails(false);
     const handleSearch = async () => {
-        if (location != initLocation) {
-            if (!location || !checkIn || !checkOut) {
+        if (location.name != initLocation) {
+            if (!location.name || !checkIn || !checkOut) {
                 messageApi.error("Điền đầy đủ các thông tin");
                 return;
             }
             const params = new URLSearchParams();
-            params.set("location", location);
+            params.set('type', location.type);
+            params.set("location", location.name);
             if (checkIn) params.set("checkIn", checkIn.format(dateFormat));
             if (checkOut) params.set("checkOut", checkOut.format(dateFormat));
             params.set("rooms", rooms);
@@ -89,12 +91,13 @@ const HotelDetails = () => {
 
             navigate(`/hotels/search?${params.toString()}`);
         } else {
-            if (!location || !checkIn || !checkOut) {
+            if (!location.name || !checkIn || !checkOut) {
                 messageApi.error("Điền đầy đủ các thông tin");
                 return;
             }
             const params = new URLSearchParams();
-            params.set("location", location);
+            params.set('type', location.type);
+            params.set("location", location.name);
             if (checkIn) params.set("checkIn", checkIn.format(dateFormat));
             if (checkOut) params.set("checkOut", checkOut.format(dateFormat));
             params.set("rooms", rooms);
@@ -106,7 +109,7 @@ const HotelDetails = () => {
 
     const handleBookingRoom = (roomTypeId, roomId) => {
         const params = new URLSearchParams();
-        params.set("location", location);
+        params.set("location", location.name);
         params.set("checkIn", checkIn.format(dateFormat));
         params.set("checkOut", checkOut.format(dateFormat));
         params.set("rooms", rooms);
@@ -122,15 +125,15 @@ const HotelDetails = () => {
         ref.current?.scrollIntoView({ behavior: "smooth" });
     };
     const [messageApi, contextMessageHolder] = message.useMessage();
-    const minPrice = Math.min(
-        ...(Array.isArray(availableRooms)
-            ? availableRooms.flatMap((roomType) =>
-                Array.isArray(roomType.rooms)
-                    ? roomType.rooms.map((avaiRoom) => avaiRoom?.price || 0)
-                    : []
-            )
-            : [0])
-    );
+    // const minPrice = Math.min(
+    //     ...(Array.isArray(availableRooms)
+    //         ? availableRooms.flatMap((roomType) =>
+    //             Array.isArray(roomType.rooms)
+    //                 ? roomType.rooms.map((avaiRoom) => avaiRoom?.price || 0)
+    //                 : []
+    //         )
+    //         : [0])
+    // );
 
     useEffect(() => {
         const url = new URL(window.location.href);
@@ -142,7 +145,8 @@ const HotelDetails = () => {
         }
     }, []);
 
-    if (isHotelLoading || isAvaiRoomsLoading || isFacilitiesLoading) {
+    //|| isAvaiRoomsLoading
+    if (isHotelLoading ) {
         return (
             <Box
                 display="flex"
@@ -163,16 +167,11 @@ const HotelDetails = () => {
                     <div className="container mx-auto">
                         <form onSubmit={(e) => e.preventDefault()}>
                             <SearchHotel
-                                location={location}
-                                setLocation={setLocation}
-                                checkIn={checkIn}
-                                setCheckIn={setCheckIn}
-                                checkOut={checkOut}
-                                setCheckOut={setCheckOut}
-                                rooms={rooms}
-                                setRooms={setRooms}
-                                adults={adults}
-                                setAdults={setAdults}
+                                location={location} setLocation={setLocation}
+                                checkIn={checkIn} setCheckIn={setCheckIn}
+                                checkOut={checkOut} setCheckOut={setCheckOut}
+                                rooms={rooms} setRooms={setRooms}
+                                adults={adults} setAdults={setAdults}
                                 handleSearch={handleSearch}
                             />
                         </form>
@@ -258,12 +257,12 @@ const HotelDetails = () => {
                             </div>
                         </div>
                         <div>
-                            <p className="text-end font-semibold text-[24px]">
+                            {/* <p className="text-end font-semibold text-[24px]">
                                 {Number(minPrice).toLocaleString("vi-VN")} ₫{" "}
                                 <span className="text-[14px] text-gray-500 font-normal">
                                     Mỗi đêm
                                 </span>
-                            </p>
+                            </p> */}
                             <div className="flex justify-end items-end mt-1">
                                 <button
                                     className="py-2 p-16 bg-orange-500 rounded-lg text-white"
@@ -276,13 +275,13 @@ const HotelDetails = () => {
                     </div>
                     <div className="grid grid-cols-3 gap-4 mb-12">
                         <div className="p-4 border border-gray-300 rounded-lg">
-                            <ReviewCard
+                            {/* <ReviewCard
                                 hotelId={hotel._id}
                                 type="Hotel"
-                            />
+                            /> */}
                         </div>
                         <div className="p-4 border border-gray-300 rounded-lg grid grid-cols-2">
-                            {facilities.slice(0, 4).map((fc, index) => (
+                            {hotel?.serviceFacilities.slice(0, 4).map((fc, index) => (
                                 <p
                                     key={index}
                                     className="flex items-center text-gray-600 text-[14px] mb-2"
@@ -320,11 +319,11 @@ const HotelDetails = () => {
                                 Chọn phòng của bạn
                             </h2>
                         </div>
-                        <RoomTypesInformation
+                        {/* <RoomTypesInformation
                             roomTypesData={availableRooms}
                             review={2}
                             handleBookingRoom={handleBookingRoom}
-                        />
+                        /> */}
                     </div>
                 </div>
             </div>
@@ -332,96 +331,149 @@ const HotelDetails = () => {
     );
 };
 
-const SearchHotel = ({
-    location,
-    setLocation,
-    checkIn,
-    setCheckIn,
-    checkOut,
-    setCheckOut,
-    rooms,
-    setRooms,
-    adults,
-    setAdults,
-    handleSearch,
-}) => {
+const SearchHotel = ({ location, setLocation, checkIn, setCheckIn, checkOut, setCheckOut, rooms, setRooms, adults, setAdults, handleSearch }) => {
+
     const [openDr, setOpenDr] = useState(false);
     const inputRef = useRef(null);
-    const {
-        data: searchSuggestions,
-        error,
-        isLoading: isSearching,
-    } = useGetSearchHotelSuggestionQuery(
-        location ? { key: location } : skipToken
+    const { data: searchSuggestions, error, isFetching } = useGetSearchHotelSuggestionQuery(
+        location.name ? { key: location.name } : skipToken,
+        {
+            refetchOnMountOrArgChange: true,
+            refetchOnFocus: false,
+            refetchOnReconnect: false,
+            keepUnusedDataFor: 0,
+        }
     );
-    const [messageApi, contextMessageHolder] = message.useMessage();
+
+    const onLocationChange = (e) => {
+        const name = e.target.value;
+        setLocation({ type: '', name });
+        setOpenDr(Boolean(name && name.trim().length > 0));
+    };
+
     useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (inputRef.current && !inputRef.current.contains(event.target)) {
-                if (
-                    open &&
-                    searchSuggestions?.results?.length > 0 &&
-                    location !== ""
-                ) {
-                    setLocation(searchSuggestions.results[0].name);
-                }
+        const selectFirstSuggestion = () => {
+            if (
+                openDr &&
+                (searchSuggestions?.cities?.length > 0 || searchSuggestions?.hotels?.length > 0) &&
+                location.name !== ''
+            ) {
+                const firstCity = searchSuggestions?.cities?.[0];
+                const firstHotel = searchSuggestions?.hotels?.[0];
+                const firstItem = firstCity
+                    ? { type: 'city', name: firstCity.name }
+                    : firstHotel
+                        ? { type: 'hotel', name: firstHotel.name }
+                        : null;
+                if (firstItem) setLocation(firstItem);
                 setOpenDr(false);
             }
         };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
+        const handleClickOutside = (event) => {
+            if (inputRef.current && !inputRef.current.contains(event.target)) {
+                selectFirstSuggestion();
+            }
         };
-    }, [location, openDr, searchSuggestions]);
+        const handleEnterPress = (event) => {
+            if (event.key === 'Enter') {
+                selectFirstSuggestion();
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleEnterPress);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEnterPress);
+        };
+    }, [location.name, setLocation, openDr, searchSuggestions]);
+
+    const [messageApi, contextMessageHolder] = message.useMessage();
 
     return (
         <div className={`flex items-center gap-2`}>
             {contextMessageHolder}
-            <div
-                ref={inputRef}
-                className="relative rounded-lg bg-white py-2 px-3 w-full"
-            >
+            <div ref={inputRef} className='relative rounded-lg bg-slate-100 py-2 px-3 w-full'>
                 {/* <label className='text-[12px] text-gray-500 font-medium'>Địa điểm</label> */}
                 <input
-                    value={location}
-                    onChange={(e) => {
-                        setLocation(e.target.value);
-                        setOpenDr(true);
-                    }}
-                    type="text"
-                    placeholder="Nhập địa điểm, tên khách sạn"
+                    value={location.name}
+                    onChange={onLocationChange}
+                    type='text'
+                    placeholder='Nhập địa điểm, tên khách sạn'
                     className={`w-full outline-none bg-transparent placeholder-gray-400 placeholder:text-[14px] placeholder:font-normal font-semibold`}
                 />
-                <div className="absolute left-0 top-full mt-1 w-full z-10 rounded-lg">
-                    {openDr &&
-                        searchSuggestions?.results?.length > 0 &&
-                        location != "" && (
-                            <div className="border border-gray-50 bg-white shadow-lg rounded-lg">
-                                {searchSuggestions.results.map(
-                                    (item, index) => (
-                                        <div
-                                            key={index}
-                                            className="hover:bg-gray-100 py-2 px-4 duration-300 text-[14px]"
-                                            onClick={() => {
-                                                setLocation(item.name);
-                                                setOpenDr(false);
-                                            }}
-                                        >
-                                            {item.name}
-                                        </div>
-                                    )
+                <div className='absolute left-0 top-full mt-1 w-full z-10 rounded-lg'>
+                    {openDr && location.name?.trim() !== '' && (
+                        <div className='absolute left-0 top-full mt-1 w-full z-10 rounded-lg'>
+                            <div className='border border-gray-50 bg-white shadow-lg rounded-lg overflow-hidden'>
+                                {isFetching && (
+                                    <div className='py-4 text-center text-gray-500 text-sm flex items-center justify-center gap-2'>
+                                        <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-primary"></span>
+                                        <span>Đang tìm kiếm...</span>
+                                    </div>
+                                )}
+                                {!isFetching && searchSuggestions && (
+                                    <div className='max-h-64 overflow-y-auto'>
+                                        {searchSuggestions.cities?.length > 0 && (
+                                            <div>
+                                                {searchSuggestions.cities.map((city, index) => (
+                                                    <div
+                                                        key={`city-${index}`}
+                                                        className='hover:bg-gray-100 p-4 duration-300 text-base cursor-pointer'
+                                                        onClick={() => {
+                                                            setLocation({ type: 'city', name: city.name });
+                                                            setOpenDr(false);
+                                                        }}
+                                                    >
+                                                        <div className='flex items-center mb-1'>
+                                                            <GrLocation className='text-gray-500 w-5 h-5 mr-3 flex-shrink-0' />
+                                                            <span className='truncate max-w-[90%]'>{city.name}</span>
+                                                        </div>
+                                                        <div className='text-sm text-gray-400 pl-8'>Thành phố</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {searchSuggestions.hotels?.length > 0 && (
+                                            <div>
+                                                {searchSuggestions.hotels.map((hotel, index) => (
+                                                    <div
+                                                        key={`hotel-${index}`}
+                                                        className='hover:bg-gray-100 p-4 duration-300 text-base cursor-pointer'
+                                                        onClick={() => {
+                                                            setLocation({ type: 'hotel', name: hotel.name });
+                                                            setOpenDr(false);
+                                                        }}
+                                                    >
+                                                        <div className='flex items-center mb-1'>
+                                                            <LuHotel className='text-gray-500 w-5 h-5 mr-3 flex-shrink-0' />
+                                                            <span className='truncate max-w-[90%]'>{hotel.name}</span>
+                                                        </div>
+                                                        <div className='text-sm text-gray-400 pl-8'>{hotel?.city?.name}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {searchSuggestions.cities?.length === 0 &&
+                                            searchSuggestions.hotels?.length === 0 && (
+                                                <div className='py-3 text-center text-gray-500 text-sm'>
+                                                    Không tìm thấy kết quả
+                                                </div>
+                                            )}
+                                    </div>
                                 )}
                             </div>
-                        )}
+                        </div>
+                    )}
                 </div>
             </div>
 
-            <div className="rounded-lg bg-white py-[5px] px-3 w-full">
+            <div className='rounded-lg bg-white py-[5px] px-3 w-full'>
                 {/* <label className='text-[12px] text-gray-500 font-medium'>Ngày nhận / trả phòng</label> */}
                 <RangePicker
-                    className="rounded-lg bg-transparent w-full custom-range-picker font-semibold"
-                    placeholder={["Chọn ngày", "Chọn ngày"]}
-                    style={{ width: "100%" }}
+                    className='rounded-lg bg-transparent w-full custom-range-picker font-semibold'
+                    placeholder={['Chọn ngày', 'Chọn ngày']}
+                    style={{ width: '100%' }}
                     suffixIcon={false}
                     value={checkIn && checkOut ? [checkIn, checkOut] : null}
                     format={dateFormat}
@@ -436,20 +488,20 @@ const SearchHotel = ({
                                 setCheckOut(null);
                                 return;
                             }
-                            setCheckIn(start);
-                            setCheckOut(end);
+                            setCheckIn(dates[0]);
+                            setCheckOut(dates[1]);
                         } else {
                             setCheckIn(null);
                             setCheckOut(null);
                         }
                     }}
                     disabledDate={(current) => {
-                        return current && current < dayjs().startOf("day");
+                        return current && current < dayjs().startOf('day');
                     }}
                 />
             </div>
 
-            <div className="rounded-lg bg-white py-2 px-3 w-full">
+            <div className='rounded-lg bg-white py-2 px-3 w-full'>
                 {/* <label className='text-[12px] text-gray-500 font-medium'>Số khách và phòng</label> */}
                 <GuestRoomSelector
                     rooms={rooms}
@@ -461,19 +513,19 @@ const SearchHotel = ({
 
             <div>
                 <button
-                    type="button"
-                    className="flex items-center bg-orange-500 hover:bg-orange-700 text-white rounded-lg px-3 font-semibold text-[16px] w-[130px] h-[40px] cursor-pointer  duration-300"
+                    type='button'
+                    className='flex items-center bg-orange-500 hover:bg-orange-700 text-white rounded-lg px-3 font-semibold text-[16px] w-[130px] h-[40px] cursor-pointer  duration-300'
                     onClick={() => {
                         handleSearch();
                     }}
                 >
-                    <CiSearch className="text-[24px] mr-1" />
-                    Cập nhật
+                    <CiSearch className='text-[24px] mr-1' />
+                    Tìm kiếm
                 </button>
             </div>
         </div>
     );
-};
+}
 
 const GuestRoomSelector = ({ rooms, setRooms, adults, setAdults }) => {
     const [open, setOpen] = useState(false);

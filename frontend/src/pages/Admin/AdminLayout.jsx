@@ -12,39 +12,39 @@ import { connectSocket } from "../../Utils/socket";
 import { addUser } from "../../redux/features/chatSlice";
 const AdminLayout = () => {
     const dispatch = useDispatch();
-    const { selectedUser, unreadCount } = useSelector((state) => state.chat);
+    // const { selectedUser, unreadCount } = useSelector((state) => state.chat);
     const { user: userInfo } = useSelector((state) => state.auth);
-    const { data: users } = useGetUserToChatQuery(undefined, {
-        refetchOnMountOrArgChange: true,
-    });
+    // const { data: users } = useGetUserToChatQuery(undefined, {
+    //     refetchOnMountOrArgChange: true,
+    // });
     // const hasUnreadMessages =
     //     Object.entries(unreadCount).some(
     //         ([userId, count]) => userId !== userInfo._id && count > 0
     //     ) ||
     //     (users && users.some((user) => user._id !== userInfo._id && user.unreadCount > 0));
-    const hasUnreadMessages = useMemo(() => {
-        return (
-            Object.entries(unreadCount).some(
-                ([userId, count]) => userId !== userInfo._id && count > 0
-            ) ||
-            (users && users.some((user) => user._id !== userInfo._id && user.unreadCount > 0))
-        );
-    }, [unreadCount]);
-    useEffect(() => {
-        const socket = connectSocket(userInfo._id, userInfo.role);
-        socket.on("newMessage", (newMessage) => {
-            dispatch(
-                addUser({
-                    ...newMessage,
-                    currentUserId: userInfo._id,
-                })
-            );
-        });
+    // const hasUnreadMessages = useMemo(() => {
+    //     return (
+    //         Object.entries(unreadCount).some(
+    //             ([userId, count]) => userId !== userInfo._id && count > 0
+    //         ) ||
+    //         (users && users.some((user) => user._id !== userInfo._id && user.unreadCount > 0))
+    //     );
+    // }, [unreadCount]);
+    // useEffect(() => {
+    //     const socket = connectSocket(userInfo._id, userInfo.role);
+    //     socket.on("newMessage", (newMessage) => {
+    //         dispatch(
+    //             addUser({
+    //                 ...newMessage,
+    //                 currentUserId: userInfo._id,
+    //             })
+    //         );
+    //     });
 
-        return () => {
-            socket.off("newMessage");
-        };
-    }, [selectedUser]);
+    //     return () => {
+    //         socket.off("newMessage");
+    //     };
+    // }, [selectedUser]);
 
     const [openDropdown, setOpenDropdown] = useState(null);
 
@@ -96,12 +96,12 @@ const AdminLayout = () => {
             icon: (
                 <div className="relative">
                     <BiSolidMessageDetail className="text-lg" />
-                    {hasUnreadMessages && (
+                    {/* {hasUnreadMessages && (
                         <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full animate-ping" />
-                    )}
+                    )} */}
                 </div>
             ),
-            showNewBadge: hasUnreadMessages,
+            // showNewBadge: hasUnreadMessages,
         },
     ];
 

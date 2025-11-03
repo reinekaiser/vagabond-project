@@ -4,7 +4,7 @@ import { apiSlice } from "./apiSlice";
 export const hotelApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getFacilities: builder.query({
-            query: () => `${FACILITY_URL}`
+            query: () => `${FACILITY_URL}/`
         }),
         getFacilitiesByCategory: builder.query({
             query: () => `${FACILITY_URL}/groupByCategory`
@@ -28,7 +28,7 @@ export const hotelApiSlice = apiSlice.injectEndpoints({
         }),
         getHotels: builder.query({
             query: (params = {}) => ({
-                url: `${HOTEL_URL}`,
+                url: `${HOTEL_URL}/`,
                 params,
             }),
             providesTags: ["Hotel"],

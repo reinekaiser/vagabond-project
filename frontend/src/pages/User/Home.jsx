@@ -19,29 +19,29 @@ const Home = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const { user: userInfo } = useSelector((state) => state.auth);
-    const { unreadCount, users } = useSelector((state) => state.chat);
-    const { data: admin, isLoading: isLoadingAdmin } = useGetUserToChatQuery();
-    useEffect(() => {
-        if (!userInfo?._id || !userInfo?.role) return;
-        const socket = connectSocket(userInfo._id, userInfo.role);
-        socket.on("newMessage", (newMessage) => {
-            const message = {
-                ...newMessage,
-                currentUserId: userInfo._id,
-            };
-            dispatch(addUser(message));
-        });
+    // const { unreadCount, users } = useSelector((state) => state.chat);
+    // const { data: admin, isLoading: isLoadingAdmin } = useGetUserToChatQuery();
+    // useEffect(() => {
+    //     if (!userInfo?._id || !userInfo?.role) return;
+    //     const socket = connectSocket(userInfo._id, userInfo.role);
+    //     socket.on("newMessage", (newMessage) => {
+    //         const message = {
+    //             ...newMessage,
+    //             currentUserId: userInfo._id,
+    //         };
+    //         dispatch(addUser(message));
+    //     });
 
-        return () => {
-            socket.off("newMessage");
-        };
-    }, [userInfo?._id, userInfo?.role]);
-    useEffect(() => {
-        if (admin) {
-            dispatch(setUsers(admin));
-        }
-    }, [admin]);
-    console.log("unread: ", unreadCount);
+    //     return () => {
+    //         socket.off("newMessage");
+    //     };
+    // }, [userInfo?._id, userInfo?.role]);
+    // useEffect(() => {
+    //     if (admin) {
+    //         dispatch(setUsers(admin));
+    //     }
+    // }, [admin]);
+    // console.log("unread: ", unreadCount);
 
     const responsivePromotion = {
         desktop: {
@@ -112,7 +112,7 @@ const Home = () => {
                         </div>
                     </div>
                 </div>
-                <TourSearch></TourSearch>
+                {/* <TourSearch></TourSearch> */}
             </div>
             {/*  */}
 
@@ -134,10 +134,10 @@ const Home = () => {
                     </GeneralCarousel>
                 </div>
             </section>
-            <HomeTourList></HomeTourList>
-            <HomeHotelList></HomeHotelList>
+            {/* <HomeTourList></HomeTourList> */}
+            {/* <HomeHotelList></HomeHotelList> */}
 
-            <Tooltip
+            {/* <Tooltip
                 title="Bạn có tin nhắn mới"
                 open={unreadCount[users[0]?._id] > 0}
                 placement="leftTop"
@@ -155,7 +155,7 @@ const Home = () => {
                         </span>
                     </div>
                 </Dropdown>
-            </Tooltip>
+            </Tooltip> */}
         </div>
     );
 };

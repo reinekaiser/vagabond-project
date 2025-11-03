@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaFacebook, FaEye, FaEyeSlash } from "react-icons/fa";
-import { GoogleLogin } from "@react-oauth/google";
-import { Environment } from "../../../environments/environments";
-import authService from "../../services/authService";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { setCredentials } from "../../redux/features/authSlice";
-
-const facebookAppId = Environment.FACEBOOK_APP_ID;
+import { useLoginMutation, useLazyGetUserQuery } from "../../redux/api/authApiSlice";
 
 const SignIn = () => {
     const dispatch = useDispatch();
@@ -18,14 +14,13 @@ const SignIn = () => {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
 
+    const [login] = useLoginMutation();
+    const [getUser] = useLazyGetUserQuery();
+
     const { user } = useSelector((state) => state.auth);
     useEffect(() => {
         if (user) {
-            if (user.role === "admin") {
-                navigate("/admin/profile");
-            } else {
-                navigate("/");
-            }
+            navigate(user.role === "ADMIN" ? "/admin/profile" : "/");
         }
     }, [user, navigate]);
 
@@ -37,54 +32,17 @@ const SignIn = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            const result = await authService.login(email, password);
-            dispatch(setCredentials(result.data.user));
-            console.log("Login result:", result);
-
-            if (result.success) {
-                toast.success(result.message);
-
-                // Get user role from token and redirect accordingly
-                const role = authService.getUserRole();
-                console.log("User role:", role);
-
-                if (role === "admin") {
-                    navigate("/admin/profile");
-                } else if (role === "user") {
-                    navigate("/");
-                } else {
-                    // Default fallback if role cannot be determined
-                    console.warn(
-                        "User role not found in token, defaulting to user home"
-                    );
-                    navigate("/");
-                }
-            } else {
-                toast.error(result.message || "Đăng nhập thất bại");
-            }
-        } catch (error) {
-            console.error("Login error:", error);
-            toast.error("Có lỗi xảy ra khi đăng nhập");
+            await login({ email, password }).unwrap();
+            const userData = await getUser().unwrap();
+            dispatch(setCredentials(userData));
+            toast.success("Đăng nhập thành công");
+            navigate(userData.role === "ADMIN" ? "/admin/profile" : "/");
+        } catch (err) {
+            console.error("Login error:", err);
+            toast.error("Đăng nhập thất bại");
         } finally {
             setLoading(false);
         }
-    };
-
-    const handleGoogleSuccess = async (credentialResponse) => {
-        try {
-            // TODO: Implement Google login with backend
-            console.log("Google Login Success:", credentialResponse);
-            toast.success("Đăng nhập với Google thành công!");
-
-            // Default to user role for social logins until backend supports role determination
-            navigate("/user/home");
-        } catch (error) {
-            toast.error("Đăng nhập với Google thất bại");
-        }
-    };
-
-    const handleGoogleError = () => {
-        toast.error("Đăng nhập với Google thất bại");
     };
 
     return (
@@ -93,42 +51,21 @@ const SignIn = () => {
             style={{ backgroundImage: "url('/images/login/background.png')" }}
         >
             <div></div>
-            <div className="items-center justify-center">
-                <div className="bg-white rounded-lg shadow-xl w-[1/2] h-full relative p-8 mx-auto">
+            <div className="flex items-center justify-center bg-white">
+                <div className="w-full p-8">
                     <h1 className="text-2xl font-bold text-center mb-2">
-                        Log in
+                        Đăng nhập
                     </h1>
 
                     <p className="text-center mb-6">
-                        Don't have an account?{" "}
+                        Chưa có tài khoản?{" "}
                         <Link
                             to="/sign-up"
                             className="text-[#27B5FC] hover:underline"
                         >
-                            Sign up
+                            Đăng ký
                         </Link>
                     </p>
-
-                    {/* <div className="w-2/3 mx-auto mb-6 flex justify-center">
-                        <div style={{ width: "320px" }}>
-                            {" "}
-                            {/* Fixed width container */}
-                            {/* <GoogleLogin
-                                onSuccess={handleGoogleSuccess}
-                                onError={handleGoogleError}
-                                size="large"
-                                text="signin_with"
-                                shape="pill"
-                                logo_alignment="center"
-                            /> */}
-                        {/* </div>
-                    </div>
-
-                    <div className="flex w-2/3 mx-auto items-center mb-6">
-                        <div className="flex-grow h-px bg-gray-300"></div>
-                        <div className="mx-4 text-gray-500">OR</div>
-                        <div className="flex-grow h-px bg-gray-300"></div>
-                    </div> */} 
 
                     <form onSubmit={handleSubmit} className="w-2/3 mx-auto">
                         <div className="mb-4">
@@ -136,7 +73,7 @@ const SignIn = () => {
                                 htmlFor="email"
                                 className="block text-sm font-medium text-gray-700 mb-1"
                             >
-                                Your email
+                                Email
                             </label>
                             <input
                                 type="email"
@@ -153,7 +90,7 @@ const SignIn = () => {
                                 htmlFor="password"
                                 className="block text-sm font-medium text-gray-700 mb-1"
                             >
-                                Your password
+                                Mật khẩu
                             </label>
                             <div className="relative">
                                 <input
@@ -176,7 +113,7 @@ const SignIn = () => {
                                     ) : (
                                         <FaEye className="mr-1" />
                                     )}
-                                    <span>Hide</span>
+                                    <span>{showPassword ? "Ẩn" : "Hiện"}</span>
                                 </button>
                             </div>
                         </div>
@@ -186,7 +123,7 @@ const SignIn = () => {
                                 to="/forgot-password"
                                 className="text-sm text-gray-600 hover:underline"
                             >
-                                Forgot your password
+                                Quên mật khẩu?
                             </Link>
                         </div>
 
