@@ -34,7 +34,13 @@ export const authApiSlice = apiSlice.injectEndpoints({
             query: () => ({
                 url: `${AUTH_URL}/`
             })
-        })
+        }),
+        getAllUsers: builder.query({
+            query: (params = {}) => ({
+                url: `/api/users/`,
+                params
+            })
+        }),
     }),
 });
 
@@ -44,5 +50,6 @@ export const {
     useLoginMutation,
     useLogoutMutation,
     useGetUserQuery,
-    useLazyGetUserQuery
+    useLazyGetUserQuery,
+    useGetAllUsersQuery
 } = authApiSlice;

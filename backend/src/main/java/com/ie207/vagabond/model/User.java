@@ -17,17 +17,18 @@ import java.util.Date;
 @Document(collection = "users")
 public class User {
     @Id
-    private String id;
+    private String _id;
     private String firstName;
     private String lastName;
     private String email;
     private String password;
-    private String phoneNumber;
-    private String gender;
-    private Date dateOfBirth;
-    private String city;
-    private String avatarUrl;
-    private String avatarPublicId;
+    private String phoneNumber = "";
+    private String gender = "";
+    private Date dateOfBirth = null;
+    private String city = "";
+    private String nationality = "";
+    private String avatarUrl = "";
+    private String avatarPublicId = "";
     private Role role;
     @CreatedDate
     private Date createdAt;

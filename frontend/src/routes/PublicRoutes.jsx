@@ -32,9 +32,9 @@ const PublicRoutes = () => {
                 {/* <Route
                     path="search"
                     element={<SearchResults></SearchResults>}
-                ></Route>
+                ></Route> */}
                 <Route path="hotels" element={<HotelSearch />} />
-                <Route
+                {/* <Route
                     path="tour/:_id"
                     element={<TourDetails></TourDetails>}
                 ></Route>
@@ -42,9 +42,9 @@ const PublicRoutes = () => {
                 <Route
                     path="city/:cityId"
                     element={<CityDetail></CityDetail>}
-                ></Route>
+                ></Route> */}
                 <Route path="hotels/search" element={<HotelSearchResults />} />
-                <Route path="hotels/:_id" element={<HotelDetails />} /> */}
+                <Route path="hotels/:_id" element={<HotelDetails />} />
                 <Route path="about" element={<About />} />
                 <Route path="contact" element={<Contact />} />
             </Route>

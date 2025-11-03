@@ -1,8 +1,11 @@
 package com.ie207.vagabond.service;
 
 import com.ie207.vagabond.model.User;
+import com.ie207.vagabond.model.enums.Role;
 import com.ie207.vagabond.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -25,5 +28,9 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
         return user.get();
+    }
+
+    public Page<User> getAllUsers(Role role, Pageable pageable) {
+        return userRepository.findAllByRole(role, pageable);
     }
 }

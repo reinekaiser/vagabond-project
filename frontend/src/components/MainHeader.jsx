@@ -43,25 +43,23 @@ export const MainHeader = () => {
         }
     };
 
-    // const { data: cities, isCitiesLoading, error } = useGetCitiesQuery();
-    // if (error) console.error("Error fetching cities:", error);
-    // if (isCitiesLoading) return <div></div>;
+    const { data: cities, isCitiesLoading, error } = useGetCitiesQuery();
+    if (error) console.error("Error fetching cities:", error);
+    const [cityOptions, setCityOptions] = useState([]);
+    
+    useEffect(() => {
+        if (!isCitiesLoading && cities) {
+            const first_ct = cities.map((city) => ({
+                _id: city._id,
+                name: city.name,
+                img: city.img[0],
+            }));
+            const final = Array(20).fill(first_ct).flat();
+            setCityOptions(final.slice(0, 12));
+        }
+    }, [cities, isCitiesLoading]);
 
-    // const [cityOptions, setCityOptions] = useState([]);
-
-    // useEffect(() => {
-    //     if (!isCitiesLoading && cities) {
-    //         const first_ct = cities.map((city) => ({
-    //             _id: city._id,
-    //             name: city.name,
-    //             img: city.img[0],
-    //         }));
-    //         const final = Array(3).fill(first_ct).flat();
-    //         setCityOptions(final.slice(0, 12));
-    //     }
-    // }, [cities, isCitiesLoading]);
-
-    // const [openCities, setOpenCities] = useState(false);
+    const [openCities, setOpenCities] = useState(false);
 
     function NavItem({ icon, children, href, Dropdown, notLink }) {
         const [open, setOpen] = useState(false);
@@ -85,6 +83,7 @@ export const MainHeader = () => {
             </div>
         );
     }
+    if (isCitiesLoading) return <div></div>;
 
     return (
         <header className="top-0 sticky bg-white border-b z-50">
@@ -153,13 +152,13 @@ export const MainHeader = () => {
                 <div className="container mx-auto py-1">
                     <div className="flex items-center ">
                         <div
-                            // onMouseEnter={() => setOpenCities(true)}
-                            // onMouseLeave={() => setOpenCities(false)}
+                            onMouseEnter={() => setOpenCities(true)}
+                            onMouseLeave={() => setOpenCities(false)}
                             className="flex gap-2 items-center font-semibold text-[14px] px-3 py-2 rounded-full hover:bg-gray-100 cursor-pointer"
                         >
                             <GrLocation className="w-[16px] h-[16px]" />
                             Địa điểm muốn đến
-                            {/* {openCities && (
+                            {openCities && (
                                 <div className="absolute left-1/2 -translate-x-1/2 top-full z-50 w-screen">
                                     <div className="max-w-screen-2xl mx-auto border bg-white">
                                         <div className="grid grid-cols-4 p-4 gap-x-4 mt-1 gap-y-6">
@@ -170,7 +169,7 @@ export const MainHeader = () => {
                                                     className="flex gap-2 items-center"
                                                 >
                                                     <img
-                                                        src={city.img}
+                                                        src={city.img || "/images/about/budapest.jpg"}
                                                         alt=""
                                                         className="w-12 h-12 rounded-full"
                                                     />
@@ -185,7 +184,7 @@ export const MainHeader = () => {
                                         </div>
                                     </div>
                                 </div>
-                            )} */}
+                            )}
                         </div>
 
                         {NAV_LINKS.map((item, index) => (

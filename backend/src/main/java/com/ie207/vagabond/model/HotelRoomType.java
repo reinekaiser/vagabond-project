@@ -15,17 +15,16 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Document(collection = "cities")
-public class City {
+@Document(collection = "hotelroomtypes")
+public class HotelRoomType {
     @Id
     private String _id;
     private String name;
-    private String description;
-    private String bestTimeToVisit;
-
-    private List<PopularPlace> popularPlace = new ArrayList<>();
     private List<String> img = new ArrayList<>();
-    private List<PopularQuestion> popularQuestion = new ArrayList<>();
+    private String area;
+    private String view;
+    private List<String> roomFacilities = new ArrayList<>();
+    private List<Room> rooms = new ArrayList<>();
 
     @CreatedDate
     private Date createdAt;

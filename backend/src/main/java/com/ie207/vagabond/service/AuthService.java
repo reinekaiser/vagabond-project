@@ -86,7 +86,7 @@ public class AuthService {
             clearCookie(response, "otp_token");
 
             List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(user.getRole().toString()));
-            Authentication authentication = new UsernamePasswordAuthenticationToken(user.getId(), null, authorities);
+            Authentication authentication = new UsernamePasswordAuthenticationToken(user.get_id(), null, authorities);
             SecurityContextHolder.getContext().setAuthentication(authentication);
             jwtProvider.generateToken(authentication, response);
 
@@ -135,7 +135,7 @@ public class AuthService {
         User currentUser = user.get();
         List<GrantedAuthority> authority = new ArrayList<>();
         authority.add(new SimpleGrantedAuthority(currentUser.getRole().toString()));
-        String userId = String.valueOf(currentUser.getId());
+        String userId = String.valueOf(currentUser.get_id());
         Authentication authentication =
                 new UsernamePasswordAuthenticationToken(userId, null, authority);
         SecurityContextHolder.getContext().setAuthentication(authentication);

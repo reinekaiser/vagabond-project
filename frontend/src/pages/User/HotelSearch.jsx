@@ -3,7 +3,9 @@ import { DatePicker, message } from 'antd';
 import { Link, useNavigate } from "react-router-dom";
 const { RangePicker } = DatePicker;
 import { AiOutlinePlus, AiOutlineMinus } from 'react-icons/ai';
+import { LuHotel } from "react-icons/lu";
 import { CiSearch } from "react-icons/ci";
+import { GrLocation } from "react-icons/gr";
 import { WHY_CHOOSE_FLIGHT } from '../../constants/hotel';
 import dayjs from 'dayjs';
 import weekday from 'dayjs/plugin/weekday';
@@ -22,80 +24,161 @@ const HotelSearch = () => {
     const [messageApi, contextMessageHolder] = message.useMessage();
 
     function SearchHotel() {
-        const [location, setLocation] = useState('');
+        const [location, setLocation] = useState({ type: '', name: '' });
         const [checkIn, setCheckIn] = useState(null);
         const [checkOut, setCheckOut] = useState(null);
         const [rooms, setRooms] = useState(1);
         const [adults, setAdults] = useState(2);
 
         const [open, setOpen] = useState(false);
-        const { data: searchSuggestions, error, isLoading: isSearching } = useGetSearchHotelSuggestionQuery(
-            location ? { key: location } : skipToken
+        const { data: searchSuggestions, error, isFetching } = useGetSearchHotelSuggestionQuery(
+            location.name ? { key: location.name } : skipToken,
+            {
+                refetchOnMountOrArgChange: true,
+                refetchOnFocus: false,
+                refetchOnReconnect: false,
+                keepUnusedDataFor: 0,
+            }
         );
-        console.log(searchSuggestions)
+
+        const onLocationChange = (e) => {
+            const name = e.target.value;
+            setLocation({ type: '', name });
+            setOpen(Boolean(name && name.trim().length > 0));
+        };
 
         const handleSearch = () => {
             const params = new URLSearchParams();
-            if (!location || !checkIn || !checkOut) {
+            if (!location.name || !checkIn || !checkOut) {
                 messageApi.error('Điền đầy đủ các thông tin');
                 return;
             }
-            params.set('location', location);
+            params.set('type', location.type);
+            params.set('location', location.name,);
             params.set('checkIn', checkIn.format(dateFormat));
             params.set('checkOut', checkOut.format(dateFormat));
             params.set('rooms', rooms);
             params.set('adults', adults);
-
+            console.log('Search params:', params.toString());
             navigate(`/hotels/search?${params.toString()}`);
         };
 
         const inputRef = useRef(null);
+
         useEffect(() => {
-            const handleClickOutside = (event) => {
-                if (inputRef.current && !inputRef.current.contains(event.target)) {
-                    if (open && searchSuggestions?.results?.length > 0 && location !== '') {
-                        setLocation(searchSuggestions.results[0].name);
-                    }
+            const selectFirstSuggestion = () => {
+                if (
+                    open &&
+                    (searchSuggestions?.cities?.length > 0 || searchSuggestions?.hotels?.length > 0) &&
+                    location.name !== ''
+                ) {
+                    const firstCity = searchSuggestions?.cities?.[0];
+                    const firstHotel = searchSuggestions?.hotels?.[0];
+
+                    const firstItem = firstCity
+                        ? { type: 'city', name: firstCity.name }
+                        : firstHotel
+                            ? { type: 'hotel', name: firstHotel.name }
+                            : null;
+
+                    if (firstItem) setLocation(firstItem);
                     setOpen(false);
                 }
             };
+
+            const handleClickOutside = (event) => {
+                if (inputRef.current && !inputRef.current.contains(event.target)) {
+                    selectFirstSuggestion();
+                }
+            };
+
+            const handleEnterPress = (event) => {
+                if (event.key === 'Enter') {
+                    selectFirstSuggestion();
+                }
+            };
+
             document.addEventListener('mousedown', handleClickOutside);
+            document.addEventListener('keydown', handleEnterPress);
+
             return () => {
                 document.removeEventListener('mousedown', handleClickOutside);
+                document.removeEventListener('keydown', handleEnterPress);
             };
-        }, [location, open, searchSuggestions]);
-
-        console.log(location)
+        }, [location.name, open, searchSuggestions]);
 
         return (
             <div className={`flex items-center gap-2`}>
                 <div ref={inputRef} className='relative rounded-lg bg-slate-100 py-2 px-3 w-full'>
                     <label className='text-[12px] text-gray-500 font-medium'>Địa điểm</label>
                     <input
-                        value={location}
-                        onChange={(e) => {
-                            setLocation(e.target.value);
-                            setOpen(true);
-                        }}
+                        value={location.name}
+                        onChange={onLocationChange}
                         type='text'
                         placeholder='Nhập địa điểm, tên khách sạn'
                         className={`w-full outline-none bg-transparent placeholder-gray-400 placeholder:text-[14px] placeholder:font-normal font-semibold`}
                     />
                     <div className='absolute left-0 top-full mt-1 w-full z-10 rounded-lg'>
-                        {open && searchSuggestions?.results?.length > 0 && location != '' && (
-                            <div className='border border-gray-50 bg-white shadow-lg rounded-lg'>
-                                {searchSuggestions.results.map((item, index) => (
-                                    <div
-                                        key={index}
-                                        className='hover:bg-gray-100 py-2 px-4 duration-300 text-[14px]'
-                                        onClick={() => {
-                                            setLocation(item.name);
-                                            setOpen(false);
-                                        }}
-                                    >
-                                        {item.name}
-                                    </div>
-                                ))}
+                        {open && location.name?.trim() !== '' && (
+                            <div className='absolute left-0 top-full mt-1 w-full z-10 rounded-lg'>
+                                <div className='border border-gray-50 bg-white shadow-lg rounded-lg overflow-hidden'>
+                                    {isFetching && (
+                                        <div className='py-4 text-center text-gray-500 text-sm flex items-center justify-center gap-2'>
+                                            <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-primary"></span>
+                                            <span>Đang tìm kiếm...</span>
+                                        </div>
+                                    )}
+                                    {!isFetching && searchSuggestions && (
+                                        <div className='max-h-64 overflow-y-auto'>
+                                            {searchSuggestions.cities?.length > 0 && (
+                                                <div>
+                                                    {searchSuggestions.cities.map((city, index) => (
+                                                        <div
+                                                            key={`city-${index}`}
+                                                            className='hover:bg-gray-100 p-4 duration-300 text-base cursor-pointer'
+                                                            onClick={() => {
+                                                                setLocation({ type: 'city', name: city.name });
+                                                                setOpen(false);
+                                                            }}
+                                                        >
+                                                            <div className='flex items-center mb-1'>
+                                                                <GrLocation className='text-gray-500 w-5 h-5 mr-3 flex-shrink-0' />
+                                                                <span className='truncate max-w-[90%]'>{city.name}</span>
+                                                            </div>
+                                                            <div className='text-sm text-gray-400 pl-8'>Thành phố</div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {searchSuggestions.hotels?.length > 0 && (
+                                                <div>
+                                                    {searchSuggestions.hotels.map((hotel, index) => (
+                                                        <div
+                                                            key={`hotel-${index}`}
+                                                            className='hover:bg-gray-100 p-4 duration-300 text-base cursor-pointer'
+                                                            onClick={() => {
+                                                                setLocation({ type: 'hotel', name: hotel.name });
+                                                                setOpen(false);
+                                                            }}
+                                                        >
+                                                            <div className='flex items-center mb-1'>
+                                                                <LuHotel className='text-gray-500 w-5 h-5 mr-3 flex-shrink-0' />
+                                                                <span className='truncate max-w-[90%]'>{hotel.name}</span>
+                                                            </div>
+                                                            <div className='text-sm text-gray-400 pl-8'>{hotel?.city?.name}</div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {searchSuggestions.cities?.length === 0 &&
+                                                searchSuggestions.hotels?.length === 0 && (
+                                                    <div className='py-3 text-center text-gray-500 text-sm'>
+                                                        Không tìm thấy kết quả
+                                                    </div>
+                                                )}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </div>
