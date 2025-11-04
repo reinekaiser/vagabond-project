@@ -31,14 +31,14 @@ export const hotelApiSlice = apiSlice.injectEndpoints({
                 url: `${HOTEL_URL}/`,
                 params,
             }),
-            providesTags: ["Hotel"],
+            // providesTags: ["Hotel"],
         }),
         getRoomTypes: builder.query({
             query: (hotelId) => `${HOTEL_URL}/${hotelId}/room-types`
         }),
         createHotel: builder.mutation({
             query: (hotel) => ({
-                url: `${HOTEL_URL}`,
+                url: `${HOTEL_URL}/`,
                 method: "POST",
                 body: hotel,
             }),
@@ -57,7 +57,7 @@ export const hotelApiSlice = apiSlice.injectEndpoints({
                 url: `${HOTEL_URL}/delete/${hotelId}`,
                 method: "DELETE",
             }),
-            invalidatesTags: ["Hotel"],
+            // invalidatesTags: ["Hotel"],
         }),
         createRoomType: builder.mutation({
             query: ({ hotelId, roomType }) => ({

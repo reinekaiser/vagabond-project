@@ -35,13 +35,13 @@ const ManageHotels = () => {
         maxPrice: priceRange[1],
         hotelFacilities: fcFilter,
         roomFacilities: fcRoomFilter,
-        sort: sort,
-        page: page,
-    }, { refetchOnMountOrArgChange: true, });
+        sort,
+        page
+    }, { refetchOnMountOrArgChange: true });
 
     useEffect(() => {
         if (!isLoading && hotels) {
-            setPage(hotels.currentPage);
+            setPage(prev => Math.min(prev, hotels.currentPage || 1));
         }
     }, [isLoading, hotels]);
     const handleChangePage = (newPage) => {
@@ -92,7 +92,7 @@ const ManageHotels = () => {
     }
 
     // console.log(priceRange[0], priceRange[1], fcFilter, fcRoomFilter, sort);
-    // console.log(hotels)
+    console.log(hotels)
     return (
         <div>
             <div className='bg-softBlue min-h-screen p-4 md:p-8'>
@@ -219,7 +219,7 @@ const ManageHotels = () => {
                                         <p className='font-semibold text-[16px]'>Kết quả tìm kiếm</p>
                                         <div className='grid grid-cols-3 gap-3'>
                                             {filteredResults.map((hotel, index) => (
-                                                <HotelCard key={index} hotel={hotel} />
+                                                <HotelCard key={index} pageSize={hotels?.data.length} hotel={hotel} page={page} setPage={setPage} refetch={refetch} />
                                             ))}
                                         </div>
                                     </>
@@ -230,7 +230,7 @@ const ManageHotels = () => {
                                 <div>
                                     <div className='grid grid-cols-3 gap-3'>
                                         {hotels?.data?.map((hotel, index) => (
-                                            <HotelCard key={index} hotel={hotel} refetch={refetch}/>
+                                            <HotelCard key={index} pageSize={hotels?.data.length} hotel={hotel} page={page} setPage={setPage} refetch={refetch} />
                                         ))}
                                     </div>
                                     <Pagination
@@ -253,7 +253,7 @@ const ManageHotels = () => {
     );
 };
 
-const HotelCard = ({ hotel, refetch }) => {
+const HotelCard = ({ pageSize, hotel, refetch, page, setPage }) => {
     const imgs = hotel.img;
     const { data: roomTypes = [], isLoading } = useGetRoomTypesQuery(hotel._id);
     const minPrice = Math.min(
@@ -263,12 +263,16 @@ const HotelCard = ({ hotel, refetch }) => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deleteHotel, { isLoading: isDeletingHotel }] = useDeleteHotelMutation();
 
+    console.log(pageSize);
     const handleDeleteHotel = async (hotelId) => {
-        console.log("Xoá khách sạn - ", hotelId);
         try {
             const res = await deleteHotel(hotelId).unwrap();
+            if (page > 1 && pageSize === 1) {
+                setPage(page - 1);
+            }
+            // console.log(res)
             toast.success(res.message);
-            refetch();
+            refetch?.();
             setIsDeleteModalOpen(false);
         } catch (error) {
             toast.error("Xoá khách sạn thất bại");

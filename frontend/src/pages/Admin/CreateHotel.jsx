@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import 'leaflet/dist/leaflet.css';
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import MapPicker from '../../components/MapPicker';
-import { TreeSelect, message } from 'antd';
+import { TreeSelect, message, Popover } from 'antd';
 import { toast } from "react-toastify";
 import UploadImg from '../../components/UploadImg';
 import { useUploadImagesMutation, useDeleteImageMutation } from '../../redux/api/uploadApiSlice';
@@ -13,13 +13,17 @@ import FormSelect from '../../components/FormSelect';
 import TextEditor from './TextEditor';
 import RoomTypeModal from '../../components/RoomTypeModal';
 import RoomModal from '../../components/RoomModal';
-import { useGetFacilitiesByCategoryQuery, useCreateHotelMutation } from '../../redux/api/hotelApiSlice';
+import { useGetFacilitiesByCategoryQuery, useCreateHotelMutation, useGetFacilitiesQuery } from '../../redux/api/hotelApiSlice';
 import HotelInformation from '../../components/HotelInformation';
 import RoomTypesInfomation from '../../components/RoomTypesInfomation';
 import { FaChevronLeft } from "react-icons/fa6";
+import { FaBed, FaMoneyBillWave, FaCoffee, FaUndo } from "react-icons/fa";
+import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { CLOUDINARY_BASE_URL, PET_POLICIES } from '../../constants/hotel';
 import { useGetCitiesQuery } from '../../redux/api/cityApiSlice';
 import ImageGalleryFromCloudinary from '../../components/ImageGalleryFromCloudinary';
+import { Box, CircularProgress } from '@mui/material';
+
 
 const CreateHotel = () => {
     const navigate = useNavigate();
@@ -32,7 +36,7 @@ const CreateHotel = () => {
                 name: "",
                 description: "",
                 address: "",
-                cityName: undefined,
+                cityId: undefined,
                 lat: undefined,
                 lng: undefined,
                 rooms: undefined,
@@ -56,6 +60,7 @@ const CreateHotel = () => {
         control,
         name: 'roomTypes'
     });
+    
 
     const [step, setStep] = useState(1);
     const [cityOptions, setCitiesOptions] = useState([]);
@@ -73,11 +78,12 @@ const CreateHotel = () => {
     const [images, setImages] = useState([]);
     const [imagesBase64, setImagesBase64] = useState([]);
 
+    const { data: allFacilities, isLoading: isFacilitiesLoading1 } = useGetFacilitiesQuery();
     const [uploadHotelImages, { isLoading: isUploadLoading, isError: isUploadError, isSuccess }] = useUploadImagesMutation();
     const [deleteHotelImage] = useDeleteImageMutation();
     const { data: facilities, isLoading: isFacilitiesLoading } = useGetFacilitiesByCategoryQuery();
     const { data: cities, isLoading: isCitiesLoading } = useGetCitiesQuery();
-    const [createHotel, { isLoading: isCreateLoading, isError: isCreateError, isSuccess: isCreateSuccess }] = useCreateHotelMutation();
+    const [createHotel, { isLoading: isCreateLoading }] = useCreateHotelMutation();
 
     useEffect(() => {
         if (cities) {
@@ -138,12 +144,9 @@ const CreateHotel = () => {
         setImages([]);
 
         const finalData = getValues();
-        console.log("hotel - ", finalData);
-
-        const payload = getValues();
         try {
-            const res = await createHotel(payload).unwrap();
-            console.log("==> API addHotel được gọi lúc:", new Date().toISOString());
+            const res = await createHotel(finalData).unwrap();
+            // console.log("Created hotel - ", res);
             toast.success("Thêm khách sạn thành công");
             navigate("/admin/manage-hotels");
         }
@@ -199,7 +202,7 @@ const CreateHotel = () => {
                             register={register}
                             errors={errors}
                             placeholder={"Nhập tên khách sạn"}
-                        validationRules = {{required: "Tên là bắt buộc"}}
+                            validationRules={{ required: "Tên là bắt buộc" }}
                         />
                         <FormTextArea
                             label={"Mô tả"}
@@ -219,13 +222,13 @@ const CreateHotel = () => {
                                     watch,
                                     setValue
                                 }}
-                            validationRules = {{required: "Địa chỉ là bắt buộc" }}
+                                validationRules={{ required: "Địa chỉ là bắt buộc" }}
                             />
                         </div>
                         <div className='flex gap-5 mb-3'>
                             <FormSelect
                                 label={"Thành phố"}
-                                name={"cityName"}
+                                name={"cityId"}
                                 control={control}
                                 options={cityOptions}
                                 placeholder={"Chọn thành phố"}
@@ -242,7 +245,7 @@ const CreateHotel = () => {
                                 register={register}
                                 errors={errors}
                                 placeholder={"Nhập số lượng phòng"}
-                            validationRules = {{ required: "Số phòng là bắt buộc" }}
+                                validationRules={{ required: "Số phòng là bắt buộc" }}
                             />
                         </div>
                         <div className="flex-1 mb-6">
@@ -494,7 +497,7 @@ const CreateHotel = () => {
                         <button
                             onClick={() => handleOpenModalRoomType()}
                             type="button"
-                            className="font-semibold border-[2px] border-blue-500 border-dashed text-blue-500 text-[14px] p-2 rounded"
+                            className="font-semibold border-[2px] border-blue-500 text-blue-500 text-[14px] p-2 rounded"
                         >
                             + Thêm loại phòng
                         </button>
@@ -514,8 +517,8 @@ const CreateHotel = () => {
                                 {roomTypes.map((roomType, index) => (
                                     <div key={index} className='mb-4 '>
                                         <div className='bg-slate-100 p-4 rounded-md'>
-                                            <div className='flex justify-between items-start'>
-                                                <div className='w-[550px] mr-2 mt-2'>
+                                            <div className='flex gap-4 items-start'>
+                                                <div className='w-1/2 mr-2 mt-2'>
                                                     <ImageGalleryFromCloudinary existingImages={roomType.img} option={2} />
                                                 </div>
                                                 <div className='space-y-1 text-[15px]'>
@@ -534,21 +537,18 @@ const CreateHotel = () => {
                                                     {roomType.roomFacilities?.length > 0 && (
                                                         <div className=''>
                                                             <span className='font-semibold'>Cơ sở vật chất: </span>
-                                                            <div className='flex flex-wrap gap-2 my-2'>
-                                                                {roomType.roomFacilities?.map((facility, key) => (
-                                                                    <p key={key} className='py-1 px-2 bg-green-100 rounded'>{facility}</p>
-                                                                ))}
+                                                            <div className='my-2'>
+                                                                <RoomFacilities facilities={roomType.roomFacilities} />
                                                             </div>
                                                         </div>
                                                     )}
-
                                                 </div>
-                                                <div className="flex space-x-2 text-[14px]">
+                                                <div className="flex space-x-2 text-[14px] ml-auto">
                                                     <button
                                                         onClick={() => {
                                                             handleEditRoomType(roomType, index);
                                                         }}
-                                                        className="text-blue-500 hover:text-indigo-900"
+                                                        className="text-blue-500 hover:text-indigo-900 font-medium"
                                                     >
                                                         Sửa
                                                     </button>
@@ -556,7 +556,7 @@ const CreateHotel = () => {
                                                         onClick={() => {
                                                             handleRemoveRoomType(index)
                                                         }}
-                                                        className="text-red-500 hover:text-red-900"
+                                                        className="text-red-500 hover:text-red-900 font-medium"
                                                     >
                                                         Xóa
                                                     </button>
@@ -568,49 +568,58 @@ const CreateHotel = () => {
                                                     <h3 className="font-bold text-[18px] mt-3 mb-1">Danh sách phòng</h3>
                                                 </div>
                                             )}
+
                                             {roomType.rooms?.map((room, roomIndex) => (
-                                                <div key={roomIndex} className="relative p-2 rounded my-2 bg-white border">
-                                                    <div className='flex justify-between items-start'>
-                                                        <div className='space-y-1 text-[15px]'>
+                                                <div
+                                                    key={roomIndex}
+                                                    className="relative p-4 rounded-lg my-3 bg-white shadow-sm border border-gray-200 hover:shadow-md duration-200"
+                                                >
+                                                    <div className="flex justify-between items-start">
+                                                        <div className="space-y-2 text-[15px] text-gray-700">
                                                             {room.bedType && (
-                                                                <p>
-                                                                    <span className='font-semibold'>Loại giường: </span>
-                                                                    {room.bedType}
+                                                                <p className="flex items-center">
+                                                                    <FaBed className="text-blue-500 mr-2 text-[16px]" />
+                                                                    <span className="font-semibold mr-1">Loại giường:</span> {room.bedType}
                                                                 </p>
                                                             )}
+
                                                             {room.price && (
-                                                                <p>
-                                                                    <span className='font-semibold'>Giá: </span>
-                                                                    {room.price.toLocaleString()} VNĐ
+                                                                <p className="flex items-center">
+                                                                    <FaMoneyBillWave className="text-green-500 mr-2 text-[16px]" />
+                                                                    <span className="font-semibold mr-1">Giá:</span>{" "}
+                                                                    {Number(room.price).toLocaleString("vi-VN")} ₫
                                                                 </p>
                                                             )}
+
                                                             {room.serveBreakfast && (
-                                                                <p>
-                                                                    <span className='font-semibold'>Bữa sáng: </span>
-                                                                    {room.serveBreakfast}
+                                                                <p className="flex items-center">
+                                                                    <FaCoffee className="text-amber-500 mr-2 text-[16px]" />
+                                                                    <span className="font-semibold mr-1">Bữa sáng:</span> {room.serveBreakfast}
                                                                 </p>
                                                             )}
-                                                            {room.cancellationPolicy.refund && (
-                                                                <p>
-                                                                    <span className='font-semibold'>Hoàn tiền: </span>
+
+                                                            {room.cancellationPolicy?.refund && (
+                                                                <p className="flex items-center">
+                                                                    <FaUndo className="text-gray-500 mr-2 text-[14px]" />
+                                                                    <span className="font-semibold mr-1">Hoàn tiền:</span>{" "}
                                                                     {room.cancellationPolicy.refund}
                                                                 </p>
                                                             )}
                                                         </div>
-                                                        <div className="flex space-x-2 text-[13px]">
+                                                        <div className="flex items-center gap-2 text-[14px]">
                                                             <button
-                                                                onClick={() => {
-                                                                    handleEditRoom(index, roomType, roomIndex, room);
-                                                                }}
-                                                                className="text-blue-500 hover:text-indigo-900"
+                                                                onClick={() =>
+                                                                    handleEditRoom(index, roomType, roomIndex, room)
+                                                                }
+                                                                className=" text-blue-600 hover:text-blue-800 font-medium"
                                                             >
                                                                 Sửa
                                                             </button>
                                                             <button
-                                                                onClick={() => {
+                                                                onClick={() =>
                                                                     handleRemoveRoom(index, roomType, roomIndex)
-                                                                }}
-                                                                className="text-red-500 hover:text-red-900"
+                                                                }
+                                                                className=" text-red-500 hover:text-red-700 font-medium"
                                                             >
                                                                 Xóa
                                                             </button>
@@ -663,8 +672,10 @@ const CreateHotel = () => {
                         className="bg-blue-500 text-white p-2 rounded"
                         onClick={() => {
                             const roomTypes = getValues("roomTypes");
-                            const hasRoomType = roomTypes.some((roomType) => roomType.rooms && roomType.rooms.length > 0);
-                            if (!hasRoomType) {
+                            const hasEmptyRoomType = roomTypes.some(
+                                (roomType) => !roomType.rooms || roomType.rooms.length === 0
+                            );
+                            if (hasEmptyRoomType) {
                                 messageApi.open({
                                     type: 'error',
                                     content: 'Cần ít nhất một loại phòng và mỗi loại phòng phải có ít nhất 1 phòng',
@@ -673,8 +684,8 @@ const CreateHotel = () => {
                             }
                             else {
                                 setStep(3);
+                                // console.log(getValues());
                             }
-                            // console.log(getValues());
                         }}
                     >
                         Hoàn tất và xem lại
@@ -688,11 +699,10 @@ const CreateHotel = () => {
         const existingImages = watch("img") || [];
         const finalData = getValues();
         const roomTypesData = finalData.roomTypes;
-
         return (
             <div>
                 <div className='bg-white rounded-lg shadow-md mt-4 p-4 md:p-6'>
-                    <HotelInformation finalData={finalData} />
+                    <HotelInformation finalData={finalData} allFacilities={allFacilities} />
                     {(existingImages.length > 0 || images.length > 0) && (
                         <div className=''>
                             <div className="flex items-center space-x-2 mb-4">
@@ -762,8 +772,10 @@ const CreateHotel = () => {
 
     return (
         <div>
-            {(isFacilitiesLoading || isCitiesLoading) ? (
-                <div>Loading...</div>
+            {(isFacilitiesLoading || isFacilitiesLoading1 || isCitiesLoading) ? (
+                <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+                    <CircularProgress />
+                </Box>
             ) : (
                 <div className='bg-softBlue min-h-screen p-4 md:p-8'>
                     {contextMessageHolder}
@@ -777,5 +789,56 @@ const CreateHotel = () => {
         </div>
     );
 }
+
+const RoomFacilities = ({ facilities = [] }) => {
+    const showMore = facilities.length > 6;
+    const displayedFacilities = showMore ? facilities.slice(0, 6) : facilities;
+
+    const renderFacilities = (items, cols = 2) => (
+        <div className={`grid grid-cols-${cols} gap-1`}>
+            {items.map((item, index) => (
+                <p key={index} className="flex items-center text-gray-600 text-[14px]">
+                    <IoMdCheckmarkCircleOutline className="text-[15px] mr-[2px]" />
+                    {item}
+                </p>
+            ))}
+        </div>
+    );
+
+    const fullFacilitiesContent = (
+        <div className="max-w-[90vw] max-h-[300px] overflow-y-auto">
+            <div className="grid grid-cols-4 gap-1 m-1">
+                {facilities.map((item, index) => (
+                    <p key={index} className="flex items-center text-gray-600 text-[14px]">
+                        <IoMdCheckmarkCircleOutline className="text-[15px] mr-[2px]" />
+                        {item}
+                    </p>
+                ))}
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="">
+            {renderFacilities(displayedFacilities)}
+            {showMore && (
+                <Popover
+                    title="Tất cả tiện ích"
+                    content={fullFacilitiesContent}
+                    trigger="hover"
+                    placement="bottom"
+                    styles={{
+                        maxWidth: "90vw",
+                    }}
+                    getPopupContainer={(triggerNode) => triggerNode.parentNode}
+                >
+                    <p className="border-b border-dashed border-gray-600 text-gray-800 text-[14px] mt-1 cursor-pointer w-fit hover:text-blue-600 duration-200">
+                        Xem thêm tiện ích
+                    </p>
+                </Popover>
+            )}
+        </div>
+    );
+};
 
 export default CreateHotel;
