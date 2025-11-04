@@ -8,6 +8,7 @@ const UploadImg = ({
   newImages = [],
   onImagesChange,
 }) => {
+    console.log(existingImages)
   const [Images, setImages] = useState(newImages);
   const [isDragOver, setIsDragOver] = useState(false); // thêm state
   const fileInputRef = useRef(null);
@@ -50,9 +51,10 @@ const UploadImg = ({
     setImages(prev => prev.filter(img => img.id !== id));
   };
 
-  const handleDeleteExistingImage = (publicId) => {
+  const handleDeleteExistingImage = (index) => {
+      console.log(index)
     onImagesChange({
-      deletedExisting: publicId,
+      deletedExisting: index,
       newImages: Images.map(({ id, preview, base64, file }) => ({ id, preview, base64, file }))
     });
   };
@@ -78,7 +80,7 @@ const UploadImg = ({
       newImages: Images.map(({ id, preview, base64, file }) => ({ id, preview, base64, file })),
       existingImages
     });
-  }, [Images, existingImages]);
+  }, [Images]);
 
   return (
     <div className="my-4">
@@ -129,10 +131,10 @@ const UploadImg = ({
             />
             <button
               type="button"
-              onClick={() => handleDeleteExistingImage(publicId)}
+              onClick={() => handleDeleteExistingImage(index)}
               className="absolute top-1 right-1 bg-red-500 text-white text-xs px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition"
             >
-              ✕x
+              ✕
             </button>
           </div>
         ))}

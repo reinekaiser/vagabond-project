@@ -9,7 +9,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TourSearchResult {
-    private String id;
+    private String _id;
     private String name;
     private String location;
     private List<String> images;

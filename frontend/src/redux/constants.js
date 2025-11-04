@@ -1,4 +1,4 @@
-export const TOUR_URL = "/api/tour";
+export const TOUR_URL = "/api/tours";
 export const HOTEL_URL = "/api/hotel"
 export const UPLOAD_URL = "/api/img"
 export const CITY_URL = "/api/cities"

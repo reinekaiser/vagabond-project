@@ -87,7 +87,7 @@ const AdminLayout = () => {
         },
         {
             title: "Thành phố",
-            to: "/admin/manage-city",
+            to: "/admin/manage-cities",
             icon: <FaCity className="text-lg" />,
         },
         {
