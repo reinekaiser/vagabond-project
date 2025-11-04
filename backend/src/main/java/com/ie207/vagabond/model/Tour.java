@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 @Document(collection = "tours")
 public class Tour {
     @Id
-    private String id;
+    private String _id;
     private String name;
     private List<String> category;
     private String location;

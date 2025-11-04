@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TicketDetail {
-    private String id;
+    private String _id;
     private String title;
     private List<PriceInfo> prices;
 }

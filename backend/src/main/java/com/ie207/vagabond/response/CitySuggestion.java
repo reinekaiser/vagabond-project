@@ -7,6 +7,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CitySuggestion {
-    private String id;
+    private String _id;
     private String name;
 }

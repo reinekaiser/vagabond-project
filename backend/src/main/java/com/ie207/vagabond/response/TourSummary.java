@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TourSummary {
-    private String id;
+    private String _id;
     private String name;
     private LocalDateTime createdAt; // Chỉ có trong newest tours
 }

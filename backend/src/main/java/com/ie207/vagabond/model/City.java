@@ -23,9 +23,9 @@ public class City {
     private String description;
     private String bestTimeToVisit;
 
-    private List<PopularPlace> popularPlace = new ArrayList<>();
-    private List<String> img = new ArrayList<>();
-    private List<PopularQuestion> popularQuestion = new ArrayList<>();
+    private List<PopularPlace> popularPlaces = new ArrayList<>();
+    private List<String> images = new ArrayList<>();
+    private List<PopularQuestion> popularQuestions = new ArrayList<>();
 
     @CreatedDate
     private Date createdAt;

@@ -52,7 +52,7 @@ export const MainHeader = () => {
             const first_ct = cities.map((city) => ({
                 _id: city._id,
                 name: city.name,
-                img: city.img[0],
+                img: city.images[0],
             }));
             const final = Array(20).fill(first_ct).flat();
             setCityOptions(final.slice(0, 12));

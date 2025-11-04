@@ -20,7 +20,7 @@ import java.util.List;
 @Document(collection = "tickets")
 public class Ticket {
     @Id
-    private String id;
+    private String _id;
 
     private String title;
     private String subtitle;

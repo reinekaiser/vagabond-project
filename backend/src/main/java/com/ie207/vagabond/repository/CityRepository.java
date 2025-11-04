@@ -9,5 +9,5 @@ import java.util.Optional;
 
 public interface CityRepository extends MongoRepository<City, String> {
     Optional<City> findByName(String cityName);
-
+    boolean existsByName(String cityName);
 }

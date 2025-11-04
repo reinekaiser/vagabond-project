@@ -44,7 +44,6 @@ public class TourService {
         City city = cityRepository.findById(request.getCityId())
                 .orElseThrow(() -> new CityNotFoundException("City not found with id: " + request.getCityId()));
 
-        // 3. Tạo tour
         Tour tour = mapToTourEntity(request, city, savedTickets);
 
         return tourRepository.save(tour);
@@ -177,12 +176,12 @@ public class TourService {
 
 
     private boolean containsTicket(List<Ticket> tickets, String ticketId) {
-        return tickets.stream().anyMatch(ticket -> ticket.getId().equals(ticketId));
+        return tickets.stream().anyMatch(ticket -> ticket.get_id().equals(ticketId));
     }
 
     private void removeTicketFromTour(Tour tour, String ticketId) {
         List<Ticket> updatedTickets = tour.getTickets().stream()
-                .filter(ticket -> !ticket.getId().equals(ticketId))
+                .filter(ticket -> !ticket.get_id().equals(ticketId))
                 .toList();
         tour.setTickets(updatedTickets);
     }
@@ -193,7 +192,7 @@ public class TourService {
         }
 
         return tour.getTickets().stream()
-                .map(Ticket::getId)
+                .map(Ticket::get_id)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
@@ -389,7 +388,7 @@ public class TourService {
 
     private TourSuggestion convertDocumentToTourSuggestion(Document doc) {
         return TourSuggestion.builder()
-                .id(doc.getObjectId("_id").toString())
+                ._id(doc.getObjectId("_id").toString())
                 .name(doc.getString("name"))
                 .location(doc.getString("location"))
                 .images(doc.getList("images", String.class))
@@ -402,7 +401,7 @@ public class TourService {
 
         return ticketDocs.stream()
                 .map(doc -> TicketDetail.builder()
-                        .id(doc.getObjectId("_id").toString())
+                        ._id(doc.getObjectId("_id").toString())
                         .title(doc.getString("title"))
                         .prices(convertDocumentsToPrices(doc.getList("prices", Document.class)))
                         .build())
@@ -440,7 +439,7 @@ public class TourService {
 
         return cities.stream()
                 .map(city -> CitySuggestion.builder()
-                        .id(city.get_id())
+                        ._id(city.get_id())
                         .name(city.getName())
                         .build())
                 .collect(Collectors.toList());
@@ -634,7 +633,7 @@ public class TourService {
         }
 
         return TourSearchResult.builder()
-                .id(doc.getObjectId("_id").toString())
+                ._id(doc.getObjectId("_id").toString())
                 .name(doc.getString("name"))
                 .location(doc.getString("location"))
                 .images(doc.getList("images", String.class))
@@ -681,11 +680,11 @@ public class TourService {
             criteria.andOperator(durationCriteria);
         }
 
-        if (cityId != null) {
-            City city = cityRepository.findById(cityId)
-                    .orElseThrow(() -> new CityNotFoundException("City not found with id: " + cityId));
-            criteria.and("city").is(city);
-        }
+//        if (cityId != null) {
+//            City city = cityRepository.findById(cityId)
+//                    .orElseThrow(() -> new CityNotFoundException("City not found with id: " + cityId));
+//            criteria.and("city").is(city);
+//        }
 
         Query query = new Query(criteria);
 
@@ -704,9 +703,7 @@ public class TourService {
                 .pageSize(pageSize)
                 .currentPage(page)
                 .data(tours).build();
-
     }
-
 
     private void applySorting(Query query, String sort) {
         if (sort != null) {
@@ -739,7 +736,7 @@ public class TourService {
         List<TourSummary> topRatedTours = tourRepository.findTop3ByOrderByAvgRatingDesc()
                 .stream()
                 .map(tour -> TourSummary.builder()
-                        .id(tour.getId())
+                        ._id(tour.get_id())
                         .name(tour.getName())
                         .build())
                 .collect(Collectors.toList());
@@ -747,7 +744,7 @@ public class TourService {
         List<TourSummary> cheapestTours = tourRepository.findTop3ByOrderByFromPriceAsc()
                 .stream()
                 .map(tour -> TourSummary.builder()
-                        .id(tour.getId())
+                        ._id(tour.get_id())
                         .name(tour.getName())
                         .build())
                 .collect(Collectors.toList());
@@ -755,7 +752,7 @@ public class TourService {
         List<TourSummary> newestTours = tourRepository.findTop3ByOrderByCreatedAtDesc()
                 .stream()
                 .map(tour -> TourSummary.builder()
-                        .id(tour.getId())
+                        ._id(tour.get_id())
                         .name(tour.getName())
                         .createdAt(tour.getCreatedAt())
                         .build())

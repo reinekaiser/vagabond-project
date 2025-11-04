@@ -44,7 +44,7 @@ public class TourController {
     }
 
     @PutMapping("/{tourId}/tickets/{ticketId}")
-    public ResponseEntity<?> updateTicketInTour(@PathVariable String tourId, @PathVariable String ticketId, @RequestBody UpdateTicketRequest request) {
+    public ResponseEntity<Ticket> updateTicketInTour(@PathVariable String tourId, @PathVariable String ticketId, @RequestBody UpdateTicketRequest request) {
         Ticket updatedTicket = tourService.updateTicketInTour(tourId, ticketId, request);
         return ResponseEntity.ok(updatedTicket);
     }
@@ -64,7 +64,7 @@ public class TourController {
     }
 
     @GetMapping("/suggestions")
-    public ResponseEntity<?> getSearchSuggestions(@RequestParam String q) {
+    public ResponseEntity<SearchSuggestionResponse> getSearchSuggestions(@RequestParam String q) {
         SearchSuggestionResponse response = tourService.getSearchSuggestions(q);
         return ResponseEntity.ok(response);
     }
@@ -86,7 +86,7 @@ public class TourController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/")
+    @GetMapping()
     public ResponseEntity<GetToursResponse> getTours(
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String languageService,

@@ -25,14 +25,14 @@ const AdminRoutes = () => {
                     {/* <Route path="dashboard" element={<Dashboard />} /> */}
                     {/* <Route path="profile" element={<Profile />} /> */}
                     {/* <Route path="/chat" element={<AdminChat/>} /> */}
-                    {/* <Route path="manage-tours">
+                    <Route path="manage-tours">
                         <Route index element={<ManageTours />} />
                         <Route path="create-tour" element={<CreateTour />} />
                         <Route
                             path="tour-detail/:_id"
                             element={<TourDetailsAdmin />}
                         />
-                    </Route> */}
+                    </Route>
 
                     <Route path="manage-hotels">
                         <Route index element={<ManageHotels />} />
@@ -47,8 +47,11 @@ const AdminRoutes = () => {
                         />
                     </Route>
 
-                    {/* <Route path="manage-city" element={<ManageCity />} /> */}
-                    {/* <Route path="create-city" element={<CreateCity />} /> */}
+                    <Route path="manage-cities" >
+                        <Route index element={<ManageCity />} />
+                        <Route path="create-city" element={<CreateCity />} />
+                    </Route>
+
 
                     {/* <Route path="booking/tour" element={<TourBooking/>} /> */}
                     {/* <Route path="booking/hotel" element={<HotelBooking/>} /> */}

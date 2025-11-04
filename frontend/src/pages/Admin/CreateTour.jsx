@@ -188,9 +188,7 @@ const CreateTour = () => {
             tourData.images = allImgs;
         }
 
-        setUploadImgKey((prev) => prev + 1);
-        setImagesBase64([]);
-        setImages([]);
+
 
         const firstPrices = tickets
             .map((ticket) => ticket.prices[0]?.price)
@@ -218,6 +216,10 @@ const CreateTour = () => {
             toast.error("Tạo tour thất bại. Vui lòng thử lại!");
             console.error(error);
         }
+
+        setUploadImgKey((prev) => prev + 1);
+        setImagesBase64([]);
+        setImages([]);
     };
 
     const [deleteTourImage] = useDeleteImageMutation();

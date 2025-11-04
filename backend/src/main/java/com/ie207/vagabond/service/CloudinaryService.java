@@ -47,4 +47,16 @@ public class CloudinaryService {
             return null;
         }
     }
+
+    public void deleteImagesBatch(List<String> publicIds) {
+        if (publicIds == null || publicIds.isEmpty()) {
+            return;
+        }
+
+        try {
+            Map result = cloudinary.api().deleteResources(publicIds, Map.of());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }
