@@ -44,12 +44,16 @@ const RoomTypesInformation = ({ roomTypesData = [], review = 1,
                         );
 
                         return (
-                            <div key={index} className='bg-gray-100 px-4 py-3 rounded-sm mb-6 space-y-3'>
+                            <div key={index} className='bg-gray-100 px-7 py-6 rounded-sm mb-6 space-y-3'>
                                 <p className='font-semibold text-lg'>{roomType.name}</p>
-                                <div className='grid grid-cols-1 md:grid-cols-[25%_75%] gap-4'>
+                                <div className='grid grid-cols-1 md:grid-cols-[25%_74%] gap-6'>
                                     <div>
                                         <ImageGalleryFromCloudinary
-                                            existingImages={roomType.img}
+                                            existingImages={
+                                                roomType?.img && roomType.img.length > 0
+                                                    ? roomType.img
+                                                    : roomType?.newImages || []
+                                            }
                                             option={2}
                                         />
                                         {roomType.area && (
@@ -84,7 +88,7 @@ const RoomTypesInformation = ({ roomTypesData = [], review = 1,
                                     <div className='mr-4'>
                                         {roomType.rooms.map((avaiRoom, idx) => (
                                             <div key={idx} className='mb-1'>
-                                                <RoomInformation roomType={roomType} room={avaiRoom} review={review} handleBookingRoom={handleBookingRoom}/>
+                                                <RoomInformation roomType={roomType} room={avaiRoom} review={review} handleBookingRoom={handleBookingRoom} />
                                             </div>
                                         ))}
                                     </div>

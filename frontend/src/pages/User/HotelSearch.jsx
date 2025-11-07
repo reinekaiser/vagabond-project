@@ -41,6 +41,8 @@ const HotelSearch = () => {
             }
         );
 
+        console.log('Search suggestions:', searchSuggestions);
+
         const onLocationChange = (e) => {
             const name = e.target.value;
             setLocation({ type: '', name });

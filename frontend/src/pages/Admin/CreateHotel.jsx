@@ -23,6 +23,7 @@ import { CLOUDINARY_BASE_URL, PET_POLICIES } from '../../constants/hotel';
 import { useGetCitiesQuery } from '../../redux/api/cityApiSlice';
 import ImageGalleryFromCloudinary from '../../components/ImageGalleryFromCloudinary';
 import { Box, CircularProgress } from '@mui/material';
+import RoomTypeModalLocal from '../../components/RoomTypeModalLocal';
 
 
 const CreateHotel = () => {
@@ -60,7 +61,7 @@ const CreateHotel = () => {
         control,
         name: 'roomTypes'
     });
-    
+
 
     const [step, setStep] = useState(1);
     const [cityOptions, setCitiesOptions] = useState([]);
@@ -74,9 +75,9 @@ const CreateHotel = () => {
     const [uploadImgKey, setUploadImgKey] = useState(0);
     const [modalKey, setModalKey] = useState(0);
     const [modalRoomKey, setModalRoomKey] = useState(0);
-
     const [images, setImages] = useState([]);
     const [imagesBase64, setImagesBase64] = useState([]);
+    const [deletedImgs, setDeletedImgs] = useState([]);
 
     const { data: allFacilities, isLoading: isFacilitiesLoading1 } = useGetFacilitiesQuery();
     const [uploadHotelImages, { isLoading: isUploadLoading, isError: isUploadError, isSuccess }] = useUploadImagesMutation();
@@ -104,8 +105,13 @@ const CreateHotel = () => {
     };
 
     const handleImagesChange = async ({ newImages, deletedExisting }) => {
-        if (deletedExisting) {
-            await deleteImagesFromCloudinary(deletedExisting);
+        if (deletedExisting != undefined) {
+            const currentImgs = getValues("img");
+            const deletedId = currentImgs[deletedExisting];
+            const updatedImgs = currentImgs.filter((_, i) => i !== deletedExisting);
+            setValue("img", updatedImgs);
+
+            setDeletedImgs(prev => [...prev, deletedId]);
         }
         if (newImages) {
             setImages(newImages);
@@ -126,35 +132,63 @@ const CreateHotel = () => {
         if (!publicId) return;
         try {
             await deleteHotelImage(publicId).unwrap()
-            setValue("img", getValues("img").filter(id => id !== publicId));
+            // setValue("img", getValues("img").filter(id => id !== publicId));
         } catch (error) {
             console.log(error)
         }
     }
 
     const addHotel = async (e) => {
-        // e.preventDefault();
-        if (imagesBase64.length > 0) {
-            const uploadedImgs = await uploadImagesToCloudinary(imagesBase64);
-            const allImgs = [...getValues("img"), ...uploadedImgs]
-            setValue("img", allImgs, { shouldValidate: true });
-        }
-        setUploadImgKey(prev => prev + 1);
-        setImagesBase64([]);
-        setImages([]);
-
-        const finalData = getValues();
         try {
-            const res = await createHotel(finalData).unwrap();
-            // console.log("Created hotel - ", res);
+            if (imagesBase64.length > 0) {
+                const uploadedImgs = await uploadImagesToCloudinary(imagesBase64);
+                const allImgs = [...getValues("img"), ...uploadedImgs];
+                setValue("img", allImgs, { shouldValidate: true });
+            }
+            setUploadImgKey(prev => prev + 1);
+            setImagesBase64([]);
+            setImages([]);
+
+            const finalData = getValues();
+            const updatedRoomTypes = [];
+            for (const rt of finalData.roomTypes) {
+                let uploadedRoomTypeImgs = [];
+                if (rt.newImages && rt.newImages.length > 0) {
+                    const res = await uploadImagesToCloudinary(rt.newImages);
+                    uploadedRoomTypeImgs = res;
+                }
+
+                const mergedImgs = [
+                    ...(rt.img || []),
+                    ...(uploadedRoomTypeImgs || []),
+                ];
+                updatedRoomTypes.push({
+                    ...rt,
+                    img: mergedImgs,
+                    newImages: [],
+                });
+            }
+
+            if (deletedImgs.length > 0) {
+                await Promise.all(deletedImgs.map(id => deleteImagesFromCloudinary(id)));
+                setDeletedImgs([]);
+            }
+
+            const hotelData = {
+                ...finalData,
+                roomTypes: updatedRoomTypes,
+            };
+
+            console.log("✅ Final data to create hotel:", hotelData);
+            const res = await createHotel(hotelData).unwrap();
             toast.success("Thêm khách sạn thành công");
             navigate("/admin/manage-hotels");
-        }
-        catch (error) {
+
+        } catch (error) {
+            console.error("❌ Error creating hotel:", error);
             toast.error("Thêm khách sạn thất bại");
-            console.log(error);
         }
-    }
+    };
 
     const [messageApi, contextMessageHolder] = message.useMessage();
     useEffect(() => {
@@ -502,7 +536,7 @@ const CreateHotel = () => {
                             + Thêm loại phòng
                         </button>
 
-                        <RoomTypeModal
+                        <RoomTypeModalLocal
                             visible={isRoomTypeModalVisible}
                             onCancel={handleCloseModalRoomType}
                             onAddRoomType={handleAddRoomType}
@@ -519,7 +553,7 @@ const CreateHotel = () => {
                                         <div className='bg-slate-100 p-4 rounded-md'>
                                             <div className='flex gap-4 items-start'>
                                                 <div className='w-1/2 mr-2 mt-2'>
-                                                    <ImageGalleryFromCloudinary existingImages={roomType.img} option={2} />
+                                                    <ImageGalleryFromCloudinary existingImages={roomType.newImages} option={2} />
                                                 </div>
                                                 <div className='space-y-1 text-[15px]'>
                                                     <h3 className='text-[18px] font-bold'>

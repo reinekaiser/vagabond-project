@@ -197,7 +197,6 @@ const RoomInformation = ({ roomType, room, review, handleBookingRoom }) => {
                                         <p className='text-[12px] font-normal text-gray-400'>Giá mỗi phòng/đêm</p>
                                     </div>
                                 </div>
-
                             ) : (
                                 <div className="flex items-start">
                                     <p className="text-[16px] font-semibold flex-1">

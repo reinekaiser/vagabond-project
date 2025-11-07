@@ -2,6 +2,7 @@ package com.ie207.vagabond.model;
 
 import com.ie207.vagabond.model.enums.Role;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -15,6 +16,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "users")
+@Builder
 public class User {
     @Id
     private String _id;

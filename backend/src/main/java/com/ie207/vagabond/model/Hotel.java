@@ -1,6 +1,7 @@
 package com.ie207.vagabond.model;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -17,6 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Document(collection = "hotels")
+@Builder
 public class Hotel {
     @Id
     private String _id;
@@ -40,6 +42,8 @@ public class Hotel {
 
     @DBRef
     private List<HotelRoomType> roomTypes = new ArrayList<>();
+
+    private double fromPrice = 0.0;
 
     @CreatedDate
     private Date createdAt;
