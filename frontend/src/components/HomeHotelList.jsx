@@ -33,11 +33,6 @@ const HomeHotelList = () => {
     };
 
     function HotelCard({ hotel }) {
-        const allPrices = hotel.roomTypes.flatMap((item) =>
-            item.rooms.map((child) => child.price)
-        );
-
-        const minPrice = Math.min(...allPrices);
 
         return (
             <div
@@ -79,7 +74,7 @@ const HomeHotelList = () => {
                             </span>
                         </div>
                         <p className="text-lg text-orange-500 font-semibold mt-auto">
-                            {minPrice.toLocaleString("vi-vn")} VND
+                            {hotel?.fromPrice.toLocaleString("vi-vn")} VND
                         </p>
                     </div>
                 </div>

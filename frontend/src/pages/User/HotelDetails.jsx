@@ -62,16 +62,16 @@ const HotelDetails = () => {
         param._id
     );
 
-    // const { data: availableRooms, isLoading: isAvaiRoomsLoading } =
-    //     useGetAvailableRoomsQuery({
-    //         id: param._id,
-    //         checkInDate: checkIn?.toISOString(),
-    //         checkOutDate: checkOut?.toISOString(),
-    //         numRooms: rooms,
-    //         numAdults: adults,
-    //     });
+    const { data: availableRooms, isLoading: isAvaiRoomsLoading } =
+        useGetAvailableRoomsQuery({
+            id: param._id,
+            checkInDate: checkIn?.format('YYYY-MM-DD'),
+            checkOutDate: checkOut?.format('YYYY-MM-DD'),
+            numRooms: rooms,
+            numAdults: adults,
+        });
 
-    console.log(hotel)
+    console.log(availableRooms)
 
     const showDrawer = () => setOpenDetails(true);
     const onClose = () => setOpenDetails(false);
@@ -125,19 +125,9 @@ const HotelDetails = () => {
         ref.current?.scrollIntoView({ behavior: "smooth" });
     };
     const [messageApi, contextMessageHolder] = message.useMessage();
-    // const minPrice = Math.min(
-    //     ...(Array.isArray(availableRooms)
-    //         ? availableRooms.flatMap((roomType) =>
-    //             Array.isArray(roomType.rooms)
-    //                 ? roomType.rooms.map((avaiRoom) => avaiRoom?.price || 0)
-    //                 : []
-    //         )
-    //         : [0])
-    // );
 
     useEffect(() => {
         const url = new URL(window.location.href);
-
         if (url.searchParams.has("token")) {
             url.searchParams.delete("token");
 
@@ -145,8 +135,7 @@ const HotelDetails = () => {
         }
     }, []);
 
-    //|| isAvaiRoomsLoading
-    if (isHotelLoading ) {
+    if (isHotelLoading || isAvaiRoomsLoading) {
         return (
             <Box
                 display="flex"
@@ -257,12 +246,12 @@ const HotelDetails = () => {
                             </div>
                         </div>
                         <div>
-                            {/* <p className="text-end font-semibold text-[24px]">
-                                {Number(minPrice).toLocaleString("vi-VN")} ₫{" "}
+                            <p className="text-end font-semibold text-[24px]">
+                                {Number(hotel.fromPrice).toLocaleString("vi-VN")} ₫{" "}
                                 <span className="text-[14px] text-gray-500 font-normal">
                                     Mỗi đêm
                                 </span>
-                            </p> */}
+                            </p>
                             <div className="flex justify-end items-end mt-1">
                                 <button
                                     className="py-2 p-16 bg-orange-500 rounded-lg text-white"
@@ -312,18 +301,18 @@ const HotelDetails = () => {
                         </div>
                     </div>
 
-                    <div ref={chooseRoomRef} className="mx-10">
+                    <div ref={chooseRoomRef} className="">
                         <div className="flex items-center space-x-2 mb-8">
                             <div className="w-2 h-7 bg-orange-500 rounded"></div>
                             <h2 className="text-[20px] font-semibold">
                                 Chọn phòng của bạn
                             </h2>
                         </div>
-                        {/* <RoomTypesInformation
+                        <RoomTypesInformation
                             roomTypesData={availableRooms}
                             review={2}
                             handleBookingRoom={handleBookingRoom}
-                        /> */}
+                        />
                     </div>
                 </div>
             </div>

@@ -91,8 +91,6 @@ const ManageHotels = () => {
         );
     }
 
-    // console.log(priceRange[0], priceRange[1], fcFilter, fcRoomFilter, sort);
-    console.log(hotels)
     return (
         <div>
             <div className='bg-softBlue min-h-screen p-4 md:p-8'>
@@ -219,18 +217,30 @@ const ManageHotels = () => {
                                         <p className='font-semibold text-[16px]'>Kết quả tìm kiếm</p>
                                         <div className='grid grid-cols-3 gap-3'>
                                             {filteredResults.map((hotel, index) => (
-                                                <HotelCard key={index} pageSize={hotels?.data.length} hotel={hotel} page={page} setPage={setPage} refetch={refetch} />
+                                                <HotelCard
+                                                    key={index}
+                                                    pageSize={hotels?.data.length}
+                                                    hotel={hotel} page={page}
+                                                    setPage={setPage}
+                                                    refetch={refetch}
+                                                />
                                             ))}
                                         </div>
                                     </>
                                 ) : (
                                     <p className='text-[14px] font-medium text-gray-500'>Không tìm thấy</p>
                                 )
-                            ) : (
+                            ) : hotels?.data.length > 0 ? (
                                 <div>
                                     <div className='grid grid-cols-3 gap-3'>
                                         {hotels?.data?.map((hotel, index) => (
-                                            <HotelCard key={index} pageSize={hotels?.data.length} hotel={hotel} page={page} setPage={setPage} refetch={refetch} />
+                                            <HotelCard
+                                                key={index}
+                                                pageSize={hotels?.data.length}
+                                                hotel={hotel} page={page}
+                                                setPage={setPage}
+                                                refetch={refetch}
+                                            />
                                         ))}
                                     </div>
                                     <Pagination
@@ -244,6 +254,8 @@ const ManageHotels = () => {
                                         onChange={handleChangePage}
                                     />
                                 </div>
+                            ): (
+                                <p className='text-[14px] font-medium text-gray-500'>Chưa có khách sạn</p>
                             )}
                         </div>
                     </div>
@@ -255,22 +267,16 @@ const ManageHotels = () => {
 
 const HotelCard = ({ pageSize, hotel, refetch, page, setPage }) => {
     const imgs = hotel.img;
-    const { data: roomTypes = [], isLoading } = useGetRoomTypesQuery(hotel._id);
-    const minPrice = Math.min(
-        ...roomTypes.flatMap(roomType => roomType.rooms.map(room => room.price))
-    );
     const navigate = useNavigate();
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deleteHotel, { isLoading: isDeletingHotel }] = useDeleteHotelMutation();
 
-    console.log(pageSize);
     const handleDeleteHotel = async (hotelId) => {
         try {
             const res = await deleteHotel(hotelId).unwrap();
             if (page > 1 && pageSize === 1) {
                 setPage(page - 1);
             }
-            // console.log(res)
             toast.success(res.message);
             refetch?.();
             setIsDeleteModalOpen(false);
@@ -297,7 +303,7 @@ const HotelCard = ({ pageSize, hotel, refetch, page, setPage }) => {
     return (
         <div>
             {contextMessageHolder}
-            {isLoading ? (
+            {!imgs ? (
                 <div className="p-2 rounded-lg shadow-md border border-gray-100 h-[360px] animate-pulse space-y-4">
                     <div className="h-[180px] bg-gray-200 rounded w-full" />
                     <div className="h-4 bg-gray-200 rounded w-[60%] mx-2" />
@@ -328,10 +334,10 @@ const HotelCard = ({ pageSize, hotel, refetch, page, setPage }) => {
                     </div>
                     <p className='flex items-center text-[14px] mb-2 text-gray-600'>
                         <LuCircleDollarSign className='text-blue-500 text-[19px] mx-1' />
-                        {Number(minPrice).toLocaleString("vi-VN")} ₫
+                        {Number(hotel.fromPrice).toLocaleString("vi-VN")} ₫
                     </p>
 
-                    {/* Dropdown ở góc dưới bên phải */}
+                    {/* Dropdown */}
                     <div className='absolute bottom-2 right-1'>
                         <Dropdown
                             menu={{
@@ -372,7 +378,7 @@ const HotelCard = ({ pageSize, hotel, refetch, page, setPage }) => {
                         onCancel={() => setIsDeleteModalOpen(false)}
                         okText="Xóa"
                         cancelText="Hủy"
-                        okButtonProps={{ danger: true, loading: isLoading }}
+                        okButtonProps={{ danger: true, loading: isDeletingHotel }}
                     >
                         <p>Bạn có chắc chắn muốn xoá hotel này không?</p>
                     </Modal>

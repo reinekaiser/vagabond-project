@@ -1,6 +1,7 @@
 package com.ie207.vagabond.model;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -13,6 +14,7 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Room {
     @Id
     private String _id;
@@ -37,6 +39,8 @@ public class Room {
         this.numberOfRoom = numberOfRoom;
         this.price = price;
         this.cancellationPolicy = cancellationPolicy;
+        this.createdAt = new Date();
+        this.updatedAt = new Date();
     }
 
 }

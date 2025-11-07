@@ -115,7 +115,7 @@ const HotelSearchResults = () => {
         params.set("rooms", rooms);
         params.set("adults", adults);
         console.log('Search params:', params.toString());
-        // navigate(`/hotels/search?${params.toString()}`);
+        navigate(`/hotels/search?${params.toString()}`);
     };
 
     const [messageApi, contextMessageHolder] = message.useMessage();
@@ -470,10 +470,6 @@ const SearchHotel = ({ location, setLocation, checkIn, setCheckIn, checkOut, set
 }
 
 const HotelCard = ({ hotel, handleClick }) => {
-    const roomTypes = hotel.roomTypes;
-    const minPrice = Math.min(
-        ...roomTypes.flatMap(roomType => roomType.rooms.map(room => room.price))
-    );
 
     return (
         <div className='grid grid-cols-[20%_auto] rounded-xl bg-white gap-4 relative h-[180px] hover:shadow-lg duration-300'
@@ -505,7 +501,7 @@ const HotelCard = ({ hotel, handleClick }) => {
                     </div>
                 </div>
                 <div className='absolute right-[2%] bottom-[8%]'>
-                    <p className='text-[24px] font-medium text-right'>{Number(minPrice).toLocaleString("vi-VN")} ₫</p>
+                    <p className='text-[24px] font-medium text-right'>{Number(hotel?.fromPrice).toLocaleString("vi-VN")} ₫</p>
                     <p className='text-[12px] text-right text-gray-400'>Giá phòng cho 1 đêm</p>
                     <div className='mt-1 flex items-center justify-end'>
                         <button

@@ -24,6 +24,7 @@ const UpdateHotel = () => {
     const [imagesBase64, setImagesBase64] = useState([]);
     const [uploadImgKey, setUploadImgKey] = useState(0);
     const [cityOptions, setCitiesOptions] = useState([]);
+    const [deletedImgs, setDeletedImgs] = useState([]);
 
     const [updateHotel, { isLoading: isUpdatingHotel }] = useUpdateHotelMutation();
     const { data: facilities, isLoading: isLoadingFacilities } = useGetFacilitiesByCategoryQuery();
@@ -95,21 +96,19 @@ const UpdateHotel = () => {
         }
     }, [hotelData, reset, cities, isCitiesLoading]);
 
-    console.log(getValues());
-
     const handleImagesChange = async ({ newImages, deletedExisting }) => {
-        if (deletedExisting) {
+        if (deletedExisting != undefined) {
             const currentImgs = getValues("img");
-            const updatedImgs = currentImgs.filter(publicId => publicId !== deletedExisting);
+            const deletedId = currentImgs[deletedExisting];
+            const updatedImgs = currentImgs.filter((_, i) => i !== deletedExisting);
             setValue("img", updatedImgs);
 
-            await deleteImagesFromCloudinary(deletedExisting);
+            setDeletedImgs(prev => [...prev, deletedId]);
         }
         if (newImages) {
             setImages(newImages);
             setImagesBase64(newImages.map((img) => img.base64));
         }
-        console.log(newImages);
     }
     const uploadImagesToCloudinary = async (imagesBase64) => {
         if (imagesBase64.length === 0) return [];
@@ -124,35 +123,40 @@ const UpdateHotel = () => {
         if (!publicId) return;
         try {
             await deleteHotelImage(publicId).unwrap()
-            setValue("img", getValues("img").filter(id => id !== publicId));
+            // setValue("img", getValues("img").filter(id => id !== publicId));
         } catch (error) {
             console.log(error)
         }
     }
 
     const onSave = async () => {
-        if (imagesBase64.length > 0) {
-            const uploadedImgs = await uploadImagesToCloudinary(imagesBase64);
-            const allImgs = [...getValues("img"), ...uploadedImgs]
-            setValue("img", allImgs, { shouldValidate: true });
-        }
-        setUploadImgKey(prev => prev + 1);
-        setImagesBase64([]);
-        setImages([]);
-
         try {
-            const res = await updateHotel({ hotelId: param._id, hotel: getValues() }).unwrap();
+            if (imagesBase64.length > 0) {
+                const uploadedImgs = await uploadImagesToCloudinary(imagesBase64);
+                const allImgs = [...getValues("img"), ...uploadedImgs];
+                setValue("img", allImgs, { shouldValidate: true });
+            }
+            setUploadImgKey(prev => prev + 1);
+            setImagesBase64([]);
+            setImages([]);
+
+            const updatedHotel = getValues();
+            const res = await updateHotel({ hotelId: param._id, hotel: updatedHotel }).unwrap();
             console.log("Update hotel response:", res);
+
+            if (deletedImgs.length > 0) {
+                await Promise.all(deletedImgs.map(id => deleteImagesFromCloudinary(id)));
+                setDeletedImgs([]);
+            }
+
             toast.success("Sửa khách sạn thành công");
             navigate("/admin/manage-hotels");
+
         } catch (error) {
             toast.error("Sửa khách sạn thất bại");
-            console.log(error);
+            console.error(error);
         }
-
-        // console.log("-", images);
-        // console.log(getValues());
-    }
+    };
 
     useEffect(() => {
         if (isUploadLoading) {
@@ -182,25 +186,6 @@ const UpdateHotel = () => {
 
 
     }, [isUploadLoading, isUploadError, isSuccess]);
-
-    useEffect(() => {
-        if (isDeletingImg) {
-            messageApi.open({
-                key: 'deleting',
-                type: 'loading',
-                content: 'Đang xoá ảnh...',
-                duration: 0,
-            })
-        }
-        if (isSuccessDelete) {
-            messageApi.open({
-                key: 'deleting',
-                type: 'success',
-                content: 'Đã xoá ảnh!',
-                duration: 2,
-            })
-        }
-    }, [isDeletingImg, isSuccessDelete])
 
     return (
         <div>

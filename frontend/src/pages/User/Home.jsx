@@ -135,7 +135,7 @@ const Home = () => {
                 </div>
             </section>
             {/* <HomeTourList></HomeTourList> */}
-            {/* <HomeHotelList></HomeHotelList> */}
+            <HomeHotelList></HomeHotelList>
 
             {/* <Tooltip
                 title="Bạn có tin nhắn mới"

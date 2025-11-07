@@ -13,7 +13,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { setOnlineUsers } from "./redux/features/authSlice";
 import { connectSocket, disconnectSocket } from "./Utils/socket";
 import ScrollToTop from "./components/ScrollToTop";
-import { useGetFacilitiesByCategoryQuery, useGetFacilitiesQuery, useGetHotelByIdQuery, useGetHotelsQuery, useGetRoomTypesQuery } from "./redux/api/hotelApiSlice";
 
 function App() {
 
