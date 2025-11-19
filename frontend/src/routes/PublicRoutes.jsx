@@ -71,10 +71,10 @@ const PublicRoutes = () => {
             <Route
                 path="checkout-stripe-success"
                 element={< CheckoutStripeSuccess />}
-            ></Route>
+            ></Route> */}
             <Route path="hotels/:_id/pay" element={<HotelBooking />} />
             
-            <Route
+            {/* <Route
                 path="hotel-checkout-payos-success"
                 element={<HotelCheckOutPayOSSuccess/>}
             />

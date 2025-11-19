@@ -4,6 +4,7 @@ import com.ie207.vagabond.model.User;
 import com.ie207.vagabond.request.LogInRequest;
 import com.ie207.vagabond.request.RegisterRequest;
 import com.ie207.vagabond.response.ApiResponse;
+import com.ie207.vagabond.response.UserResponse;
 import com.ie207.vagabond.service.AuthService;
 import com.ie207.vagabond.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -60,8 +61,8 @@ public class AuthController {
     }
 
     @GetMapping("/")
-    public ResponseEntity<User> getCurrentUser(Authentication authentication) throws Exception {
-        User user = userService.getCurrentUser(authentication);
+    public ResponseEntity<UserResponse> getCurrentUser(Authentication authentication) throws Exception {
+        UserResponse user = userService.getCurrentUser(authentication);
         return ResponseEntity.ok(user);
     }
 
