@@ -59,7 +59,7 @@ const PublicRoutes = () => {
             <Route
                 path="tour"
                 element={<TourList></TourList>}
-            ></Route>
+            ></Route> */}
             <Route
                 path="tour-checkout-success"
                 element={<TourCheckoutSuccess />}
@@ -68,7 +68,7 @@ const PublicRoutes = () => {
                 path="hotel-checkout-success"
                 element={< HotelCheckoutSuccess />}
             ></Route>
-            <Route
+            {/* <Route
                 path="checkout-stripe-success"
                 element={< CheckoutStripeSuccess />}
             ></Route> */}

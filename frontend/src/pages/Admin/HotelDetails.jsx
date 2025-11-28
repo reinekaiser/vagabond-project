@@ -61,7 +61,7 @@ const HotelDetails = () => {
         if (!publicId) return;
         try {
             await deleteHotelImage(publicId).unwrap()
-            console.log("deleted image - ", publicId)
+            // console.log("deleted image - ", publicId)
         } catch (error) {
             console.log(error)
         }
@@ -447,7 +447,7 @@ const RoomTypeCard = ({ roomType, images, handleEditRoomType, handleDeleteRoomTy
             {items.map((item, index) => (
                 <p key={index} className='flex items-center text-gray-600 text-[14px]'>
                     <IoMdCheckmarkCircleOutline className='text-[15px] mr-[2px]' />
-                    {item}
+                    <span className='truncate w-full'>{item}</span>
                 </p>
             ))}
         </div>

@@ -1,10 +1,7 @@
 package com.ie207.vagabond.service;
 
 import com.ie207.vagabond.model.*;
-import com.ie207.vagabond.repository.CityRepository;
-import com.ie207.vagabond.repository.HotelFacilityRepository;
-import com.ie207.vagabond.repository.HotelRepository;
-import com.ie207.vagabond.repository.HotelRoomTypeRepository;
+import com.ie207.vagabond.repository.*;
 import com.ie207.vagabond.request.HotelRequest;
 import com.ie207.vagabond.request.RoomRequest;
 import com.ie207.vagabond.request.RoomTypeRequest;
@@ -39,6 +36,7 @@ public class HotelService {
     private final CloudinaryService cloudinaryService;
     private final CityRepository cityRepository;
     private final HotelFacilityRepository hotelFacilityRepository;
+    private final HotelBookingRepository hotelBookingRepository;
 
     //    search & filter hotel
     public List<City> searchCities (String keyword) {
@@ -173,9 +171,18 @@ public class HotelService {
         }
 
         if (sort != null) {
-            switch (sort){
+            switch (sort) {
                 case "newest":
                     pipeline.add(new Document("$sort", new Document("createdAt", -1)));
+                    break;
+                case "oldest":
+                    pipeline.add(new Document("$sort", new Document("createdAt", 1)));
+                    break;
+                case "priceAsc":
+                    pipeline.add(new Document("$sort", new Document("fromPrice", 1)));
+                    break;
+                case "priceDesc":
+                    pipeline.add(new Document("$sort", new Document("fromPrice", -1)));
                     break;
                 default:
                     pipeline.add(new Document("$sort", new Document("createdAt", 1)));
@@ -741,16 +748,16 @@ public class HotelService {
         for (HotelRoomType roomType : hotel.getRoomTypes()) {
             List<Map<String, Object>> availableRooms = new ArrayList<>();
             for (Room room : roomType.getRooms()){
-//                List<HotelBooking> bookings = hotelBookingRepository
-//                        .findByHotelIdAndRoomTypeIdAndRoomIdAndCheckinBeforeAndCheckoutAfterAndBookingStatusIn(
-//                                hotelId,
-//                                roomType.get_id(),
-//                                room.get_id(),
-//                                checkOutDate,
-//                                checkInDate,
-//                                Arrays.asList("pending", "confirmed")
-//                        );
-                int roomsBooked = 0;
+                List<HotelBooking> bookings = hotelBookingRepository
+                        .findByHotelIdAndRoomTypeIdAndRoomIdAndCheckinBeforeAndCheckoutAfterAndBookingStatusIn(
+                                hotelId,
+                                roomType.get_id(),
+                                room.get_id(),
+                                checkOutDate,
+                                checkInDate,
+                                Arrays.asList("pending", "confirmed")
+                        );
+                int roomsBooked = bookings.size();
                 int roomsAvailable = room.getNumberOfRoom() - roomsBooked;
                 long numNights = ChronoUnit.DAYS.between(checkInDate, checkOutDate);
                 if (roomsAvailable >= numRooms) {

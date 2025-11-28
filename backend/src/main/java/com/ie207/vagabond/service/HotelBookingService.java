@@ -10,6 +10,7 @@ import com.ie207.vagabond.request.HotelBookingRequest;
 import com.ie207.vagabond.response.GetHotelBookingResponse;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +36,46 @@ public class HotelBookingService {
     private final HotelRepository hotelRepository;
     private final HotelRoomTypeRepository hotelRoomTypeRepository;
     private final MongoTemplate mongoTemplate;
+    private final HotelRoomTypeRepository roomTypeRepository;
+
+    public List<Map<String, Object>> getMyBookings(String userId) {
+        List<HotelBooking> bookings = hotelBookingRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        List<Map<String, Object>> result = bookings.stream().map(b -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("_id", b.get_id());
+            map.put("userId", b.getUserId());
+            map.put("hotelId", b.getHotelId());
+            map.put("roomTypeId", b.getRoomTypeId());
+            map.put("roomId", b.getRoomId());
+            map.put("name", b.getName());
+            map.put("email", b.getEmail());
+            map.put("phone", b.getPhone());
+            map.put("checkin", b.getCheckin());
+            map.put("checkout", b.getCheckout());
+            map.put("numGuests", b.getNumGuests());
+            map.put("numRooms", b.getNumRooms());
+            map.put("paymentMethod", b.getPaymentMethod());
+            map.put("totalPrice", b.getTotalPrice());
+            map.put("bookingStatus", b.getBookingStatus());
+            map.put("isReviewed", b.getIsReviewed());
+            map.put("createdAt", b.getCreatedAt());
+            map.put("updatedAt", b.getUpdatedAt());
+
+            hotelRepository.findById(b.getHotelId()).ifPresent(h -> {
+                map.put("hotelName", h.getName());
+                map.put("hotelImg", h.getImg());
+            });
+
+            roomTypeRepository.findById(b.getRoomTypeId()).ifPresent(r -> {
+                map.put("roomTypeName", r.getName());
+            });
+
+            return map;
+        }).collect(Collectors.toList());
+
+        return result;
+    }
+
 
     @Transactional
     public HotelBooking updateHotelBookingStatus(String id, String status) {
@@ -73,24 +115,28 @@ public class HotelBookingService {
         if (bookingStatus != null && !bookingStatus.equals("all")) {
             pipeline.add(new Document("$match", new Document("bookingStatus", bookingStatus)));
         }
-
+        pipeline.add(new Document("$addFields", new Document()
+                .append("userObjectId", new Document("$toObjectId", "$userId"))
+                .append("hotelObjectId", new Document("$toObjectId", "$hotelId"))
+                .append("roomTypeObjectId", new Document("$toObjectId", "$roomTypeId"))
+        ));
         pipeline.add(new Document("$lookup", new Document()
-                .append("from", "user")
-                .append("localField", "userId")
+                .append("from", "users")
+                .append("localField", "userObjectId")
                 .append("foreignField", "_id")
                 .append("as", "user")));
         pipeline.add(new Document("$unwind", new Document("path", "$user").append("preserveNullAndEmptyArrays", true)));
 
         pipeline.add(new Document("$lookup", new Document()
-                .append("from", "hotel")
-                .append("localField", "hotelId")
+                .append("from", "hotels")
+                .append("localField", "hotelObjectId")
                 .append("foreignField", "_id")
                 .append("as", "hotel")));
         pipeline.add(new Document("$unwind", new Document("path", "$hotel").append("preserveNullAndEmptyArrays", true)));
 
         pipeline.add(new Document("$lookup", new Document()
                 .append("from", "hotelroomtypes")
-                .append("localField", "roomTypeId")
+                .append("localField", "roomTypeObjectId")
                 .append("foreignField", "_id")
                 .append("as", "roomType")));
         pipeline.add(new Document("$unwind", new Document("path", "$roomType").append("preserveNullAndEmptyArrays", true)));
@@ -112,15 +158,20 @@ public class HotelBookingService {
         ));
 
         List<Document> bookings = mongoTemplate
-                .getCollection("hotelBooking")
+                .getCollection("hotelbookings")
                 .aggregate(pipeline)
                 .into(new ArrayList<>());
+        bookings.forEach(doc -> {
+            if (doc.get("_id") instanceof ObjectId) {
+                doc.put("_id", ((ObjectId) doc.get("_id")).toHexString());
+            }
+        });
 
         Document matchCount = new Document();
         if (bookingStatus != null && !bookingStatus.equals("all")) {
             matchCount.append("bookingStatus", bookingStatus);
         }
-        long total = mongoTemplate.getCollection("hotelBooking").countDocuments(matchCount);
+        long total = mongoTemplate.getCollection("hotelbookings").countDocuments(matchCount);
 
         Map<String, Object> response = new HashMap<>();
         response.put("bookings", bookings);

@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class HotelBookingRequest {
+    private String orderID;
+
     private String userId;
     private String hotelId;
     private String roomTypeId;
