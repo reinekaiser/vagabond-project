@@ -30,7 +30,7 @@ const CreateHotel = () => {
     const navigate = useNavigate();
     const {
         register, handleSubmit, control, formState: { errors },
-        getValues, setValue, watch, reset
+        getValues, setValue, watch, reset, trigger
     } = useForm(
         {
             defaultValues: {
@@ -407,12 +407,16 @@ const CreateHotel = () => {
                     <button
                         type="button"
                         className="bg-blue-500 text-white p-2 rounded mt-3 mr-1"
-                        onClick={() => {
+                        onClick={async () => {
+                            const isValid = await trigger();
+                            if (!isValid) {
+                                toast.error("Hãy điền đầy đủ các thông tin bắt buộc!")
+                                return;
+                            }
                             setStep(2);
-                            // console.log(images);
                         }}
                     >
-                        Tiếp tục thêm loại phòng và phòng
+                        Tiếp tục
                     </button>
                 </div>
             </div>

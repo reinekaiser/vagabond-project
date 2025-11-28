@@ -264,10 +264,11 @@ const HotelDetails = () => {
                     </div>
                     <div className="grid grid-cols-3 gap-4 mb-12">
                         <div className="p-4 border border-gray-300 rounded-lg">
-                            {/* <ReviewCard
-                                hotelId={hotel._id}
+                            <ReviewCard
+                                hotelId={hotel?._id}
                                 type="Hotel"
-                            /> */}
+                                avgRating={hotel?.averageRating}
+                            />
                         </div>
                         <div className="p-4 border border-gray-300 rounded-lg grid grid-cols-2">
                             {hotel?.serviceFacilities.slice(0, 4).map((fc, index) => (

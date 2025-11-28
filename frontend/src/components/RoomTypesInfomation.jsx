@@ -15,7 +15,7 @@ const RoomTypesInformation = ({ roomTypesData = [], review = 1,
             {items.map((item, index) => (
                 <p key={index} className='flex items-center text-gray-600 text-[14px]'>
                     <IoMdCheckmarkCircleOutline className='text-[15px] mr-[2px]' />
-                    {item}
+                    <span className='truncate w-full'>{item}</span>
                 </p>
             ))}
         </div>

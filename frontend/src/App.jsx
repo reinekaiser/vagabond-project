@@ -50,7 +50,7 @@ function App() {
                     /> */}
                     {/* <Route path="/reset-password" element={<ResetPassword />} /> */}
                     <Route path="/admin/*" element={<AdminRoutes />} />
-                    {/* <Route path="/user/*" element={<UserRoutes />} /> */}
+                    <Route path="/user/*" element={<UserRoutes />} />
                     <Route path="*" element={<PublicRoutes />} />
                 </Routes>
             </BrowserRouter>

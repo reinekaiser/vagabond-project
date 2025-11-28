@@ -1,6 +1,5 @@
 package com.ie207.vagabond.model;
 
-import com.ie207.vagabond.model.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,27 +10,23 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "users")
+@NoArgsConstructor
 @Builder
-public class User {
+@Document(collection = "hotelreviews")
+public class HotelReview {
     @Id
     private String _id;
-    private String firstName;
-    private String lastName;
-    private String email;
-    private String password;
-    private String phoneNumber;
-    private String gender;
-    private Date dateOfBirth;
-    private String city;
-    private String nationality;
-    private String avatarUrl;
-    private String avatarPublicId;
-    private Role role;
+    private String userId;
+    private String hotelId;
+
+    private double rating;
+    private String comment;
+    private List<String> images;
+
     @CreatedDate
     private Date createdAt;
     @LastModifiedDate

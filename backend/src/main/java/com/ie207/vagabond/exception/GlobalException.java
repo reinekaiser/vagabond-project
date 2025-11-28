@@ -80,4 +80,11 @@ public class GlobalException {
 
         return new ResponseEntity<ErrorDetails>(error,HttpStatus.ACCEPTED);
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest().body(Map.of(
+                "error", ex.getMessage()
+        ));
+    }
 }

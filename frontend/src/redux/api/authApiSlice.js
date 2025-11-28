@@ -1,4 +1,4 @@
-import { AUTH_URL } from "../constants";
+import { AUTH_URL, USER_URL } from "../constants";
 import { apiSlice } from "./apiSlice";
 
 export const authApiSlice = apiSlice.injectEndpoints({
@@ -41,6 +41,20 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 params
             })
         }),
+        updateUser: builder.mutation({
+            query: ({ user }) => ({
+                url: `${USER_URL}/update`,
+                method: "PUT",
+                body: user
+            }) 
+        }),
+        changePassword: builder.mutation({
+            query: ({ oldPassword, newPassword }) => ({
+                url: `${USER_URL}/change-password`,
+                method: "PUT",
+                body: { oldPassword, newPassword },
+            }),
+        }),
     }),
 });
 
@@ -51,5 +65,7 @@ export const {
     useLogoutMutation,
     useGetUserQuery,
     useLazyGetUserQuery,
-    useGetAllUsersQuery
+    useGetAllUsersQuery,
+    useUpdateUserMutation,
+    useChangePasswordMutation
 } = authApiSlice;
