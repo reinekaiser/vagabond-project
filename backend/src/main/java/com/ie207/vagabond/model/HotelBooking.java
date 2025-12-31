@@ -9,27 +9,38 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.ArrayList;
+import java.time.LocalDate;
 import java.util.Date;
-import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Document(collection = "hotelroomtypes")
+@Document(collection = "hotelbookings")
 @Builder
-public class HotelRoomType {
+public class HotelBooking {
     @Id
     private String _id;
+    private String userId;
+    private String hotelId;
+    private String roomTypeId;
+    private String roomId;
+
     private String name;
-    private List<String> img = new ArrayList<>();
-    private String area;
-    private String view;
-    private List<String> roomFacilities = new ArrayList<>();
-    private List<Room> rooms = new ArrayList<>();
+    private String email;
+    private String phone;
+    private LocalDate checkin;
+    private LocalDate checkout;
+    private int numGuests;
+    private int numRooms;
+
+    private String paymentMethod;
+    private double totalPrice;
+    private String bookingStatus = "pending"; // failed, pending, confirmed, canceled
+    private Boolean isReviewed = false;
 
     @CreatedDate
     private Date createdAt;
     @LastModifiedDate
     private Date updatedAt;
+
 }

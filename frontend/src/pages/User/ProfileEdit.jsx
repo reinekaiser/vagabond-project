@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { FaUser, FaLock, FaEdit, FaSave, FaEye, FaEyeSlash, FaCalendarAlt, FaMapMarkerAlt, FaEnvelope, FaPhone, FaFlag, FaVenus, FaMars } from 'react-icons/fa';
+import { useChangePasswordMutation, useUpdateUserMutation } from '../../redux/api/authApiSlice';
+import { useDispatch } from 'react-redux';
+import { setCredentials } from '../../redux/features/authSlice';
 
 const GENDERS = [
   { value: '', label: 'Chọn giới tính' },
@@ -23,11 +26,13 @@ const ProfileEdit = () => {
     nationality: ''
   });
 
+  const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(false);
+  const [updateUser] = useUpdateUserMutation();
+  const [changePassword ] = useChangePasswordMutation();
 
   useEffect(() => {
-    // Lấy dữ liệu user từ localStorage hoặc API
     const user = JSON.parse(localStorage.getItem('userInfo'));
     if (user) {
       setForm({
@@ -51,37 +56,17 @@ const ProfileEdit = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/users/profile`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(form)
-      });
-      
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Cập nhật thông tin thất bại');
-      }
-      
-      // Cập nhật lại localStorage
-      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-      localStorage.setItem('userInfo', JSON.stringify({ ...userInfo, ...data.user }));
-      
-      toast.success(data.message || 'Cập nhật thông tin thành công!');
+      const user = JSON.parse(localStorage.getItem('userInfo'));
+      const updatedData = await updateUser({ userId: user._id, user: form }).unwrap();
+
+      dispatch(setCredentials(updatedData))
+      toast.success('Cập nhật thông tin thành công!');
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error(error.message || 'Cập nhật thông tin thất bại');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleLogout = () => {
-    localStorage.clear();
-    window.location.href = '/sign-in';
   };
 
   const ChangePasswordForm = () => {
@@ -111,31 +96,18 @@ const ProfileEdit = () => {
         toast.error('Mật khẩu xác nhận không khớp');
         return;
       }
-      setPasswordLoading(true);
+      setPasswordLoading(true)
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/api/users/change-password`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ 
-            oldPassword: passwordForm.oldPassword, 
-            newPassword: passwordForm.newPassword 
-          })
-        });
-        
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.message || 'Đổi mật khẩu thất bại');
-        }
-        
-        toast.success(data.message || 'Đổi mật khẩu thành công!');
+        const res = await changePassword({
+          oldPassword: passwordForm.oldPassword,
+          newPassword: passwordForm.newPassword
+        }).unwrap();
+
+        toast.success(res.message || 'Đổi mật khẩu thành công!');
         setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
       } catch (err) {
         console.error('Error changing password:', err);
-        toast.error(err.message || 'Đổi mật khẩu thất bại');
+        toast.error(err.data?.message || 'Đổi mật khẩu thất bại');
       } finally {
         setPasswordLoading(false);
       }
@@ -265,22 +237,20 @@ const ProfileEdit = () => {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
             <div className="flex border-b border-gray-200">
               <button
-                className={`flex items-center gap-2 px-6 py-4 font-semibold transition-colors ${
-                  activeTab === 'profile' 
-                    ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50' 
-                    : 'text-gray-500 hover:text-blue-500 hover:bg-gray-50'
-                }`}
+                className={`flex items-center gap-2 px-6 py-4 font-semibold transition-colors ${activeTab === 'profile'
+                  ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50'
+                  : 'text-gray-500 hover:text-blue-500 hover:bg-gray-50'
+                  }`}
                 onClick={() => setActiveTab('profile')}
               >
                 <FaUser className="text-sm" />
                 Thông tin cá nhân
               </button>
               <button
-                className={`flex items-center gap-2 px-6 py-4 font-semibold transition-colors ${
-                  activeTab === 'security' 
-                    ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50' 
-                    : 'text-gray-500 hover:text-blue-500 hover:bg-gray-50'
-                }`}
+                className={`flex items-center gap-2 px-6 py-4 font-semibold transition-colors ${activeTab === 'security'
+                  ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50'
+                  : 'text-gray-500 hover:text-blue-500 hover:bg-gray-50'
+                  }`}
                 onClick={() => setActiveTab('security')}
               >
                 <FaLock className="text-sm" />
@@ -297,7 +267,7 @@ const ProfileEdit = () => {
                       <FaEdit className="text-blue-500" />
                       Thông tin cơ bản
                     </h3>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -314,7 +284,7 @@ const ProfileEdit = () => {
                           required
                         />
                       </div>
-                      
+
                       <div className="space-y-2">
                         <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
                           <FaUser className="text-gray-400" />
@@ -335,9 +305,9 @@ const ProfileEdit = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                          {form.gender === 'male' ? <FaMars className="text-blue-500" /> : 
-                           form.gender === 'female' ? <FaVenus className="text-pink-500" /> : 
-                           <FaUser className="text-gray-400" />}
+                          {form.gender === 'male' ? <FaMars className="text-blue-500" /> :
+                            form.gender === 'female' ? <FaVenus className="text-pink-500" /> :
+                              <FaUser className="text-gray-400" />}
                           Giới tính
                         </label>
                         <select
@@ -351,7 +321,7 @@ const ProfileEdit = () => {
                           ))}
                         </select>
                       </div>
-                      
+
                       <div className="space-y-2">
                         <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
                           <FaCalendarAlt className="text-gray-400" />
@@ -374,7 +344,7 @@ const ProfileEdit = () => {
                       <FaMapMarkerAlt className="text-green-500" />
                       Thông tin địa chỉ
                     </h3>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -390,7 +360,7 @@ const ProfileEdit = () => {
                           placeholder="Nhập thành phố"
                         />
                       </div>
-                      
+
                       <div className="space-y-2">
                         <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
                           <FaFlag className="text-gray-400" />
@@ -414,7 +384,7 @@ const ProfileEdit = () => {
                       <FaEnvelope className="text-purple-500" />
                       Thông tin liên hệ
                     </h3>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -430,7 +400,7 @@ const ProfileEdit = () => {
                           placeholder="Email không thể thay đổi"
                         />
                       </div>
-                      
+
                       <div className="space-y-2">
                         <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
                           <FaPhone className="text-gray-400" />
@@ -468,7 +438,7 @@ const ProfileEdit = () => {
                   </div>
                 </form>
               )}
-              
+
               {activeTab === 'security' && <ChangePasswordForm />}
             </div>
           </div>

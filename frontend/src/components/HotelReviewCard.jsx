@@ -5,7 +5,7 @@ import { FaBuilding } from "react-icons/fa6";
 import { CLOUDINARY_BASE_URL } from "../constants/hotel";
 import { useAddReviewMutation } from "../redux/api/reviewApiSlice";
 import { toast } from "react-toastify";
-const HotelReviewCard = ({userId, booking, modalKey, setModalKey, refetch }) => {
+const HotelReviewCard = ({ userId, booking, modalKey, setModalKey, refetch }) => {
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
     const [addReview] = useAddReviewMutation();
@@ -22,13 +22,13 @@ const HotelReviewCard = ({userId, booking, modalKey, setModalKey, refetch }) => 
         const reviewData = {
             userId,
             ...review,
-            reviewableId: booking.hotelId._id,
-            reviewableType: "Hotel",
+            productId: booking.hotelId,
+            productType: "Hotel",
             bookingId: booking._id,
         };
         try {
             const res = await addReview(reviewData).unwrap();
-            console.log("Review added successfully:", reviewData);
+            console.log("Review added successfully:", res);
             toast.success("Thêm review thành công")
             refetch()
         } catch (error) {
@@ -43,7 +43,7 @@ const HotelReviewCard = ({userId, booking, modalKey, setModalKey, refetch }) => 
                 <FaBuilding className="text-[18px] mr-2 mt-2 text-blue-400" />
                 <div>
                     <p className="font-semibold text-[18px]">
-                        {booking.hotelId.name}
+                        {booking.hotelName}
                     </p>
                     <p className="text-gray-500 text-sm">
                         {dayjs(booking.checkin).format("DD/MM/YYYY")} -{" "}
@@ -61,7 +61,7 @@ const HotelReviewCard = ({userId, booking, modalKey, setModalKey, refetch }) => 
                         <button
                             onClick={() =>
                                 handleOpenReviewModal(
-                                    booking.hotelId._id,
+                                    booking.hotelId,
                                     booking._id,
                                     "Hotel"
                                 )
@@ -82,7 +82,7 @@ const HotelReviewCard = ({userId, booking, modalKey, setModalKey, refetch }) => 
             </div>
             <div className="rounded-xl overflow-hidden h-[100px] w-[140px]">
                 <img
-                    src={`${CLOUDINARY_BASE_URL}/${booking.hotelId.img[0]}`}
+                    src={`${CLOUDINARY_BASE_URL}/${booking.hotelImg[0]}`}
                     alt=""
                     className="w-full h-full object-cover"
                 />

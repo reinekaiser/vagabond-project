@@ -23,7 +23,7 @@ import RoomModal from '../../components/RoomModal';
 import { toast } from "react-toastify";
 import { message } from 'antd';
 import { Box, CircularProgress } from '@mui/material';
-import { useUploadImagesMutation } from '../../redux/api/uploadApiSlice';
+import { useDeleteImageMutation, useUploadImagesMutation } from '../../redux/api/uploadApiSlice';
 
 
 const HotelDetails = () => {
@@ -40,6 +40,7 @@ const HotelDetails = () => {
     const [updateRoom, { isLoading: isUpdatingRoom }] = useUpdateRoomMutation();
     const [deleteRoom, { isLoading: isDeletingRoom }] = useDeleteRoomMutation();
     const [uploadHotelImages, { isLoading: isUploadLoading, isError: isUploadError, isSuccess }] = useUploadImagesMutation();
+    const [deleteHotelImage, { isLoading: isDeleting, isSuccess: isDeteted }] = useDeleteImageMutation();
 
     const [newRoomType, setNewRoomType] = useState({});
     const [newRoom, setNewRoom] = useState([]);
@@ -55,6 +56,16 @@ const HotelDetails = () => {
     const [selectedRoomTypeId, setSelectedRoomTypeId] = useState(null);
     const [isDeleteRoomModalVisible, setDeleteRoomModalVisible] = useState(false);
     const [selectedRoomInfo, setSelectedRoomInfo] = useState(null); // { roomTypeId, roomId, roomTypeName }
+
+    const deleteImagesFromCloudinary = async (publicId) => {
+        if (!publicId) return;
+        try {
+            await deleteHotelImage(publicId).unwrap()
+            // console.log("deleted image - ", publicId)
+        } catch (error) {
+            console.log(error)
+        }
+    }
 
     // room type
     const handleOpenModalRoomType = () => {
@@ -131,12 +142,17 @@ const HotelDetails = () => {
         setModalKey((prev) => prev + 1)
         setIsRoomTypeModalVisible(true);
     }
-    const handleUpdateRoomType = async (updatedRoomType) => {
+    const handleUpdateRoomType = async (updatedRoomType, deletedImgs) => {
         // console.log("updateroomtype - ", param._id, "-", editingRoomTypeId);
         // console.log(updatedRoomType);
         try {
             const res = await updateRoomType({ hotelId: param._id, roomTypeId: editingRoomTypeId, roomType: updatedRoomType }).unwrap();
             console.log(res);
+
+            if (deletedImgs.length > 0) {
+                await Promise.all(deletedImgs.map(id => deleteImagesFromCloudinary(id)));
+            }
+
             await refetchHotel();
             handleCloseModalRoomType();
             toast.success("Cập nhật loại phòng thành công");
@@ -431,7 +447,7 @@ const RoomTypeCard = ({ roomType, images, handleEditRoomType, handleDeleteRoomTy
             {items.map((item, index) => (
                 <p key={index} className='flex items-center text-gray-600 text-[14px]'>
                     <IoMdCheckmarkCircleOutline className='text-[15px] mr-[2px]' />
-                    {item}
+                    <span className='truncate w-full'>{item}</span>
                 </p>
             ))}
         </div>

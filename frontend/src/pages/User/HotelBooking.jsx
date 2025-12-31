@@ -71,6 +71,9 @@ const HotelBooking = () => {
         param._id
     );
     const [createHotelBooking] = useCreateBookingMutation();
+    const [createPaypalOrder, { isLoading: loadingCreatePaypal }] = useCreateHotelPaypalOrderMutation();
+    const [createStripeCheckout, { isLoading: loadingCreateStripe }] = useCreateHotelCheckoutSessionMutation();
+    const [createPayOSCheckout, { isLoading: loadingCreatePayOS }] = useCreateHotelPayOSLinkMutation();
 
     const [selectedMethod, setSelectedMethod] = useState("paypal");
     const [visibleModal, setVisibleModal] = useState(false);
@@ -116,12 +119,7 @@ const HotelBooking = () => {
     );
     const room = roomType?.rooms.find((room) => room._id === roomId);
 
-    const [createPaypalOrder, { isLoading: loadingCreatePaypal }] =
-        useCreateHotelPaypalOrderMutation();
-    const [createStripeCheckout, { isLoading: loadingCreateStripe }] =
-        useCreateHotelCheckoutSessionMutation();
-    const [createPayOSCheckout, { isLoading: loadingCreatePayOS }] =
-        useCreateHotelPayOSLinkMutation();
+    
 
     const handlePayment = async (e) => {
         e.preventDefault();
@@ -162,59 +160,60 @@ const HotelBooking = () => {
             } catch (err) {
                 console.error("PayPal redirect error", err);
             }
-        } else if (selectedMethod === "stripe") {
-            try {
-                const res = await createStripeCheckout({
-                    hotelName: hotel.name,
-                    location,
-                    roomTypeName: roomType.name,
-                    roomTypeImg: roomType.img[0],
-                    userId: user?._id,
-                    hotelId: param._id,
-                    roomTypeId,
-                    roomId,
-                    checkin: checkIn,
-                    checkout: checkOut,
-                    numGuests: adults,
-                    numRooms: rooms,
-                    phone: getValues("phone"),
-                    name: getValues("name"),
-                    email: getValues("email"),
-                    paymentMethod: selectedMethod,
-                    totalPrice: getRoomPrice(room, checkIn, checkOut, rooms),
-                }).unwrap();
-                window.location.href = res.url;
-            } catch (err) {
-                console.error("Stripe redirect error", err);
-            }
-        } else if (selectedMethod === 'qr') {
-            try {
-                const res = await createPayOSCheckout({
-                    hotelName: hotel.name,
-                    location,
-                    roomTypeName: roomType.name,
-                    roomTypeImg: roomType.img[0],
-                    userId: user?._id,
-                    hotelId: param._id,
-                    roomTypeId,
-                    roomId,
-                    checkin: checkIn,
-                    checkout: checkOut,
-                    numGuests: adults,
-                    numRooms: rooms,
-                    phone: getValues("phone"),
-                    name: getValues("name"),
-                    email: getValues("email"),
-                    paymentMethod: selectedMethod,
-                    totalPrice: getRoomPrice(room, checkIn, checkOut, rooms),
-                }).unwrap();
+        } 
+        // else if (selectedMethod === "stripe") {
+        //     try {
+        //         const res = await createStripeCheckout({
+        //             hotelName: hotel.name,
+        //             location,
+        //             roomTypeName: roomType.name,
+        //             roomTypeImg: roomType.img[0],
+        //             userId: user?._id,
+        //             hotelId: param._id,
+        //             roomTypeId,
+        //             roomId,
+        //             checkin: checkIn,
+        //             checkout: checkOut,
+        //             numGuests: adults,
+        //             numRooms: rooms,
+        //             phone: getValues("phone"),
+        //             name: getValues("name"),
+        //             email: getValues("email"),
+        //             paymentMethod: selectedMethod,
+        //             totalPrice: getRoomPrice(room, checkIn, checkOut, rooms),
+        //         }).unwrap();
+        //         window.location.href = res.url;
+        //     } catch (err) {
+        //         console.error("Stripe redirect error", err);
+        //     }
+        // } else if (selectedMethod === 'qr') {
+        //     try {
+        //         const res = await createPayOSCheckout({
+        //             hotelName: hotel.name,
+        //             location,
+        //             roomTypeName: roomType.name,
+        //             roomTypeImg: roomType.img[0],
+        //             userId: user?._id,
+        //             hotelId: param._id,
+        //             roomTypeId,
+        //             roomId,
+        //             checkin: checkIn,
+        //             checkout: checkOut,
+        //             numGuests: adults,
+        //             numRooms: rooms,
+        //             phone: getValues("phone"),
+        //             name: getValues("name"),
+        //             email: getValues("email"),
+        //             paymentMethod: selectedMethod,
+        //             totalPrice: getRoomPrice(room, checkIn, checkOut, rooms),
+        //         }).unwrap();
 
-                window.location.href = res.checkoutUrl
+        //         window.location.href = res.checkoutUrl
 
-            } catch (error) {
-                console.error("Payos redirect error", error)
-            }
-        }
+        //     } catch (error) {
+        //         console.error("Payos redirect error", error)
+        //     }
+        // }
     };
 
     const isLoadingCheckoutButton = loadingCreatePaypal || loadingCreateStripe;
@@ -331,7 +330,7 @@ const HotelBooking = () => {
                                     key={roomType._id}
                                     className="grid grid-cols-[65%_35%]"
                                 >
-                                    <span className="text-[20px] font-semibold">
+                                    <span className="text-[20px] font-semibold flex items-center">
                                         {roomType.name}
                                     </span>
                                     <div className="rounded-xl overflow-hidden h-[70px]">

@@ -53,8 +53,8 @@ const AdminRoutes = () => {
                     </Route>
 
 
-                    {/* <Route path="booking/tour" element={<TourBooking/>} /> */}
-                    {/* <Route path="booking/hotel" element={<HotelBooking/>} /> */}
+                    <Route path="booking/tour" element={<TourBooking/>} />
+                    <Route path="booking/hotel" element={<HotelBooking/>} />
                 </Route>
             </Route>
         </Routes>

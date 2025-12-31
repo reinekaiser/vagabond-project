@@ -25,29 +25,25 @@ import {
 } from "react-icons/fa";
 import HotelReviewCard from "../../components/HotelReviewCard";
 import TourReviewCard from "../../components/TourReviewCard";
+import { useDeleteImageMutation } from "../../redux/api/uploadApiSlice";
 
 const UnreviewedTab = () => {
     const { user } = useSelector((state) => state.auth);
-
-    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
     const [modalKey, setModalKey] = useState(0);
-    const [itemId, setItemId] = useState(null);
-    const [bookingId, setBookingId] = useState(null);
-    const [type, setType] = useState(null);
 
     const {
         data: hotelBookings,
         isLoading: isHotelBookingLoading,
         refetch: refetchHotel,
     } = useGetHotelBookingCanReviewQuery(user._id);
-    const {
-        data: tourBookings,
-        isLoading: isTourBookingLoading,
-        refetch: refetchTour,
-    } = useGetTourBookingCanReviewQuery(user._id);
-    const [addReview] = useAddReviewMutation();
+    // const {
+    //     data: tourBookings,
+    //     isLoading: isTourBookingLoading,
+    //     refetch: refetchTour,
+    // } = useGetTourBookingCanReviewQuery(user._id);
 
-    if (isHotelBookingLoading || isTourBookingLoading) {
+    //|| isTourBookingLoading
+    if (isHotelBookingLoading) {
         return (
             <div className="flex justify-center items-center min-h-[200px]">
                 <div className="w-10 h-10 border-2 border-blue-500 rounded-full animate-spin"></div>
@@ -72,6 +68,7 @@ const UnreviewedTab = () => {
                         modalKey={modalKey}
                         setModalKey={setModalKey}
                         refetch={refetchHotel}
+                        key={index}
                     ></HotelReviewCard>
                 ))
             )}
@@ -79,7 +76,7 @@ const UnreviewedTab = () => {
             <h2 className="text-lg font-semibold text-gray-800 mb-4">
                 Đơn tour
             </h2>
-            {tourBookings?.length === 0 ? (
+            {/* {tourBookings?.length === 0 ? (
                 <p className="text-center text-gray-500">
                     Không có đơn tour nào có thể đánh giá.
                 </p>
@@ -93,7 +90,7 @@ const UnreviewedTab = () => {
                         refetch={refetchTour}
                     ></TourReviewCard>
                 ))
-            )}
+            )} */}
         </div>
     );
 };
@@ -111,6 +108,16 @@ const ReviewedTab = () => {
         const [updateReview] = useUpdateReviewMutation();
         const [deleteReview, { isLoading: isDeleting, isSuccess }] =
             useDeleteReviewMutation();
+        const [deleteImage] = useDeleteImageMutation();
+        const deleteImagesFromCloudinary = async (publicId) => {
+            if (!publicId) return;
+            try {
+                await deleteImage(publicId).unwrap()
+                console.log("deleted image - ", publicId)
+            } catch (error) {
+                console.log(error)
+            }
+        }
 
         const [editingReview, setEditingReview] = useState(null);
         const [editingReviewId, setEditingReviewId] = useState(null);
@@ -130,15 +137,20 @@ const ReviewedTab = () => {
             setIsEditModalOpen(false);
         };
 
-        const handleUpdateReview = async (updatedReview) => {
+        const handleUpdateReview = async (updatedReview, deletedImgs) => {
             try {
+                // console.log("updating review - ", updatedReview);
                 const res = await updateReview({
                     id: editingReviewId,
                     review: updatedReview,
                 }).unwrap();
-                toast.success("Cập nhật đánh giá thành công");
-                console.log("Review updated successfully:", res);
+
+                if (deletedImgs.length > 0) {
+                    await Promise.all(deletedImgs.map(id => deleteImagesFromCloudinary(id)));
+                }
                 refetch();
+                toast.success("Cập nhật đánh giá thành công");
+                // console.log("Review updated successfully:", res);
             } catch (error) {
                 console.error("Error updating review:", error);
                 toast.error("Cập nhật đánh giá thất bại");
@@ -304,8 +316,8 @@ const ReviewedTab = () => {
     return (
         <div className="space-y-4">
             {contextMessageHolder}
-            {myReviews.map((review) => (
-                <ReviewCard review={review}></ReviewCard>
+            {myReviews.map((review, idx) => (
+                <ReviewCard key={idx} review={review}></ReviewCard>
             ))}
         </div>
     );

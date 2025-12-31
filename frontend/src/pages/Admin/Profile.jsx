@@ -25,16 +25,18 @@ import {
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../redux/features/authSlice';
 import { useNavigate } from "react-router-dom";
+import { useGetUserQuery, useLogoutMutation } from '../../redux/api/authApiSlice';
 
 const Profile = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
 
-  const { data: adminData, isLoading: isLoadingProfile } = useGetAdminProfileQuery();
+  const { data: adminData, isLoading: isLoadingProfile } = useGetUserQuery();
   const [updateProfile, { isLoading: isUpdatingProfile }] = useUpdateAdminProfileMutation();
   const [updateAvatar, { isLoading: isUpdatingAvatar }] = useUpdateAdminAvatarMutation();
   const [updatePassword, { isLoading: isUpdatingPassword }] = useUpdateAdminPasswordMutation();
+  const [ logoutUser ] = useLogoutMutation();
 
   const [openEdit, setOpenEdit] = useState(false);
   const [openPassword, setOpenPassword] = useState(false);
@@ -55,7 +57,14 @@ const Profile = () => {
     }
   }, [adminData]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      const res = await logoutUser().unwrap();
+      console.log('Logout response:', res);
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
     localStorage.removeItem('token');
     dispatch(logout());
     navigate('/sign-in');
@@ -97,7 +106,8 @@ const Profile = () => {
 
   const handleUpdateProfile = async () => {
     try {
-      await updateProfile(editData).unwrap();
+      console.log('Updating profile with data:', editData);
+      // await updateProfile(editData).unwrap();
       toast.success('Cập nhật thông tin thành công');
       setOpenEdit(false);
     } catch (error) {
@@ -157,8 +167,8 @@ const Profile = () => {
             <div className="relative group mb-6 md:mb-0 md:mr-8">
               <div className="relative">
                 <img
-                  src={adminData?.avatar || adminData?.profilePicture || '/default-avatar.png'}
-                  alt={adminData?.username}
+                  src={adminData?.avatarUrl || '/ava.jpg'}
+                  alt={adminData?.lastName}
                   className="w-32 h-32 rounded-full border-4 border-white/30 shadow-lg object-cover transition-transform group-hover:scale-105"
                 />
                 <label className="absolute bottom-2 right-2 bg-white/90 hover:bg-white text-gray-700 p-2 rounded-full cursor-pointer shadow-lg transition-all duration-200 hover:scale-110">
@@ -181,7 +191,7 @@ const Profile = () => {
             {/* User Info */}
             <div className="flex-1 text-white">
               <h1 className="text-3xl md:text-4xl font-bold mb-2">
-                {adminData?.username || 'Admin'}
+                {adminData?.firstName || 'Admin'} {adminData?.lastName || 'User'}
               </h1>
               <div className="flex items-center justify-center md:justify-start mb-4">
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-white/20 text-white backdrop-blur-sm">
@@ -189,7 +199,7 @@ const Profile = () => {
                   {adminData?.role || 'Administrator'}
                 </span>
               </div>
-              <p className="text-blue-100 mb-6 max-w-md">
+              <p className="text-blue-100 mb-6">
                 Quản lý hệ thống du lịch và điều hành các hoạt động kinh doanh
               </p>
               
@@ -220,10 +230,20 @@ const Profile = () => {
                 <div className="group">
                   <label className="flex items-center text-sm font-medium text-gray-600 mb-2">
                     <UserIcon className="w-4 h-4 mr-2" />
-                    Tên đăng nhập
+                    Tên
                   </label>
                   <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 group-hover:border-blue-300 transition-colors">
-                    <p className="text-gray-800 font-medium">{adminData?.username || 'Chưa cập nhật'}</p>
+                    <p className="text-gray-800 font-medium">{adminData?.firstName || 'Chưa cập nhật'}</p>
+                  </div>
+                </div>
+
+                <div className="group">
+                  <label className="flex items-center text-sm font-medium text-gray-600 mb-2">
+                    <UserIcon className="w-4 h-4 mr-2" />
+                    Họ
+                  </label>
+                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 group-hover:border-blue-300 transition-colors">
+                    <p className="text-gray-800 font-medium">{adminData?.lastName || 'Chưa cập nhật'}</p>
                   </div>
                 </div>
 
@@ -243,7 +263,7 @@ const Profile = () => {
                     Số điện thoại
                   </label>
                   <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 group-hover:border-blue-300 transition-colors">
-                    <p className="text-gray-800 font-medium">{adminData?.phone || 'Chưa cập nhật'}</p>
+                    <p className="text-gray-800 font-medium">{adminData?.phoneNumber || 'Chưa cập nhật'}</p>
                   </div>
                 </div>
 
@@ -257,7 +277,7 @@ const Profile = () => {
                   </div>
                 </div>
 
-                <div className="group md:col-span-2">
+                <div className="group">
                   <label className="flex items-center text-sm font-medium text-gray-600 mb-2">
                     <MapPinIcon className="w-4 h-4 mr-2" />
                     Thành phố
@@ -352,12 +372,26 @@ const Profile = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tên đăng nhập
+                      Họ
                     </label>
                     <input
                       type="text"
                       name="username"
-                      value={editData?.username || ''}
+                      value={editData?.lastName || ''}
+                      onChange={handleEditChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      placeholder="Nhập tên đăng nhập"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tên
+                    </label>
+                    <input
+                      type="text"
+                      name="username"
+                      value={editData?.firstName || ''}
                       onChange={handleEditChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                       placeholder="Nhập tên đăng nhập"
@@ -406,7 +440,7 @@ const Profile = () => {
                     />
                   </div>
 
-                  <div className="md:col-span-2">
+                  <div className="">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Thành phố
                     </label>

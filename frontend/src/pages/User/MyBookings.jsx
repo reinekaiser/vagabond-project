@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import { Tabs, Modal } from "antd";
 import { CheckCircleIcon, XCircleIcon, ClockIcon } from "@heroicons/react/24/outline";
 import { IoReceiptOutline } from "react-icons/io5";
@@ -26,6 +26,11 @@ const statusMap = {
     label: "Đã hủy",
     color: "bg-red-100 text-red-700",
     icon: <XCircleIcon className="w-5 h-5 inline mr-1 text-[12px]" />,
+  },
+  failed: {
+    label: "Chờ xác nhận",
+    color: "bg-yellow-100 text-yellow-700",
+    icon: <ClockIcon className="w-5 h-5 inline mr-1 text-[12px]" />,
   },
 };
 
@@ -74,16 +79,19 @@ const HotelBookingsTab = () => {
     >
       <div className="flex items-start mb-4 flex-1">
         <FaBuilding className="text-[18px] mr-2 mt-2 text-blue-400" />
-        <div>
-          <p className="font-semibold text-[18px]">{booking.hotelId.name} - {booking.roomTypeId.name}</p>
-          <p className="text-gray-500 text-sm ml-2">
-            {dayjs(booking.checkin).format("DD/MM/YYYY")} -{" "}
-            {dayjs(booking.checkout).format("DD/MM/YYYY")} (
-            {dayjs(booking.checkout).diff(dayjs(booking.checkin), "day")} đêm)
-          </p>
-          <p className='text-gray-500 text-sm ml-2'>
-            {booking.numGuests} khách, {booking.numRooms} phòng
-          </p>
+        <div className="space-y-2">
+          <p className="font-semibold text-[18px]">{booking.hotelName}</p>
+          <p className="font-semibold text-[16px]">{booking.roomTypeName}</p>
+          <div>
+            <p className="text-gray-500 text-sm">
+              {dayjs(booking.checkin).format("DD/MM/YYYY")} -{" "}
+              {dayjs(booking.checkout).format("DD/MM/YYYY")} (
+              {dayjs(booking.checkout).diff(dayjs(booking.checkin), "day")} đêm)
+            </p>
+            <p className='text-gray-500 text-sm'>
+              {booking.numGuests} khách, {booking.numRooms} phòng
+            </p>
+          </div>
           <p className="text-orange-600 font-medium mt-2">Tổng giá: {Number(booking.totalPrice).toLocaleString("vi-VN")} ₫</p>
           <div
             className={`inline-flex items-center mt-4 px-2 py-1 rounded-md text-[12px] font-medium ${statusMap[booking.bookingStatus]?.color}`}
@@ -105,7 +113,7 @@ const HotelBookingsTab = () => {
       </div>
       <div className="rounded-xl overflow-hidden h-[120px] w-[180px]">
         <img
-          src={`${CLOUDINARY_BASE_URL}/${booking.hotelId.img[0]}`}
+          src={`${CLOUDINARY_BASE_URL}/${booking.hotelImg[0]}`}
           alt=""
           className="w-full h-full object-cover"
         />

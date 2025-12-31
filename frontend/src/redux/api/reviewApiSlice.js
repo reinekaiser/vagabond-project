@@ -42,9 +42,9 @@ export const reviewApiSlice = apiSlice.injectEndpoints({
             }),
         }),
         getReviewByProductId: builder.query({
-            query: ({ reviewableId, reviewableType }) => ({
+            query: ({ productId, productType }) => ({
                 url: `${REVIEW_URL}/`,
-                params: { reviewableId, reviewableType },
+                params: { productId, productType },
             }),
         }),
         getReviewByCity: builder.query({

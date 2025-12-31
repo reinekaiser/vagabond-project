@@ -31,7 +31,7 @@ export const hotelApiSlice = apiSlice.injectEndpoints({
                 url: `${HOTEL_URL}/`,
                 params,
             }),
-            // providesTags: ["Hotel"],
+            providesTags: ["Hotel"],
         }),
         getRoomTypes: builder.query({
             query: (hotelId) => `${HOTEL_URL}/${hotelId}/room-types`

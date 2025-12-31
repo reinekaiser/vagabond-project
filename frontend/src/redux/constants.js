@@ -12,3 +12,4 @@ export const STRIPE_URL = "/api/stripe";
 export const PAYOS_URL = "/api/payos";
 export const HOTEL_BOOKING_URL = "/api/hotelBooking";
 export const AUTH_URL = "/api/auth"
+export const USER_URL = "/api/users"

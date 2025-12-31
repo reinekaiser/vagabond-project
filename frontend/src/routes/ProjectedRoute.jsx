@@ -5,7 +5,7 @@ const ProtectedRoute = ({ allowedRoles }) => {
     const { user } = useSelector((state) => state.auth);
     const location = useLocation();
     if (!user) {
-        return <Navigate to="/login" state={{ from: location }} replace />;
+        return <Navigate to="/" state={{ from: location }} replace />;
     }
 
     if (user.role?.toUpperCase() === "ADMIN" && !location.pathname.startsWith("/admin")) {

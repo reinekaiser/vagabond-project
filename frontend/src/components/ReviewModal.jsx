@@ -10,8 +10,8 @@ const ReviewModal = ({ visible, onCancel, onAddReview, onUpdateReview, editingRe
     const [uploadKey, setUploadKey] = useState(0);
     const [images, setImages] = useState([]);
     const [imgesBase64, setImagesBase64] = useState([]);
+    const [deletedImgs, setDeletedImgs] = useState([]);
     const [uploadImages, { isLoading: isUploadLoading, isError: isUploadError, isSuccess }] = useUploadImagesMutation();
-    const [deleteImage, { isLoading: isDeleting, isSuccess: isDeteted }] = useDeleteImageMutation();
 
     const { register, handleSubmit, control, formState: { errors }, setValue, getValues, watch } = useForm({
         defaultValues: editingReview || {
@@ -21,19 +21,14 @@ const ReviewModal = ({ visible, onCancel, onAddReview, onUpdateReview, editingRe
         }
     });
 
-    const deleteImagesFromCloudinary = async (publicId) => {
-        if (!publicId) return;
-        try {
-            await deleteImage(publicId).unwrap()
-            setValue("images", getValues("images").filter(id => id !== publicId));
-            console.log("deleted image - ", publicId)
-        } catch (error) {
-            console.log(error)
-        }
-    }
-    const handleRoomTypeImagesChange = async ({ newImages, deletedExisting }) => {
-        if (deletedExisting) {
-            await deleteImagesFromCloudinary(deletedExisting);
+    const handleReviewImagesChange = async ({ deletedExisting, newImages }) => {
+        if (deletedExisting != undefined) {
+            const currentImgs = getValues("images");
+            const deletedId = currentImgs[deletedExisting];
+            const updatedImgs = currentImgs.filter((_, i) => i !== deletedExisting);
+            setValue("images", updatedImgs);
+
+            setDeletedImgs(prev => [...prev, deletedId]);
         }
         if (newImages) {
             setImages(newImages);
@@ -57,9 +52,10 @@ const ReviewModal = ({ visible, onCancel, onAddReview, onUpdateReview, editingRe
                 const allImgs = [...getValues("images"), ...uploadedImages];
                 setValue("images", allImgs);
             }
-            onUpdateReview(getValues());
+            onUpdateReview(getValues(), deletedImgs);
             setImages([]);
             setImagesBase64([]);
+            setDeletedImgs([]);
             setUploadKey(prevKey => prevKey + 1);
         }
         else {
@@ -97,24 +93,7 @@ const ReviewModal = ({ visible, onCancel, onAddReview, onUpdateReview, editingRe
         }
     }, [isUploadLoading, isUploadError, isSuccess]);
 
-    useEffect(() => {
-        if (isDeleting) {
-            messageApi.open({
-                key: 'deleting',
-                type: 'loading',
-                content: 'Đang xóa ảnh...',
-                duration: 0,
-            })
-        }
-        if (isDeteted) {
-            messageApi.open({
-                key: 'deleting',
-                type: 'success',
-                content: 'Xóa ảnh thành công!',
-                duration: 2,
-            })
-        }
-    }, [isDeleting, isDeteted])
+    
 
     return (
         <Modal
@@ -158,7 +137,7 @@ const ReviewModal = ({ visible, onCancel, onAddReview, onUpdateReview, editingRe
                     label="Thêm ảnh"
                     existingImages={watch("images") || []}
                     newImages={images}
-                    onImagesChange={handleRoomTypeImagesChange}
+                    onImagesChange={handleReviewImagesChange}
                     key={uploadKey}
                 />
 
