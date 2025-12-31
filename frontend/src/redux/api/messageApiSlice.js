@@ -5,12 +5,8 @@ export const messageApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getUsers: builder.query({
             query: () => {
-                const token = localStorage.getItem('token');
                 return {
-                    url: `${MESSAGE_URL}/`,
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                    url: `${MESSAGE_URL}/`
                 }
             },
             providesTags: ['UserToChat']

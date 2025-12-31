@@ -25,6 +25,7 @@ const TourDetails = () => {
     const navigate = useNavigate();
     const { data, isLoading, refetch } = useGetTourDetailsQuery(params._id);
 
+    console.log(data)
     const location = useLocation();
 
     useEffect(() => {

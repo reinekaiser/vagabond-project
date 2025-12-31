@@ -54,6 +54,16 @@ public class GlobalException {
         return new ResponseEntity<>(err, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(ReceiverNotFound.class)
+    public ResponseEntity<ErrorDetails> handleReceiverNotFound(ReceiverNotFound ex, WebRequest req) {
+        return buildErrorResponse(ex, req, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(SenderNotFound.class)
+    public ResponseEntity<ErrorDetails> handleSenderNotFound(SenderNotFound ex, WebRequest req) {
+        return buildErrorResponse(ex, req, HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorDetails> methodArgumentNotValidExceptionHandler(MethodArgumentNotValidException me){
         ErrorDetails err=new ErrorDetails(me.getBindingResult().getFieldError().getDefaultMessage(),"validation error", LocalDateTime.now());

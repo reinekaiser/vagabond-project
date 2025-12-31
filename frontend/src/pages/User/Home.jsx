@@ -134,7 +134,7 @@ const Home = () => {
                     </GeneralCarousel>
                 </div>
             </section>
-            {/* <HomeTourList></HomeTourList> */}
+            <HomeTourList></HomeTourList>
             <HomeHotelList></HomeHotelList>
 
             {/* <Tooltip

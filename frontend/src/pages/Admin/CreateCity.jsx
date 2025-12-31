@@ -10,6 +10,8 @@ import {FiPlusCircle} from "react-icons/fi";
 import {FaRegTrashCan} from "react-icons/fa6";
 import {IoIosClose} from "react-icons/io";
 import {toast} from "react-toastify";
+import { Modal, Spin } from "antd";
+import { LoadingOutlined } from '@ant-design/icons';
 
 const CreateCity = () => {
     const navigate = useNavigate();
@@ -52,6 +54,8 @@ const CreateCity = () => {
         uploadPlaceImages,
         { isLoading: isUploadPlaceImageLoading, isError: isUploadPlaceImageError, isSuccess: isUploadPlaceImageSuccess },
     ] = useUploadImagesMutation();
+
+    const [isUploadingImages, setIsUploadingImages] = useState(false)
 
     const uploadImagesToCloudinary = async (imagesBase64) => {
         if (imagesBase64.length === 0) return [];
@@ -115,56 +119,57 @@ const CreateCity = () => {
 
     const uploadToastId = useRef(null);
 
-    useEffect(() => {
-        if (isUploadLoading) {
-            uploadToastId.current = toast.loading("Đang tải ảnh thành phố...");
-        } else if (isUploadSuccess) {
-            toast.update(uploadToastId.current, {
-                render: "Tải ảnh thành phố thành công!",
-                type: "success",
-                isLoading: false,
-                closeButton: true,
-                autoClose:3000
-            });
-        } else if (isUploadError) {
-            toast.update(uploadToastId.current, {
-                render: "Tải ảnh thành phố thất bại!",
-                type: "error",
-                isLoading: false,
-                closeButton: true,
-                autoClose:3000
-            });
-        }
-    }, [isUploadLoading, isUploadSuccess, isUploadError]);
-
-    const uploadPlaceImageToastId = useRef(null);
-
-    useEffect(() => {
-        if (isUploadPlaceImageLoading) {
-            uploadPlaceImageToastId.current = toast.loading("Đang tải ảnh địa điểm...");
-        } else if (isUploadPlaceImageSuccess) {
-            toast.update(uploadPlaceImageToastId.current, {
-                render: "Tải ảnh địa điểm thành công!",
-                type: "success",
-                isLoading: false,
-                closeButton: true,
-                autoClose:3000
-            });
-        } else if (isUploadPlaceImageError) {
-            toast.update(uploadPlaceImageToastId.current, {
-                render: "Tải ảnh địa điểm thất bại!",
-                type: "error",
-                isLoading: false,
-                closeButton: true,
-                autoClose:3000
-            });
-        }
-    }, [isUploadPlaceImageLoading, isUploadPlaceImageSuccess, isUploadPlaceImageError]);
+    // useEffect(() => {
+    //     if (isUploadLoading) {
+    //         uploadToastId.current = toast.loading("Đang tải ảnh thành phố...");
+    //     } else if (isUploadSuccess) {
+    //         toast.update(uploadToastId.current, {
+    //             render: "Tải ảnh thành phố thành công!",
+    //             type: "success",
+    //             isLoading: false,
+    //             closeButton: true,
+    //             autoClose:3000
+    //         });
+    //     } else if (isUploadError) {
+    //         toast.update(uploadToastId.current, {
+    //             render: "Tải ảnh thành phố thất bại!",
+    //             type: "error",
+    //             isLoading: false,
+    //             closeButton: true,
+    //             autoClose:3000
+    //         });
+    //     }
+    // }, [isUploadLoading, isUploadSuccess, isUploadError]);
+    //
+    // const uploadPlaceImageToastId = useRef(null);
+    //
+    // useEffect(() => {
+    //     if (isUploadPlaceImageLoading) {
+    //         uploadPlaceImageToastId.current = toast.loading("Đang tải ảnh địa điểm...");
+    //     } else if (isUploadPlaceImageSuccess) {
+    //         toast.update(uploadPlaceImageToastId.current, {
+    //             render: "Tải ảnh địa điểm thành công!",
+    //             type: "success",
+    //             isLoading: false,
+    //             closeButton: true,
+    //             autoClose:3000
+    //         });
+    //     } else if (isUploadPlaceImageError) {
+    //         toast.update(uploadPlaceImageToastId.current, {
+    //             render: "Tải ảnh địa điểm thất bại!",
+    //             type: "error",
+    //             isLoading: false,
+    //             closeButton: true,
+    //             autoClose:3000
+    //         });
+    //     }
+    // }, [isUploadPlaceImageLoading, isUploadPlaceImageSuccess, isUploadPlaceImageError]);
 
     const [createCity, {isloading: isCreatingCity }] = useCreateCityMutation()
 
     const onSubmit = async (data) => {
         try {
+            setIsUploadingImages(true)
             const base64List = await Promise.all(
                 placeImages.map((file) => {
                     if (!file) return null;
@@ -200,6 +205,7 @@ const CreateCity = () => {
                 data.images = [...existingImages, ...uploadedImgs];
             }
 
+            setIsUploadingImages(false)
             try {
                 const result = await createCity(data).unwrap();
                 toast.success("Tạo thành phố thành công");
@@ -485,7 +491,7 @@ const CreateCity = () => {
                                 className="inline-flex items-center gap-3 px-3 py-1 border font-medium rounded-md text-blue-500  hover:bg-blue-100 border-blue-500"
                             >
                                 <FiPlusCircle></FiPlusCircle>
-                                Thêm địa điểm
+                                Thêm câu hỏi
                             </button>
                         </div>
 
@@ -501,6 +507,22 @@ const CreateCity = () => {
                     </form>
                 </div>
             </div>
+            <Modal
+                open={isUploadingImages}
+                footer={null}
+                closable={false}
+                centered
+                width={300}
+                style={{ textAlign: 'center' }}
+            >
+                <Spin
+                    indicator={<LoadingOutlined style={{ fontSize: 60 }} spin />}
+                    size="large"
+                />
+                <div style={{ marginTop: 16 }}>
+                    <p>Đang upload ảnh...</p>
+                </div>
+            </Modal>
         </div>
     );
 };

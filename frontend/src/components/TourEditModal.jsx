@@ -1,4 +1,4 @@
-import { Modal } from "antd";
+import { Modal, Spin } from "antd";
 import { useForm } from "react-hook-form";
 import { useEffect, useState, useRef } from "react";
 import UploadImg from "./UploadImg";
@@ -17,6 +17,7 @@ import {
 } from "../constants/tour";
 import { useGetCitiesQuery } from "../redux/api/cityApiSlice";
 import { toast } from "react-toastify";
+import { LoadingOutlined } from '@ant-design/icons';
 
 const TourEditModal = ({ open, onCancel, tour, refetch }) => {
     const {
@@ -33,7 +34,7 @@ const TourEditModal = ({ open, onCancel, tour, refetch }) => {
             name: "",
             category: [],
             location: "",
-            city: "",
+            cityId: "",
             duration: "",
             experiences: "",
             languageService: [],
@@ -49,6 +50,7 @@ const TourEditModal = ({ open, onCancel, tour, refetch }) => {
     const { data: cities, isLoading: isCitiesLoading } = useGetCitiesQuery();
 
     const [cityOptions, setCitiesOptions] = useState([]);
+    console.log(tour)
 
     useEffect(() => {
         if (tour && open) {
@@ -56,7 +58,7 @@ const TourEditModal = ({ open, onCancel, tour, refetch }) => {
                 name: tour.name,
                 category: tour.category,
                 location: tour.location,
-                city: tour.city,
+                cityId: tour.city._id,
                 duration: tour.duration,
                 experiences: tour.experiences,
                 languageService: tour.languageService,
@@ -95,14 +97,12 @@ const TourEditModal = ({ open, onCancel, tour, refetch }) => {
     const [imagesBase64, setImagesBase64] = useState([]);
 
     const handleImagesChange = async ({ newImages, deletedExisting }) => {
-        if (deletedExisting) {
-            const currentImgs = getValues("images");
-            const updatedImgs = currentImgs.filter(
-                (publicId) => publicId !== deletedExisting
-            );
-            setValue("images", updatedImgs);
-
-            await deleteImagesFromCloudinary(deletedExisting);
+        if (deletedExisting !== null) {
+            console.log(deletedExisting)
+            setValue(
+                "images",
+                getValues("images").filter((_, i) => i !== deletedExisting)
+            )
         }
         if (newImages) {
             setImages(newImages);
@@ -122,32 +122,10 @@ const TourEditModal = ({ open, onCancel, tour, refetch }) => {
         }
     };
 
-    const deleteImagesFromCloudinary = async (publicId) => {
-        if (!publicId) return;
-        try {
-            await deleteTourImage(publicId).unwrap();
-            setValue(
-                "images",
-                getValues("images").filter((id) => id !== publicId)
-            );
-        } catch (error) {
-            console.log(error);
-        }
-    };
-
     const uploadToastId = useRef(null);
 
     useEffect(() => {
-        if (isUploadLoading) {
-            uploadToastId.current = toast.loading("Đang tải ảnh...");
-        } else if (isUploadSuccess) {
-            toast.update(uploadToastId.current, {
-                render: "Tải ảnh thành công!",
-                type: "success",
-                isLoading: false,
-                autoClose: 3000,
-            });
-        } else if (isUploadError) {
+        if (isUploadError) {
             toast.update(uploadToastId.current, {
                 render: "Tải ảnh thất bại!",
                 type: "error",
@@ -157,20 +135,17 @@ const TourEditModal = ({ open, onCancel, tour, refetch }) => {
         }
     }, [isUploadLoading, isUploadSuccess, isUploadError]);
 
-    const onSubmit = async () => {
+    const onSubmit = async (data) => {
+        console.log(data)
         if (imagesBase64.length > 0) {
             const uploadedImgs = await uploadImagesToCloudinary(imagesBase64);
-            const allImgs = [...getValues("images"), ...uploadedImgs];
-            setValue("images", allImgs);
+            data.images = [...getValues("images"), ...uploadedImgs];
         }
-        setUploadImgKey((prev) => prev + 1);
-        setImages([]);
-        setImagesBase64([]);
 
         try {
             const res = await updateTour({
                 tourId: tour._id,
-                data: getValues(),
+                data: data,
             }).unwrap();
             toast.success("Sửa tour thành công");
             refetch();
@@ -180,6 +155,9 @@ const TourEditModal = ({ open, onCancel, tour, refetch }) => {
         }
 
         onCancel();
+        setUploadImgKey((prev) => prev + 1);
+        setImages([]);
+        setImagesBase64([]);
     };
 
     return (
@@ -247,7 +225,7 @@ const TourEditModal = ({ open, onCancel, tour, refetch }) => {
                             <div className="flex gap-2">
                                 <FormSelect
                                     label={"Thành phố"}
-                                    name={"city"}
+                                    name={"cityId"}
                                     control={control}
                                     placeholder={"Chọn thành phố"}
                                     // validationRules={{
@@ -342,6 +320,22 @@ const TourEditModal = ({ open, onCancel, tour, refetch }) => {
                     </div>
                 </form>
             </div>
+            <Modal
+                open={isUploadLoading}
+                footer={null}
+                closable={false}
+                centered
+                width={300}
+                style={{ textAlign: 'center' }}
+            >
+                <Spin
+                    indicator={<LoadingOutlined style={{ fontSize: 60 }} spin />}
+                    size="large"
+                />
+                <div style={{ marginTop: 16 }}>
+                    <p>Đang upload ảnh...</p>
+                </div>
+            </Modal>
         </Modal>
     );
 };
