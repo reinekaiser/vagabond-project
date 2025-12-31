@@ -134,8 +134,8 @@ const Home = () => {
                     </GeneralCarousel>
                 </div>
             </section>
-            {/* <HomeTourList></HomeTourList> */}
-            {/* <HomeHotelList></HomeHotelList> */}
+            <HomeTourList></HomeTourList>
+            <HomeHotelList></HomeHotelList>
 
             {/* <Tooltip
                 title="Bạn có tin nhắn mới"

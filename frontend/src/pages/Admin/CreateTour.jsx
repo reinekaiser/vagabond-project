@@ -10,12 +10,13 @@ import { HiPlus } from "react-icons/hi";
 import { useUploadImagesMutation, useDeleteImageMutation } from "../../redux/api/uploadApiSlice";
 import { CiEdit } from "react-icons/ci";
 import { MdOutlineDeleteForever } from "react-icons/md";
-import { Modal } from "antd";
+import { Modal, Spin } from "antd";
 import TicketForm from "../../components/TicketForm";
 import TourInformation from "../../components/TourInformation";
 import UploadImg from "../../components/UploadImg";
 import { CATEGORY_OPTIONS, LANGUAGE_OPTIONS } from "../../constants/tour";
 import { useGetCitiesQuery } from "../../redux/api/cityApiSlice";
+import { LoadingOutlined } from '@ant-design/icons';
 
 const cloudinaryBaseUrl = "https://res.cloudinary.com/dytiq61hf/image/upload/v1744375449";
 const CreateTour = () => {
@@ -172,6 +173,7 @@ const CreateTour = () => {
     const finishTour = async (e) => {
         e.preventDefault();
 
+        console.log(tourData)
         // Upload ảnh
         let uploadedImgs = [];
         if (imagesBase64.length > 0) {
@@ -179,7 +181,7 @@ const CreateTour = () => {
                 uploadedImgs = await uploadImagesToCloudinary(imagesBase64);
                 console.log(uploadedImgs);
             } catch (error) {
-                console.error("Upload ảnh thất bại!");
+                console.error("Upload ảnh thất bại! ", error);
                 return;
             }
 
@@ -196,7 +198,7 @@ const CreateTour = () => {
         const fromPrice = firstPrices.length > 0 ? Math.min(...firstPrices) : 0;
 
         // Check ID city
-        const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(tourData.city);
+        const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(tourData.cityId);
         if (!isValidObjectId) {
             toast.error("ID thành phố không hợp lệ");
             return;
@@ -207,6 +209,8 @@ const CreateTour = () => {
             fromPrice,
             tickets,
         };
+
+        console.log(payload)
 
         try {
             const result = await createTour(payload).unwrap();
@@ -297,7 +301,7 @@ const CreateTour = () => {
                             <div className="flex gap-2">
                                 <FormSelect
                                     label={"Thành phố"}
-                                    name={"city"}
+                                    name={"cityId"}
                                     control={control}
                                     placeholder={"Chọn thành phố"}
                                     validationRules={{
@@ -534,17 +538,7 @@ const CreateTour = () => {
     const uploadToastId = useRef(null);
 
     useEffect(() => {
-        if (isUploadLoading) {
-            uploadToastId.current = toast.loading("Đang tải ảnh...");
-        } else if (isUploadSuccess) {
-            toast.update(uploadToastId.current, {
-                render: "Tải ảnh thành công!",
-                type: "success",
-                isLoading: false,
-                closeButton: true,
-                autoClose:3000
-            });
-        } else if (isUploadError) {
+        if (isUploadError) {
             toast.update(uploadToastId.current, {
                 render: "Tải ảnh thất bại!",
                 type: "error",
@@ -643,6 +637,22 @@ const CreateTour = () => {
                 {step === 1 && renderStep1()}
                 {step === 2 && renderStep2()}
                 {step === 3 && renderStep3()}
+                <Modal
+                    open={isUploadLoading}
+                    footer={null}
+                    closable={false}
+                    centered
+                    width={300}
+                    style={{ textAlign: 'center' }}
+                >
+                    <Spin
+                        indicator={<LoadingOutlined style={{ fontSize: 60 }} spin />}
+                        size="large"
+                    />
+                    <div style={{ marginTop: 16 }}>
+                        <p>Đang upload ảnh...</p>
+                    </div>
+                </Modal>
             </div>
         </div>
     );

@@ -19,14 +19,14 @@ import TourEditModal from "../../components/TourEditModal";
 const TourDetailsAdmin = () => {
     const params = useParams();
     const navigate = useNavigate();
-    const { data, isLoading, refetch } = useGetTourDetailsQuery(params._id);
+    const { data: tour, isLoading, refetch } = useGetTourDetailsQuery(params._id);
 
     const [addTicketToTour, { isLoading: isLoadingAddTicket, isSuccess }] =
         useAddTicketToTourMutation();
 
     const handleAddTicketToTour = async (ticketData) => {
         try {
-            const tourId = data.tour._id;
+            const tourId = tour._id;
             await addTicketToTour({ tourId, ticketData }).unwrap();
             toast.success("Thêm vé thành công");
             refetch();
@@ -74,7 +74,7 @@ const TourDetailsAdmin = () => {
 
         const handleDeleteTicketFromTour = async () => {
             try {
-                const tourId = data.tour._id;
+                const tourId = tour._id;
                 const ticketId = ticket._id;
                 console.log(ticketId);
                 await deleteTicketFromTour({
@@ -278,7 +278,7 @@ const TourDetailsAdmin = () => {
                         open={isUpdateTicketModalOpen}
                         onCancel={handleCancelUpdateTicketModal}
                         ticket={ticket}
-                        tourId={data.tour._id}
+                        tourId={tour._id}
                         refetch={refetch}
                     ></TicketEditModal>
                     <button
@@ -311,7 +311,7 @@ const TourDetailsAdmin = () => {
     if (isLoading) return <div>Loading...</div>;
 
     const { voucherValidity, redemptionPolicy, cancellationPolicy, termsAndConditions } =
-        data.tickets[0];
+        tour.tickets[0];
     const defaultPolicy = {
         voucherValidity,
         redemptionPolicy,
@@ -339,14 +339,14 @@ const TourDetailsAdmin = () => {
                     </div>
                     <TourEditModal
                         open={isTourEditModalOpen}
-                        tour={data.tour}
+                        tour={tour}
                         onCancel={() => setIsTourEditModalOpen(false)}
                         refetch={refetch}
                     ></TourEditModal>
                 </div>
             </div>
             <div className="w-[85%] mx-auto bg-white rounded-lg shadow-md mt-4 p-4 md:p-6">
-                <TourInformation tourData={data.tour}></TourInformation>
+                <TourInformation tourData={tour}></TourInformation>
                 <div className="mt-2">
                     <div className="flex justify-between">
                         <div className="flex items-center space-x-2">
@@ -400,7 +400,7 @@ const TourDetailsAdmin = () => {
                         </Modal>
                     </div>
                     <div className="space-y-4 mt-4 pl-5">
-                        {data.tickets.map((ticket, index) => (
+                        {tour.tickets.map((ticket, index) => (
                             <TicketCard key={index} ticket={ticket}></TicketCard>
                         ))}
                     </div>

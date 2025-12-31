@@ -14,17 +14,33 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.WebUtils;
 
 import javax.crypto.SecretKey;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 public class JwtTokenValidator extends OncePerRequestFilter {
+    private static final Map<String, List<String>> PUBLIC_ENDPOINTS = Map.of(
+            "POST", List.of(
+                    "/api/auth/login",
+                    "/api/auth/register",
+                    "/api/auth/send-otp"
+            ),
+            "GET", List.of(
+                    "/api/hotels/**",
+                    "/api/tours/**",
+                    "/api/cites/**"
+            )
+    );
+
+    private static final AntPathMatcher pathMatcher = new AntPathMatcher();
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-        throws IOException, ServletException {
+            throws IOException, ServletException {
 
         Cookie jwtCookie = WebUtils.getCookie(request, "jwt");
         String jwt = null;
@@ -58,9 +74,12 @@ public class JwtTokenValidator extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getServletPath();
-        // Bỏ qua endpoint send-otp và register (nếu muốn)
-        return path.startsWith("/api/auth/login")
-                || path.startsWith("/api/auth/register")
-                || path.startsWith("/api/auth/send-otp");
+        String method = request.getMethod();
+
+        List<String> publicPatterns = PUBLIC_ENDPOINTS.get(method);
+        if (publicPatterns == null) return false;
+
+        return publicPatterns.stream()
+                .anyMatch(pattern -> pathMatcher.match(pattern, path));
     }
 }

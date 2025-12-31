@@ -62,7 +62,7 @@ const CityCard = ({ city }) => {
 
   return (
     <div 
-      className='p-2 rounded-xl shadow-md border border-gray-100 h-[340px] relative hover:shadow-xl duration-300 bg-white flex flex-col'
+      className='p-2 rounded-xl shadow-md border border-gray-100 h-[320px] relative hover:shadow-xl duration-300 bg-white flex flex-col'
 
     >
       <div className="w-full h-[160px] grid grid-cols-3 gap-1 rounded-xl overflow-hidden mb-2">
@@ -96,19 +96,7 @@ const CityCard = ({ city }) => {
 
           <p className='text-[14px] text-gray-600 line-clamp-2'>{city.description}</p>
         </div>
-        {city.popularPlaces && city.popularPlaces.length > 0 && (
-          <div className="mt-1">
-            <span className="font-medium text-[13px]">Địa điểm nổi bật:</span>
-            <ul className="pl-4 text-[13px] text-gray-500 flex gap-2">
-              {city.popularPlaces.slice(0, 2).map((place, idx) => (
-                <li key={idx}>{place.name}</li>
-              ))}
-              {city.popularPlaces.length > 2 && (
-                <li>+{city.popularPlaces.length - 2} địa điểm khác</li>
-              )}
-            </ul>
-          </div>
-        )}
+
       </div>
         <Dropdown
             menu={{ items: menuActions }}

@@ -20,6 +20,9 @@ const CityEditModal = ({ open, onCancel, city }) => {
         images: city?.images || [],
         popularPlaces: city?.popularPlaces || [
             { name: '', description: '', image: ''}
+        ],
+        popularQuestions: city.popularQuestions || [
+            { question: '', answer: ''}
         ]
     }
     const {
