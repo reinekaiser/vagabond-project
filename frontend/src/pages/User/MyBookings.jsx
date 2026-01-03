@@ -173,12 +173,12 @@ const TourBookingsTab = () => {
       <div className="flex items-start mb-4 w-full">
         <IoTicketSharp className="text-[18px] mr-2 mt-2 text-blue-400" />
         <div>
-          <p className="font-semibold text-[18px]">{booking.tourId.name}</p>
+          <p className="font-semibold text-[18px]">{booking.name}</p>
           <p className="text-gray-500 text-sm truncate max-w-md mb-1">
-            {booking.ticketId.title}
+            {booking.title}
           </p>
           <p className="text-gray-500 text-sm">
-            {dayjs(booking.date).format("DD/MM/YYYY")}
+            Ngày sử dụng: {dayjs(booking.useDate).format("DD/MM/YYYY")}
           </p>
           <p className="text-orange-600 font-medium mt-2">
             Tổng giá: {Number(booking.totalPrice).toLocaleString("vi-VN")} ₫
@@ -214,7 +214,7 @@ const TourBookingsTab = () => {
       </div>
       <div className="rounded-xl overflow-hidden h-[120px] w-[180px]">
         <img
-          src={`${CLOUDINARY_BASE_URL}/${booking.tourId.images[0]}`}
+          src={`${booking.tourImg}`}
           alt=""
           className="w-full h-full object-cover"
         />

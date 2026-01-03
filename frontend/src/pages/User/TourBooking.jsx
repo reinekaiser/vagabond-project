@@ -24,13 +24,12 @@ const paymentOptions = [
         id: "paypal",
         label: "PayPal",
         description:
-            "Có thể phát sinh thêm phí nếu thanh toán bằng PayPal. Hãy liên hệ ngân hàng của bạn để cập nhật thêm thông tin.",
+            "Cổng thanh toán quốc tế.",
     },
-    { id: "stripe", label: "Stripe" },
     {
-        id: "qr",
-        label: "Chuyển khoản qua QR",
-        description: "Hoàn tiền không áp dụng cho lựa chọn thanh toán của bạn",
+        id: "vnpay",
+        label: "VNPay",
+        description: "Cổng thanh toán Việt Nam",
     },
 ];
 
@@ -85,11 +84,7 @@ const TourBooking = () => {
     const [createPaypalOrder, { isLoading: loadingCreatePaypal }] =
         useCreatePaypalOrderMutation();
 
-    const [createStripeCheckout, { isLoading: loadingCreateStripe }] =
-        useCreateTourCheckoutSessionMutation();
 
-    const [createPayOSCheckout, { isLoading: loadingCreatePayOS }] =
-        useCreateTourPayOSLinkMutation();
     const { user } = useSelector((state) => state.auth);
 
     const handlePayment = async () => {
@@ -110,6 +105,8 @@ const TourBooking = () => {
             })
         );
 
+        console.log(localStorage.getItem("pendingTourBooking"));
+
         if (selectedMethod === "paypal") {
             try {
                 const res = await createPaypalOrder({
@@ -121,53 +118,54 @@ const TourBooking = () => {
             } catch (err) {
                 console.error("PayPal redirect error", err);
             }
-        } else if (selectedMethod === "stripe") {
-            try {
-                const res = await createStripeCheckout({
-                    userId: user?._id,
-                    tourId: tour.id,
-                    tourName: tour.name,
-                    tourImg: tour.img,
-                    ticketName: ticket.title,
-                    ticketId: ticket._id,
-                    quantities,
-                    useDate: selectedDate,
-                    phone: getValues("phone"),
-                    name: getValues("name"),
-                    email: getValues("email"),
-                    paymentMethod: selectedMethod,
-                    totalPrice: totalPrice,
-                }).unwrap();
-                window.location.href = res.url;
-            } catch (err) {
-                console.error("Stripe redirect error", err);
-            }
-        } else if (selectedMethod === 'qr') {
-            try {
-                const res = await createPayOSCheckout({
-                    userId: user?._id,
-                    tourId: tour.id,
-                    tourName: tour.name,
-                    tourImg: tour.img,
-                    ticketName: ticket.title,
-                    ticketId: ticket._id,
-                    quantities,
-                    useDate: selectedDate,
-                    phone: getValues("phone"),
-                    name: getValues("name"),
-                    email: getValues("email"),
-                    paymentMethod: selectedMethod,
-                    totalPrice: totalPrice,
-                }).unwrap();
-                
-                window.location.href = res.checkoutUrl
-            } catch (error) {
-                console.error("Payos redirect error", error)
-            }
         }
+        // else if (selectedMethod === "stripe") {
+        //     try {
+        //         const res = await createStripeCheckout({
+        //             userId: user?._id,
+        //             tourId: tour.id,
+        //             tourName: tour.name,
+        //             tourImg: tour.img,
+        //             ticketName: ticket.title,
+        //             ticketId: ticket._id,
+        //             quantities,
+        //             useDate: selectedDate,
+        //             phone: getValues("phone"),
+        //             name: getValues("name"),
+        //             email: getValues("email"),
+        //             paymentMethod: selectedMethod,
+        //             totalPrice: totalPrice,
+        //         }).unwrap();
+        //         window.location.href = res.url;
+        //     } catch (err) {
+        //         console.error("Stripe redirect error", err);
+        //     }
+        // } else if (selectedMethod === 'qr') {
+        //     try {
+        //         const res = await createPayOSCheckout({
+        //             userId: user?._id,
+        //             tourId: tour.id,
+        //             tourName: tour.name,
+        //             tourImg: tour.img,
+        //             ticketName: ticket.title,
+        //             ticketId: ticket._id,
+        //             quantities,
+        //             useDate: selectedDate,
+        //             phone: getValues("phone"),
+        //             name: getValues("name"),
+        //             email: getValues("email"),
+        //             paymentMethod: selectedMethod,
+        //             totalPrice: totalPrice,
+        //         }).unwrap();
+
+        //         window.location.href = res.checkoutUrl
+        //     } catch (error) {
+        //         console.error("Payos redirect error", error)
+        //     }
+        // }
     };
 
-    const isLoadingCheckoutButton = loadingCreatePaypal || loadingCreateStripe;
+    const isLoadingCheckoutButton = loadingCreatePaypal;
     return (
         <div className="bg-gray-100">
             <MainHeader />
@@ -299,9 +297,12 @@ const TourBooking = () => {
                                     <button
                                         disabled={isLoadingCheckoutButton}
                                         onClick={handlePayment}
-                                        className="bg-orange-600 rounded-xl px-6 py-2 text-white h-min"
+                                        className="bg-orange-600 rounded-xl px-6 py-2 text-white h-min flex items-center gap-2"
                                     >
                                         Thanh toán ngay
+                                        {isLoadingCheckoutButton && (
+                                            <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                                        )}
                                     </button>
                                 </div>
                             </div>
@@ -498,8 +499,8 @@ const TicketModal = ({ ticket }) => {
                                             }
                                             onClick={() => handleClick(idx)}
                                             className={` font-medium ${idx === activeIndex
-                                                    ? "text-primary"
-                                                    : "text-gray-500"
+                                                ? "text-primary"
+                                                : "text-gray-500"
                                                 }`}
                                         >
                                             {label}

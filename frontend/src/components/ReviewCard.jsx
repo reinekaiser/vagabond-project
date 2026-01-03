@@ -10,7 +10,6 @@ const ReviewCard = ({ hotelId, type, avgRating }) => {
         productId: hotelId,
         productType: type
     })
-    console.log(data)
 
     const [drawerVisible, setDrawerVisible] = useState(false);
     const [expandedComments, setExpandedComments] = useState({});

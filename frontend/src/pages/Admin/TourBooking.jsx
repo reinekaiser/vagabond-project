@@ -81,51 +81,53 @@ const TourBooking = () => {
                         <div className='col-span-2 font-semibold'>Trạng thái</div>
                     </div>
                     {tourBookings?.bookings?.length > 0 ? (
-                        tourBookings?.bookings?.map((booking) => (
-                            <div key={booking._id} className='grid grid-cols-9 gap-3 pl-11 py-4 border-b text-[14px] hover:bg-slate-50 duration-300'>
-                                <Tooltip
-                                    title={booking.tourId?.name}
-                                    placement="top"
-                                    trigger="hover"
-                                >
+                        <>
+                            {tourBookings?.bookings?.map((booking) => (
+                                <div key={booking._id} className='grid grid-cols-9 gap-3 pl-11 py-4 border-b text-[14px] hover:bg-slate-50 duration-300'>
+                                    <Tooltip
+                                        title={booking.tourName}
+                                        placement="top"
+                                        trigger="hover"
+                                    >
+                                        <div className='col-span-2'>
+                                            {booking.tourName?.length > 50 ? booking.tourName.slice(0, 50) + '...'
+                                                : booking.tourName}
+                                        </div>
+                                    </Tooltip>
+                                    <Tooltip
+                                        title={booking.ticketName}
+                                        placement="top"
+                                        trigger="hover"
+                                    >
+                                        <div className='col-span-2'>
+                                            {booking.ticketName?.length > 55 ? booking.ticketName.slice(0, 55) + '...'
+                                                : booking.ticketName}
+                                        </div>
+                                    </Tooltip>
+                                    <div className='col-span-1'>{booking.name}</div>
+                                    <div className='col-span-1'>{dayjs(booking.useDate).format('DD/MM/YYYY')}</div>
+                                    <div className='col-span-1'>{booking.totalPrice.toLocaleString('vi-VN')} ₫</div>
                                     <div className='col-span-2'>
-                                        {booking.tourId?.name?.length > 50 ? booking.tourId.name.slice(0, 50) + '...'
-                                            : booking.tourId?.name}
+                                        <BookingStatusSelect booking={booking} handleUpdateBookingStatus={handleUpdateBookingStatus} />
                                     </div>
-                                </Tooltip>
-                                <Tooltip
-                                    title={booking.ticketId?.title}
-                                    placement="top"
-                                    trigger="hover"
-                                >
-                                    <div className='col-span-2'>
-                                        {booking.ticketId?.title?.length > 55 ? booking.ticketId.title.slice(0, 55) + '...'
-                                            : booking.ticketId?.title}
-                                    </div>
-                                </Tooltip>
-                                <div className='col-span-1'>{booking.name}</div>
-                                <div className='col-span-1'>{dayjs(booking.useDate).format('DD/MM/YYYY')}</div>
-                                <div className='col-span-1'>{booking.totalPrice.toLocaleString('vi-VN')} ₫</div>
-                                <div className='col-span-2'>
-                                    <BookingStatusSelect booking={booking} handleUpdateBookingStatus={handleUpdateBookingStatus} />
                                 </div>
+                            ))}
+                            <div className='px-6 pb-4'>
+                                <Pagination
+                                    total={tourBookings?.total}
+                                    align='end'
+                                    style={{
+                                        marginTop: "20px",
+                                    }}
+                                    pageSize={tourBookings?.limit}
+                                    current={page}
+                                    onChange={handleChangePage}
+                                />
                             </div>
-                        ))
+                        </>
                     ) : (
                         <p className='text-center text-gray-500 py-4'>Không có đơn đặt nào</p>
                     )}
-                    <div className='px-6 pb-4'>
-                        <Pagination
-                            total={tourBookings?.total}
-                            align='end'
-                            style={{
-                                marginTop: "20px",
-                            }}
-                            pageSize={tourBookings?.limit}
-                            current={page}
-                            onChange={handleChangePage}
-                        />
-                    </div>
                 </div>
             </div>
         </div>

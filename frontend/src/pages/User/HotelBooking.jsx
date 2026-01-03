@@ -25,10 +25,8 @@ import { LuCircleDollarSign } from "react-icons/lu";
 import { CLOUDINARY_BASE_URL } from "../../constants/hotel";
 import { useSelector } from "react-redux";
 import {
-    useCreateBookingMutation,
-    useCreateHotelCheckoutSessionMutation,
     useCreateHotelPaypalOrderMutation,
-    useCreateHotelPayOSLinkMutation
+    useCreateHotelVnpayOrderMutation
 } from "../../redux/api/hotelBookingApiSlice";
 dayjs.extend(customParseFormat);
 dayjs.locale("vi");
@@ -37,13 +35,12 @@ const paymentOptions = [
         id: "paypal",
         label: "PayPal",
         description:
-            "Có thể phát sinh thêm phí nếu thanh toán bằng PayPal. Hãy liên hệ ngân hàng của bạn để cập nhật thêm thông tin.",
+            "Cổng thanh toán quốc tế.",
     },
-    { id: "stripe", label: "Stripe" },
     {
-        id: "qr",
-        label: "Chuyển khoản qua QR",
-        description: "Hoàn tiền không áp dụng cho lựa chọn thanh toán của bạn",
+        id: "vnpay",
+        label: "VNPay",
+        description: "Cổng thanh toán Việt Nam",
     },
 ];
 
@@ -61,7 +58,6 @@ const HotelBooking = () => {
 
     const {
         register,
-        handleSubmit,
         formState: { errors },
         getValues,
     } = useForm();
@@ -70,10 +66,9 @@ const HotelBooking = () => {
     const { data: hotel, isLoading: isLoadingHotel } = useGetHotelByIdQuery(
         param._id
     );
-    const [createHotelBooking] = useCreateBookingMutation();
+
     const [createPaypalOrder, { isLoading: loadingCreatePaypal }] = useCreateHotelPaypalOrderMutation();
-    const [createStripeCheckout, { isLoading: loadingCreateStripe }] = useCreateHotelCheckoutSessionMutation();
-    const [createPayOSCheckout, { isLoading: loadingCreatePayOS }] = useCreateHotelPayOSLinkMutation();
+    const [createVnpayOrder, { isLoading: loadingCreateVnpay }] = useCreateHotelVnpayOrderMutation();
 
     const [selectedMethod, setSelectedMethod] = useState("paypal");
     const [visibleModal, setVisibleModal] = useState(false);
@@ -119,7 +114,7 @@ const HotelBooking = () => {
     );
     const room = roomType?.rooms.find((room) => room._id === roomId);
 
-    
+
 
     const handlePayment = async (e) => {
         e.preventDefault();
@@ -160,7 +155,26 @@ const HotelBooking = () => {
             } catch (err) {
                 console.error("PayPal redirect error", err);
             }
-        } 
+        }
+        else if (selectedMethod === "vnpay") {
+            try {
+                const res = await createVnpayOrder({
+                    amount: getRoomPrice(room, checkIn, checkOut, rooms),
+                    hotelId: param._id,
+                    location,
+                    checkIn,
+                    checkOut,
+                    rooms,
+                    adults,
+                    roomTypeId,
+                    roomId,
+                }).unwrap();
+
+                window.location.href = res.url;
+            } catch (error) {
+                console.error("Vnpay redirect error", error)
+            }
+        }
         // else if (selectedMethod === "stripe") {
         //     try {
         //         const res = await createStripeCheckout({
@@ -216,7 +230,7 @@ const HotelBooking = () => {
         // }
     };
 
-    const isLoadingCheckoutButton = loadingCreatePaypal || loadingCreateStripe;
+    const isLoadingCheckoutButton = loadingCreatePaypal || loadingCreateVnpay;
 
     return (
         <div className="bg-gray-100 ">
@@ -303,9 +317,12 @@ const HotelBooking = () => {
                                         <button
                                             disabled={isLoadingCheckoutButton}
                                             onClick={handlePayment}
-                                            className="bg-orange-600 rounded-xl px-6 py-2 text-white h-min"
+                                            className="bg-orange-600 rounded-xl px-6 py-2 text-white h-min flex items-center gap-2"
                                         >
                                             Thanh toán ngay
+                                            {isLoadingCheckoutButton && (
+                                                <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                                            )}
                                         </button>
                                     </div>
                                 </div>
@@ -732,12 +749,14 @@ const PaymentMethodSelector = ({ selectedMethod, setSelectedMethod }) => {
                 ))}
             </div>
 
-            <div
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="text-sm text-center text-gray-600 mt-4 cursor-pointer hover:underline select-none"
-            >
-                {isExpanded ? "Thu gọn" : "Hiển thị thêm"}
-            </div>
+            {visibleOptions.length > 2 && (
+                <div
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="text-sm text-center text-gray-600 mt-4 cursor-pointer hover:underline select-none"
+                >
+                    {isExpanded ? "Thu gọn" : "Hiển thị thêm"}
+                </div>
+            )}
         </div>
     );
 };

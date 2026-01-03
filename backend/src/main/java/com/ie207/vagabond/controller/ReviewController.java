@@ -125,4 +125,20 @@ public class ReviewController {
             return ResponseEntity.internalServerError().body("Internal server error");
         }
     }
+
+    @GetMapping("/tour-order-can-review")
+    public ResponseEntity<?> getTourOrdersCanReview(@RequestParam String userId) {
+        if (userId == null || userId.isBlank()) {
+            return ResponseEntity.badRequest().body("Missing userId");
+        }
+
+        try {
+            List<Document> bookings = reviewService.getTourOrdersCanReview(userId);
+            return ResponseEntity.ok(bookings);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("Internal server error");
+        }
+    }
+
 }
