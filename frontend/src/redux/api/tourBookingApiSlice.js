@@ -28,15 +28,9 @@ export const tourBookingSlice = apiSlice.injectEndpoints({
             query: (sessionId) => `${STRIPE_URL}/booking-status?session_id=${sessionId}`,
         }),
         getMyTourBookings: builder.query({
-            query: () => {
-                const token = localStorage.getItem('token');
-                return {
-                    url: `${TOUR_BOOKING_URL}/`,
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                };
-            },
+            query: () => ({
+                url: `${TOUR_BOOKING_URL}/my`,
+            }),
         }),
         cancelTourBooking: builder.mutation({
             query: (id) => ({
@@ -48,7 +42,7 @@ export const tourBookingSlice = apiSlice.injectEndpoints({
             query: ({ id, bookingStatus }) => ({
                 url: `${TOUR_BOOKING_URL}/${id}/status`,
                 method: "PUT",
-                body: { bookingStatus },
+                body: bookingStatus,
             }),
         }),
         getTourBookings: builder.query({
@@ -73,7 +67,8 @@ export const tourBookingSlice = apiSlice.injectEndpoints({
                     bookingData,
                 },
             })
-        })
+        }),
+        
     }),
 });
 

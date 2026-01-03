@@ -36,14 +36,14 @@ const UnreviewedTab = () => {
         isLoading: isHotelBookingLoading,
         refetch: refetchHotel,
     } = useGetHotelBookingCanReviewQuery(user._id);
-    // const {
-    //     data: tourBookings,
-    //     isLoading: isTourBookingLoading,
-    //     refetch: refetchTour,
-    // } = useGetTourBookingCanReviewQuery(user._id);
+    const {
+        data: tourBookings,
+        isLoading: isTourBookingLoading,
+        refetch: refetchTour,
+    } = useGetTourBookingCanReviewQuery(user._id);
 
-    //|| isTourBookingLoading
-    if (isHotelBookingLoading) {
+    
+    if (isHotelBookingLoading || isTourBookingLoading) {
         return (
             <div className="flex justify-center items-center min-h-[200px]">
                 <div className="w-10 h-10 border-2 border-blue-500 rounded-full animate-spin"></div>
@@ -76,7 +76,7 @@ const UnreviewedTab = () => {
             <h2 className="text-lg font-semibold text-gray-800 mb-4">
                 Đơn tour
             </h2>
-            {/* {tourBookings?.length === 0 ? (
+            {tourBookings?.length === 0 ? (
                 <p className="text-center text-gray-500">
                     Không có đơn tour nào có thể đánh giá.
                 </p>
@@ -90,7 +90,7 @@ const UnreviewedTab = () => {
                         refetch={refetchTour}
                     ></TourReviewCard>
                 ))
-            )} */}
+            )}
         </div>
     );
 };
@@ -105,7 +105,7 @@ const ReviewedTab = () => {
     } = useGetMyReviewsQuery(user._id);
 
     const ReviewCard = ({ review }) => {
-        const [updateReview] = useUpdateReviewMutation();
+        const [updateReview, { isLoading: isUpdating }] = useUpdateReviewMutation();
         const [deleteReview, { isLoading: isDeleting, isSuccess }] =
             useDeleteReviewMutation();
         const [deleteImage] = useDeleteImageMutation();
@@ -215,6 +215,7 @@ const ReviewedTab = () => {
                         onUpdateReview={handleUpdateReview}
                         editingReview={editingReview}
                         key={modalKey}
+                        isLoading={isUpdating}
                     />
                     <Modal
                         title="Xác nhận xoá đánh giá"
@@ -231,7 +232,7 @@ const ReviewedTab = () => {
 
                 <div className="flex-1">
                     <h3 className="font-semibold text-lg mb-1">
-                        {review.reviewableId?.name}
+                        {review?.productName}
                     </h3>
 
                     <div className="flex items-center text-yellow-500 mb-1">
@@ -288,8 +289,8 @@ const ReviewedTab = () => {
                     )}
 
                     <div className="text-sm text-gray-400 mt-3">
-                        {review.reviewableType} | Đánh giá vào{" "}
-                        {dayjs(review.createdAt).format("DD/MM/YYYY")}
+                        {review.productType} | Cập nhật vào{" "}
+                        {dayjs(review.updatedAt).format("DD/MM/YYYY")}
                     </div>
                 </div>
             </div>

@@ -13,7 +13,6 @@ const statusOptions = [
     { value: 'cancelled', label: 'Cancelled', textColor: 'text-red-600', bgColor: 'bg-red-200', iconColor: '#dc2626' },
 ];
 
-
 const HotelBooking = () => {
     const [bookingStatus, setBookingStatus] = useState('all');
     const [page, setPage] = useState(1);
@@ -83,47 +82,50 @@ const HotelBooking = () => {
                         <div className='col-span-2 font-semibold'>Trạng thái</div>
                     </div>
                     {hotelBokings?.bookings?.length > 0 ? (
-                        hotelBokings?.bookings?.map((booking) => (
-                            <div key={booking._id} className='grid grid-cols-10 gap-2 border-b pl-11 py-4 text-[14px] hover:bg-slate-50 duration-300'>
-                                <div className='col-span-2'>{booking.hotelName}</div>
-                                <Tooltip
-                                    title={booking.roomTypeName}
-                                    placement="top"
-                                    trigger="hover"
-                                >
+                        <>
+                            {hotelBokings?.bookings?.map((booking) => (
+                                <div key={booking._id} className='grid grid-cols-10 gap-2 border-b pl-11 py-4 text-[14px] hover:bg-slate-50 duration-300'>
+                                    <div className='col-span-2'>{booking.hotelName}</div>
+                                    <Tooltip
+                                        title={booking.roomTypeName}
+                                        placement="top"
+                                        trigger="hover"
+                                    >
+                                        <div className='col-span-2'>
+                                            {booking.roomTypeName.length > 50 ? booking.roomTypeName.slice(0, 50) + '...'
+                                                : booking.roomTypeName}
+                                        </div>
+                                    </Tooltip>
+                                    {/* <div className='col-span-1'>{booking.name}</div> */}
+                                    <div className='col-span-1'>{booking.userFirstName} {booking.userLastName}</div>
+                                    <div className='col-span-1'>{dayjs(booking.checkin).format('DD/MM/YYYY')}</div>
+                                    <div className='col-span-1'>{dayjs(booking.checkout).format('DD/MM/YYYY')}</div>
+                                    <div className='col-span-1'>{booking.totalPrice.toLocaleString()} ₫</div>
                                     <div className='col-span-2'>
-                                        {booking.roomTypeName.length > 50 ? booking.roomTypeName.slice(0, 50) + '...'
-                                            : booking.roomTypeName}
+                                        <BookingStatusSelect
+                                            booking={booking}
+                                            handleUpdateBookingStatus={handleUpdateBookingStatus}
+                                        />
                                     </div>
-                                </Tooltip>
-                                {/* <div className='col-span-1'>{booking.name}</div> */}
-                                <div className='col-span-1'>{booking.userFirstName} {booking.userLastName}</div>
-                                <div className='col-span-1'>{dayjs(booking.checkin).format('DD/MM/YYYY')}</div>
-                                <div className='col-span-1'>{dayjs(booking.checkout).format('DD/MM/YYYY')}</div>
-                                <div className='col-span-1'>{booking.totalPrice.toLocaleString()} ₫</div>
-                                <div className='col-span-2'>
-                                    <BookingStatusSelect
-                                        booking={booking}
-                                        handleUpdateBookingStatus={handleUpdateBookingStatus}
-                                    />
                                 </div>
+                            ))}
+                            <div className='px-6 pb-4'>
+                                <Pagination
+                                    total={hotelBokings?.total}
+                                    align='end'
+                                    style={{
+                                        marginTop: "20px",
+                                    }}
+                                    pageSize={hotelBokings?.pageSize}
+                                    current={page}
+                                    onChange={handleChangePage}
+                                />
                             </div>
-                        ))
+                        </>
                     ) : (
-                        <p className='text-center col-span-10'>Không có đơn đặt nào.</p>
+                        <p className='text-center text-gray-500 py-4'>Không có đơn đặt nào</p>
                     )}
-                    <div className='px-6 pb-4'>
-                        <Pagination
-                            total={hotelBokings?.total}
-                            align='end'
-                            style={{
-                                marginTop: "20px",
-                            }}
-                            pageSize={hotelBokings?.pageSize}
-                            current={page}
-                            onChange={handleChangePage}
-                        />
-                    </div>
+
                 </div>
             </div>
         </div >

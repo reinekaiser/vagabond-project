@@ -5,34 +5,38 @@ import { BsCheckCircle } from "react-icons/bs";
 import dayjs from 'dayjs';
 const TourCheckoutSuccess = () => {
     const [searchParams] = useSearchParams();
-    const orderID = searchParams.get("token");
+    const orderID = searchParams.get("token") || searchParams.get("vnp_TxnRef");
 
     const [booking, setBooking] = useState(null);
 
     const [capturePaypalOrder, { isLoading, data, error }] =
         useCapturePaypalOrderAndSaveTourBookingMutation();
 
-    console.log(data)
-    
+    const localTourBooingData = JSON.parse(
+        localStorage.getItem("pendingTourBooking")
+    );
+
     useEffect(() => {
         const confirmOrder = async () => {
             try {
-                const localTourBooingData = JSON.parse(
-                    localStorage.getItem("pendingTourBooking")
-                );
-
-                console.log(localTourBooingData);
 
                 if (!orderID || !localTourBooingData) return;
+                const { quantities = {}, ...rest } = localTourBooingData;
 
-                const res = await capturePaypalOrder({
-                    orderID,
-                    ...localTourBooingData,
-                }).unwrap();
+                if (localTourBooingData?.paymentMethod === "paypal") {
 
-                setBooking(res.order);
+                    const res = await capturePaypalOrder({
+                        orderID,
+                        ...rest,
+                        adults: quantities["Người lớn"] || 0,
+                        childs: quantities["Trẻ em"] || 0,
+                    }).unwrap();
 
-                localStorage.removeItem("pendingTourBooking");
+                    setBooking(res.order);
+
+                    localStorage.removeItem("pendingTourBooking");
+                }
+
             } catch (err) {
                 console.error("Lỗi khi lưu đơn hàng:", err);
             }
@@ -66,7 +70,7 @@ const TourCheckoutSuccess = () => {
                     <div className="flex justify-between">
                         <span className="font-medium">Phương thức thanh toán:</span>
                         <span className="font-semibold">
-                           {booking.paymentMethod.charAt(0).toUpperCase() + booking.paymentMethod.slice(1)}
+                            {booking.paymentMethod.charAt(0).toUpperCase() + booking.paymentMethod.slice(1)}
                         </span>
                     </div>
                     <div className="flex justify-between">

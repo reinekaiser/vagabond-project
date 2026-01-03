@@ -27,6 +27,7 @@ public class ReviewService {
     private final MongoTemplate mongoTemplate;
     private final HotelReviewRepository hotelReviewRepository;
     private final TourReviewRepository tourReviewRepository;
+    private final TourBookingRepository tourBookingRepository;
 
     @Transactional
     public Object createReview(ReviewRequest request) {
@@ -82,10 +83,10 @@ public class ReviewService {
 
                 savedReview = tourReviewRepository.save(review);
 
-//                TourBooking booking = tourBookingRepository.findById(request.getBookingId())
-//                        .orElseThrow(() -> new IllegalArgumentException("Invalid tour booking"));
-//                booking.setIsReviewed(true);
-//                tourBookingRepository.save(booking);
+                TourBooking booking = tourBookingRepository.findById(request.getBookingId())
+                        .orElseThrow(() -> new IllegalArgumentException("Invalid tour booking"));
+                booking.setIsReviewed(true);
+                tourBookingRepository.save(booking);
                 break;
             }
 
@@ -280,6 +281,50 @@ public class ReviewService {
         return bookings;
     }
 
+    public List<Document> getTourOrdersCanReview(String userId) {
+        LocalDate today = LocalDate.now();
+        List<String> excludedStatuses = Arrays.asList("pending", "cancelled");
+
+        List<Document> pipeline = new ArrayList<>();
+
+        pipeline.add(new Document("$match", new Document("userId", userId)
+                .append("bookingStatus", new Document("$nin", excludedStatuses))
+                .append("isReviewed", false)
+                .append("useDate", new Document("$lte", today))
+        ));
+
+        pipeline.add(new Document("$addFields", new Document("tourObjectId", new Document("$toObjectId", "$tourId"))));
+        pipeline.add(new Document("$lookup", new Document()
+                .append("from", "tours")
+                .append("localField", "tourObjectId")
+                .append("foreignField", "_id")
+                .append("as", "tour")
+        ));
+        pipeline.add(new Document("$unwind", new Document("path", "$tour").append("preserveNullAndEmptyArrays", true)));
+
+        pipeline.add(new Document("$project", new Document()
+                .append("_id", 1)
+                .append("tourId", 1)
+                .append("useDate", 1)
+                .append("totalPrice", 1)
+                .append("bookingStatus", 1)
+                .append("tourName", "$tour.name")
+                .append("tourImg", "$tour.images")
+        ));
+
+        List<Document> bookings = mongoTemplate.getCollection("tourbookings")
+                .aggregate(pipeline)
+                .into(new ArrayList<>());
+
+        bookings.forEach(doc -> {
+            if (doc.get("_id") instanceof ObjectId) {
+                doc.put("_id", ((ObjectId) doc.get("_id")).toHexString());
+            }
+        });
+
+        return bookings;
+    }
+
     public List<Document> getMyReviews(String userId) {
         if (userId == null) throw new IllegalArgumentException("userId is required");
 
@@ -421,6 +466,7 @@ public class ReviewService {
                 .append("images", 1)
                 .append("createdAt", 1)
                 .append("updatedAt", 1)
+                .append("userId", 1)
                 .append("userFirstName", "$user.firstName")
                 .append("userLastName", "$user.lastName")
                 .append("userEmail", "$user.email")

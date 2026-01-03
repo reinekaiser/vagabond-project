@@ -5,7 +5,7 @@ import { useForm, Controller } from "react-hook-form";
 import { useUploadImagesMutation, useDeleteImageMutation } from '../redux/api/uploadApiSlice'
 import FormTextArea from './FormTextArea';
 
-const ReviewModal = ({ visible, onCancel, onAddReview, onUpdateReview, editingReview }) => {
+const ReviewModal = ({ visible, onCancel, onAddReview, onUpdateReview, editingReview, isLoading }) => {
     const [messageApi, contextMessageHolder] = message.useMessage();
     const [uploadKey, setUploadKey] = useState(0);
     const [images, setImages] = useState([]);
@@ -93,7 +93,7 @@ const ReviewModal = ({ visible, onCancel, onAddReview, onUpdateReview, editingRe
         }
     }, [isUploadLoading, isUploadError, isSuccess]);
 
-    
+
 
     return (
         <Modal
@@ -144,9 +144,16 @@ const ReviewModal = ({ visible, onCancel, onAddReview, onUpdateReview, editingRe
                 <div className="flex justify-end">
                     <button
                         type="submit"
-                        className="bg-blue-500 text-white p-2 rounded"
+                        disabled={isLoading || isUploadLoading}
+                        className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded
+                            disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                        {editingReview ? "Sửa đánh giá" : "Thêm đánh giá"}
+                        {(isLoading || isUploadLoading) && (
+                            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                        )}
+                        <span>
+                            {editingReview ? "Sửa đánh giá" : "Thêm đánh giá"}
+                        </span>
                     </button>
                 </div>
             </form>

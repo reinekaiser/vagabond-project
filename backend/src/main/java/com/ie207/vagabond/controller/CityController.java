@@ -45,26 +45,26 @@ public class CityController {
         }
     }
 
-    @PostMapping("/")
-    public ResponseEntity<City> createCity(@RequestBody CityRequest request) {
-        City city = cityService.createCity(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(city);
-    }
-
-    @PutMapping("/{cityId}")
-    public ResponseEntity<City> updateCity(@RequestBody CityRequest request, @PathVariable String cityId) {
-        City city = cityService.updateCity(cityId, request);
-        return ResponseEntity.ok(city);
-    }
-
-    @DeleteMapping("/{cityId}")
-    public ResponseEntity<?> deleteCity(@PathVariable String cityId) {
-        try {
-            cityService.deleteCity(cityId);
-            return ResponseEntity.ok(Map.of("message", "City deleted successfully"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
-        }
-    }
+//    @PostMapping("/")
+//    public ResponseEntity<City> createCity(@RequestBody CityRequest request) {
+//        City city = cityService.createCity(request);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(city);
+//    }
+//
+//    @PutMapping("/{cityId}")
+//    public ResponseEntity<City> updateCity(@RequestBody CityRequest request, @PathVariable String cityId) {
+//        City city = cityService.updateCity(cityId, request);
+//        return ResponseEntity.ok(city);
+//    }
+//
+//    @DeleteMapping("/{cityId}")
+//    public ResponseEntity<?> deleteCity(@PathVariable String cityId) {
+//        try {
+//            cityService.deleteCity(cityId);
+//            return ResponseEntity.ok(Map.of("message", "City deleted successfully"));
+//        } catch (RuntimeException e) {
+//            return ResponseEntity.badRequest()
+//                    .body(Map.of("error", e.getMessage()));
+//        }
+//    }
 }
