@@ -3,6 +3,7 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 
 const ProtectedRoute = ({ allowedRoles }) => {
     const { user } = useSelector((state) => state.auth);
+    console.log(user)
     const location = useLocation();
     if (!user) {
         return <Navigate to="/" state={{ from: location }} replace />;

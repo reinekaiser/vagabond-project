@@ -5,44 +5,57 @@ import { useDispatch, useSelector } from "react-redux";
 import { setUsers, setSelectedUser } from '../../redux/features/chatSlice';
 import { useGetUserToChatQuery, useMarkMessagesAsReadMutation } from '../../redux/api/messageApiSlice';
 import { RiUserAddFill } from "react-icons/ri";
-import { connectSocket } from '../../Utils/socket'
+import WebSocketService from '../../services/websocket.js';
 import { addUser } from '../../redux/features/chatSlice'
 
 const AdminChat = () => {
     const dispatch = useDispatch();
     const { user: userInfo } = useSelector((state) => state.auth);
     const { selectedUser } = useSelector((state) => state.chat);
-    const { data: user, isLoading: isLoadingUser, refetch } = useGetUserToChatQuery(undefined, {
+    const { data: users, isLoading: isLoadingUser, refetch } = useGetUserToChatQuery(undefined, {
         refetchOnMountOrArgChange: true,
     });
     useEffect(() => {
-        if (user) {
-            dispatch(setUsers(user));
+        if (users) {
+            dispatch(setUsers(users));
         }
-    }, [user]);
+    }, [users]);
 
     useEffect(() => {
-        const socket = connectSocket(userInfo._id, userInfo.role);
-        console.log(socket)
-        socket.on("newMessage", (newMessage) => {
-            const message = {
-                ...newMessage,
-                currentUserId: userInfo._id,
-            };
-            dispatch(addUser(message))
-        });
+        const handleConnect = () => {
+            console.log('WebSocket connected successfully')
+
+            WebSocketService.subscribe('/user/queue/messages', (newMessage) => {
+                const message = {
+                    ...newMessage,
+                    currentUserId: userInfo._id,
+                };
+
+                dispatch(addUser(message))
+            })
+        }
+
+        WebSocketService.connect(userInfo._id, userInfo.role, handleConnect);
+
+        // socket.on("newMessage", (newMessage) => {
+        //     const message = {
+        //         ...newMessage,
+        //         currentUserId: userInfo._id,
+        //     };
+        //     dispatch(addUser(message))
+        // });
 
         return () => {
-            socket.off("newMessage");
+            WebSocketService.disconnect();
         };
     }, [selectedUser])
+
 
     const [markSent] = useMarkMessagesAsReadMutation();
     const handleMarkMessagesAsRead = async () => {
         if (selectedUser) {
             try {
                 dispatch(setSelectedUser(selectedUser));
-                console.log("handleMarkMessagesAsRead")
                 const res = await markSent(selectedUser._id);
                 console.log(res);
             } catch (error) {
@@ -104,6 +117,7 @@ const ChatSideBar = () => {
         }
     };
 
+    console.log("onlineUsers", onlineUsers)
     // console.log("admin - ", unreadCount)
 
     return (

@@ -1,11 +1,16 @@
 import { BiSupport } from "react-icons/bi";
 import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useGetMessagesQuery, useSendMessageMutation, useGetUserToChatQuery, useMarkMessagesAsReadMutation } from '../../redux/api/messageApiSlice';
+import {
+    useGetMessagesQuery,
+    useGetUserToChatQuery,
+    useMarkMessagesAsReadMutation,
+    useSendMessageMutation
+} from '../../redux/api/messageApiSlice';
 import { RiSendPlaneFill } from "react-icons/ri";
 import { setMessages, addMessage, setUsers, setSelectedUser } from '../../redux/features/chatSlice'
-import { connectSocket } from '../../Utils/socket'
 import { Box, CircularProgress } from '@mui/material';
+import WebSocketService from "../../services/websocket.js";
 
 const Chat = () => {
     const dispatch = useDispatch();
@@ -28,7 +33,6 @@ const Chat = () => {
                 try {
                     console.log("MarkMessagesAsRead")
                     const res = await markSent(admin[0]._id);
-                    console.log(res)
                 } catch (error) {
                     console.error("Error marking messages as read:", error);
                 }
@@ -36,27 +40,42 @@ const Chat = () => {
         };
         initializeChat();
     }, [admin]);
+
+    console.log("messages", messages)
+
     useEffect(() => {
         if (adminId && messages) {
             dispatch(setMessages(messages));
         }
     }, [messages, dispatch]);
+
     useEffect(() => {
         if (adminId) {
-            const socket = connectSocket(user._id, user.role);
-            socket.on("newMessage", (newMessage) => {
-                const message = {
-                    ...newMessage,
-                    currentUserId: user._id,
-                };
-                console.log("<", message)
-                const isMessageSentFromAdmin = String(message.sender._id) === String(adminId);
-                console.log(isMessageSentFromAdmin)
-                if (!isMessageSentFromAdmin) return;
-                dispatch(addMessage(message));
-            });
+            const handleConnect = () => {
+                const subscription = WebSocketService.subscribe(
+                    "/user/queue/messages",
+                    (newMessage) => {
+                        const message = {
+                            ...newMessage,
+                            currentUserId: user._id,
+                        };
+                        
+                        const isMessageSentFromAdmin = String(message.sender._id) === String(adminId);
+                        console.log(isMessageSentFromAdmin)
+                        if (!isMessageSentFromAdmin) return;
+                        dispatch(addMessage(message));
+                    }
+                );
+            };
+
+            const handleError = (error) => {
+                console.error('❌ WebSocket connection error:', error);
+            }
+
+            WebSocketService.connect(user._id, user.role, handleConnect, handleError);
+
             return () => {
-                socket.off("newMessage");
+                WebSocketService.disconnect();
             };
         }
     }, [adminId])
@@ -141,7 +160,7 @@ const MessageInput = ({ dispatch }) => {
     const { user } = useSelector((state) => state.auth);
     const { selectedUser } = useSelector((state) => state.chat);
     const adminId = selectedUser?._id;
-    const [sendMsg] = useSendMessageMutation();
+    const [sendMsg] = useSendMessageMutation()
 
     const handleChange = (e) => setText(e.target.value);
     const handleSend = async () => {
@@ -152,6 +171,8 @@ const MessageInput = ({ dispatch }) => {
                 ...res,
                 currentUserId: user._id,
             };
+
+            console.log("message", message)
             dispatch(addMessage(message));
             setText("");
         } catch (error) {

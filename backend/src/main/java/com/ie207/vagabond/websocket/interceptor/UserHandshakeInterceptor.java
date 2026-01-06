@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
+import java.security.Principal;
 import java.util.Map;
 
 @Component
@@ -32,6 +33,8 @@ public class UserHandshakeInterceptor implements HandshakeInterceptor {
             if (userId != null) {
                 attributes.put("userId", userId);
                 attributes.put("role", role != null ? role : "user");
+                Principal principal = () -> userId;
+                attributes.put("user", principal);
             }
         }
 

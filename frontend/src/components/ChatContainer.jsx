@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useGetMessagesQuery, useSendMessageMutation } from '../redux/api/messageApiSlice'
+import {useGetMessagesQuery, useSendMessageMutation} from '../redux/api/messageApiSlice'
 import { setMessages, addMessage } from '../redux/features/chatSlice'
 import { RiSendPlaneFill } from "react-icons/ri";
-import { connectSocket } from '../Utils/socket'
+import WebSocketService from '../services/websocket.js';
 
 const ChatContainer = ({ onClick }) => {
     const dispatch = useDispatch();
@@ -14,28 +14,41 @@ const ChatContainer = ({ onClick }) => {
         skip: !selectedUser?._id,
         refetchOnMountOrArgChange: true,
     })
+
     useEffect(() => {
         if (selectedUser?._id && messages) {
             dispatch(setMessages(messages));
         }
     }, [messages, selectedUser?._id]);
+
     useEffect(() => {
         if (selectedUser?._id) {
-            const socket = connectSocket(user._id, user.role);
-            socket.on("newMessage", (newMessage) => {
-                const message = {
-                    ...newMessage,
-                    currentUserId: user._id,
-                };
-                console.log(">", message)
-                const isMessageSentFromSelectedUser = String(message.sender._id) === String(selectedUser._id);
-                console.log(isMessageSentFromSelectedUser)
-                if (!isMessageSentFromSelectedUser) return;
-                dispatch(addMessage(message));
-            });
+            const handleConnect = () => {
+                WebSocketService.subscribe(
+                    "/user/queue/messages",
+                    (newMessage) => {
+                        const message = {
+                            ...newMessage,
+                            currentUserId: user._id,
+                        };
+                        console.log('✅ Processed message:', message);
+                        const isMessageSentFromSelectedUser = String(message.sender._id) === String(selectedUser._id);
+                        console.log(isMessageSentFromSelectedUser)
+                        if (!isMessageSentFromSelectedUser) return;
+                        dispatch(addMessage(message))
+                    }
+                );
+
+            };
+
+            const handleError = (error) => {
+                console.error('❌ WebSocket connection error:', error);
+            }
+
+            WebSocketService.connect(user._id, user.role, handleConnect, handleError);
 
             return () => {
-                socket.off("newMessage");
+                WebSocketService.disconnect();
             };
         }
     }, [selectedUser._id]);
@@ -112,7 +125,6 @@ const ChatContainer = ({ onClick }) => {
                         })}
                     </div>
 
-
                     <MessageInput dispatch={dispatch} />
                 </div>
             )}
@@ -151,7 +163,7 @@ const MessageInput = ({ dispatch }) => {
     const [text, setText] = useState("");
     const { selectedUser } = useSelector((state) => state.chat);
     const { user } = useSelector((state) => state.auth);
-    const [sendMsg] = useSendMessageMutation();
+    const [sendMsg] = useSendMessageMutation()
 
     const handleChange = (e) => {
         setText(e.target.value);
@@ -164,6 +176,7 @@ const MessageInput = ({ dispatch }) => {
                 ...res,
                 currentUserId: user._id,
             };
+            console.log("message", message)
             dispatch(addMessage(message));
             setText("");
         } catch (error) {

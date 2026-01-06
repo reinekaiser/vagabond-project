@@ -22,6 +22,7 @@
     "@react-three/drei": "^10.0.7",
     "@react-three/fiber": "^9.1.2",
     "@reduxjs/toolkit": "^2.6.1",
+    "@stomp/stompjs": "^7.2.1",
     "antd": "^5.24.6",
     "apexcharts": "^4.5.0",
     "axios": "^1.8.3",
@@ -44,11 +45,12 @@
     "react-select": "^5.10.1",
     "react-slick": "^0.30.3",
     "react-toastify": "^11.0.5",
+    "scrollreveal": "^4.0.9",
     "slick-carousel": "^1.8.1",
-    "socket.io-client": "^4.8.1",
+    "sockjs-client": "^1.6.1",
     "three": "^0.162.0",
-    "yet-another-react-lightbox": "^3.23.0",
-    "scrollreveal": "^4.0.9"
+    "vite-plugin-node-polyfills": "^0.24.0",
+    "yet-another-react-lightbox": "^3.23.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

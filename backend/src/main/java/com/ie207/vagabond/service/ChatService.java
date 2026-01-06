@@ -27,7 +27,8 @@ public class ChatService {
     private final WebSocketEventListener eventListener;
     private final SimpMessagingTemplate messagingTemplate;
 
-    public List<User> getAllUsers(User currentUser){
+    public List<User> getAllUsers(String currentUserId){
+        User currentUser = userRepository.findById(currentUserId).orElseThrow(() -> new RuntimeException("User not found"));
         if (currentUser == null){
             throw new RuntimeException("Something went wrong...");
         }
@@ -49,7 +50,7 @@ public class ChatService {
     }
 
     @Transactional
-    public Message sendMessage(String senderId, String receiverId, String text, String messageType) {
+    public Message sendMessage(String senderId, String receiverId, String text) {
 
         if (text == null || text.trim().isEmpty()) {
             throw new IllegalArgumentException("Message text cannot be empty");
@@ -75,31 +76,24 @@ public class ChatService {
         System.out.println("✅ Message saved to DB: " + savedMessage.get_id());
 
 
-        if ("toAdmin".equals(messageType)) {
-            // Broadcast đến tất cả admin
-            messagingTemplate.convertAndSend("/topic/admin/messages", savedMessage);
-            System.out.println("✅ Broadcasted to all admins");
+        String receiverSocketId = eventListener.getReceiverSocketId(receiver.get_id());
 
-        } else if ("toUser".equals(messageType) && receiver != null) {
-            // Gửi đến user cụ thể
-            String receiverSocketId = eventListener.getReceiverSocketId(receiver.get_id());
-
-            if (receiverSocketId != null) {
-                messagingTemplate.convertAndSendToUser(
-                        receiverSocketId,
-                        "/queue/messages",
-                        message
-                );
-                System.out.println("✅ Sent to user: " + receiver.get_id());
-            } else {
-                System.out.println("⚠️ User offline, message saved but not delivered");
-            }
+        if (receiverSocketId != null) {
+            messagingTemplate.convertAndSendToUser(
+                    receiver.get_id(),
+                    "/queue/messages",
+                    message
+            );
+            System.out.println("✅ Sent to user: " + receiver.get_id());
+        } else {
+            System.out.println("⚠️ User offline, message saved but not delivered");
         }
 
         return message;
     }
 
-    public List<UserWithMessageResponse> getUsersToChat (User currentUser) {
+    public List<UserWithMessageResponse> getUsersToChat (String currentUserId) {
+        User currentUser = userRepository.findById(currentUserId).orElseThrow(() -> new RuntimeException("User not found"));
         if (currentUser == null){
             throw new RuntimeException("Something went wrong...");
         }
@@ -120,7 +114,6 @@ public class ChatService {
                 })
                 .toList();
 
-        List<Message> allMessages = messageRepository.findAll();
 
         List<UserWithMessageResponse> userWithMessages = new ArrayList<>();
 
@@ -173,7 +166,7 @@ public class ChatService {
 
     @Transactional
     public List<Message> getChatHistory(String currentUserId, String otherUserId) {
-        // Lấy messages giữa 2 users, sort tăng dần theo thời gian
+
         List<Message> messages = messageRepository.findMessagesBetweenUsers(
                 currentUserId,
                 otherUserId,

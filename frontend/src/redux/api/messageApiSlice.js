@@ -6,58 +6,34 @@ export const messageApiSlice = apiSlice.injectEndpoints({
         getUsers: builder.query({
             query: () => {
                 return {
-                    url: `${MESSAGE_URL}/`
+                    url: `${MESSAGE_URL}/users`
                 }
             },
             providesTags: ['UserToChat']
         }),
         getUserToChat: builder.query({
-            query: () => {
-                const token = localStorage.getItem('token');
-                return {
-                    url: `${MESSAGE_URL}/users_to_chat`,
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                }
-            }
+            query: () => ({
+                url: `${MESSAGE_URL}/users/chat`
+            })
         }),
         getMessages: builder.query({
-            query: (id) => {
-                const token = localStorage.getItem('token');
-                return {
-                    url: `${MESSAGE_URL}/${id}`,
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                }
-            },
+            query: (id) => ({
+                url: `${MESSAGE_URL}/history/${id}`
+            }),
+        }),
+        markMessagesAsRead: builder.mutation({
+            query: (id) => ({
+                url: `${MESSAGE_URL}/read/${id}`,
+                method: "PUT"
+            })
         }),
         sendMessage: builder.mutation({
-            query: ({ id, text }) => {
-                const token = localStorage.getItem('token');
-                return {
+            query: ({ id, text }) => ({
                     url: `${MESSAGE_URL}/send/${id}`,
                     method: "POST",
                     body: { text },
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                }
-            },
+                }),
             invalidatesTags: ['UserToChat']
-        }),
-        markMessagesAsRead: builder.mutation({
-            query: (id) => {
-                const token = localStorage.getItem('token');
-                return {
-                    url: `${MESSAGE_URL}/mark-as-read/${id}`,
-                    method: "PUT",
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                };
-            }
         })
     }),
 });
@@ -66,6 +42,6 @@ export const {
     useGetUsersQuery,
     useGetMessagesQuery,
     useGetUserToChatQuery,
-    useSendMessageMutation,
-    useMarkMessagesAsReadMutation
+    useMarkMessagesAsReadMutation,
+    useSendMessageMutation
 } = messageApiSlice

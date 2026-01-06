@@ -8,43 +8,56 @@ import { BiSolidMessageDetail } from "react-icons/bi";
 
 import { useGetUserToChatQuery } from "../../redux/api/messageApiSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { connectSocket } from "../../Utils/socket";
-import { addUser } from "../../redux/features/chatSlice";
+import WebSocketService from "../../services/websocket.js"
+import {addMessage, addUser} from "../../redux/features/chatSlice";
 const AdminLayout = () => {
     const dispatch = useDispatch();
-    // const { selectedUser, unreadCount } = useSelector((state) => state.chat);
+    const { selectedUser, unreadCount } = useSelector((state) => state.chat);
     const { user: userInfo } = useSelector((state) => state.auth);
-    // const { data: users } = useGetUserToChatQuery(undefined, {
-    //     refetchOnMountOrArgChange: true,
-    // });
-    // const hasUnreadMessages =
-    //     Object.entries(unreadCount).some(
-    //         ([userId, count]) => userId !== userInfo._id && count > 0
-    //     ) ||
-    //     (users && users.some((user) => user._id !== userInfo._id && user.unreadCount > 0));
-    // const hasUnreadMessages = useMemo(() => {
-    //     return (
-    //         Object.entries(unreadCount).some(
-    //             ([userId, count]) => userId !== userInfo._id && count > 0
-    //         ) ||
-    //         (users && users.some((user) => user._id !== userInfo._id && user.unreadCount > 0))
-    //     );
-    // }, [unreadCount]);
-    // useEffect(() => {
-    //     const socket = connectSocket(userInfo._id, userInfo.role);
-    //     socket.on("newMessage", (newMessage) => {
-    //         dispatch(
-    //             addUser({
-    //                 ...newMessage,
-    //                 currentUserId: userInfo._id,
-    //             })
-    //         );
-    //     });
+    const { data: users } = useGetUserToChatQuery(undefined, {
+        refetchOnMountOrArgChange: true,
+    });
 
-    //     return () => {
-    //         socket.off("newMessage");
-    //     };
-    // }, [selectedUser]);
+    const hasUnreadMessages = useMemo(() => {
+        return (
+            Object.entries(unreadCount).some(
+                ([userId, count]) => userId !== userInfo._id && count > 0
+            ) ||
+            (users && users.some((user) => user._id !== userInfo._id && user.unreadCount > 0))
+        );
+    }, [unreadCount]);
+
+    useEffect(() => {
+        const handleConnect = () => {
+            WebSocketService.subscribe(
+                "/user/queue/messages",
+                (newMessage) => {
+                    const message = {
+                        ...newMessage,
+                        currentUserId: user._id,
+                    };
+                    dispatch(addUser(message))
+                }
+            );
+        };
+
+        const handleError = (error) => {
+            console.error('❌ WebSocket connection error:', error);
+        }
+        WebSocketService.connect(userInfo._id, userInfo.role);
+        // socket.on("newMessage", (newMessage) => {
+        //     dispatch(
+        //         addUser({
+        //             ...newMessage,
+        //             currentUserId: userInfo._id,
+        //         })
+        //     );
+        // });
+
+        return () => {
+            WebSocketService.disconnect();
+        };
+    }, [selectedUser]);
 
     const [openDropdown, setOpenDropdown] = useState(null);
 

@@ -11,37 +11,37 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useGetUserToChatQuery } from "../../redux/api/messageApiSlice";
 import { addUser, setUsers } from "../../redux/features/chatSlice";
-import { connectSocket } from "../../Utils/socket.js";
 import { Tooltip, Dropdown } from "antd";
 import { RiCustomerServiceFill, RiCustomerService2Fill } from "react-icons/ri";
-
+import WebSocketService from "../../services/websocket.js"
 const Home = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const { user: userInfo } = useSelector((state) => state.auth);
-    // const { unreadCount, users } = useSelector((state) => state.chat);
-    // const { data: admin, isLoading: isLoadingAdmin } = useGetUserToChatQuery();
-    // useEffect(() => {
-    //     if (!userInfo?._id || !userInfo?.role) return;
-    //     const socket = connectSocket(userInfo._id, userInfo.role);
-    //     socket.on("newMessage", (newMessage) => {
-    //         const message = {
-    //             ...newMessage,
-    //             currentUserId: userInfo._id,
-    //         };
-    //         dispatch(addUser(message));
-    //     });
+    const { unreadCount, users } = useSelector((state) => state.chat);
+    const { data: admin, isLoading: isLoadingAdmin } = useGetUserToChatQuery();
+    useEffect(() => {
+        if (!userInfo?._id || !userInfo?.role) return;
+        WebSocketService.connect(userInfo._id, userInfo.role);
+        // socket.on("newMessage", (newMessage) => {
+        //     const message = {
+        //         ...newMessage,
+        //         currentUserId: userInfo._id,
+        //     };
+        //     dispatch(addUser(message));
+        // });
 
-    //     return () => {
-    //         socket.off("newMessage");
-    //     };
-    // }, [userInfo?._id, userInfo?.role]);
-    // useEffect(() => {
-    //     if (admin) {
-    //         dispatch(setUsers(admin));
-    //     }
-    // }, [admin]);
-    // console.log("unread: ", unreadCount);
+        return () => {
+            WebSocketService.disconnect();
+        };
+
+    }, [userInfo?._id, userInfo?.role]);
+    useEffect(() => {
+        if (admin) {
+            dispatch(setUsers(admin));
+        }
+    }, [admin]);
+    console.log("unread: ", unreadCount);
 
     const responsivePromotion = {
         desktop: {
@@ -137,7 +137,7 @@ const Home = () => {
             <HomeTourList></HomeTourList>
             <HomeHotelList></HomeHotelList>
 
-            {/* <Tooltip
+            <Tooltip
                 title="Bạn có tin nhắn mới"
                 open={unreadCount[users[0]?._id] > 0}
                 placement="leftTop"
@@ -155,7 +155,7 @@ const Home = () => {
                         </span>
                     </div>
                 </Dropdown>
-            </Tooltip> */}
+            </Tooltip>
         </div>
     );
 };
