@@ -14,7 +14,7 @@ import { useGetFacilitiesQuery } from '../redux/api/hotelApiSlice';
 import { Box, CircularProgress } from '@mui/material';
 
 const HotelInformation = ({ finalData, allFacilities  }) => {
-    const cityDt = finalData.city?._id || finalData.cityName;
+    const cityDt = finalData.city?._id || finalData?.cityId;
     const [groupedFacilities, setGroupedFacilities] = useState({});
     const { data: cities, isLoading: isCitiesLoading } = useGetCitiesQuery();
     const [cityOptions, setCitiesOptions] = useState([]);
@@ -50,8 +50,6 @@ const HotelInformation = ({ finalData, allFacilities  }) => {
         }
     }, [finalData.serviceFacilities, allFacilities, cities, isCitiesLoading]);
 
-    console.log(cityOptions);
-
     if (isCitiesLoading)
         return <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
             <CircularProgress />
@@ -75,7 +73,7 @@ const HotelInformation = ({ finalData, allFacilities  }) => {
                         </p>
                         <p className='flex items-center text-[16px]'>
                             <MdRoom className='text-red-500 text-[20px] mx-1' /> {finalData.address},{" "}
-                            {cityOptions.find(city => String(city._id) === String(finalData?.cityId))?.name}
+                            {cityOptions.find(city => String(city._id) === String(cityDt))?.name}
                         </p>
                     </div>
                     <p className='text-[16px] text-gray-500'>

@@ -1,4 +1,4 @@
-package com.ie207.vagabond.model;
+package com.ie207.vagabond.response;
 
 import com.ie207.vagabond.model.enums.Role;
 import lombok.AllArgsConstructor;
@@ -8,22 +8,18 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "users")
-@Builder
-public class User {
-    @Id
+public class UserResponse {
     private String _id;
     private String firstName;
     private String lastName;
     private String email;
-    private String password;
     private String phoneNumber;
     private String gender;
     private Date dateOfBirth;

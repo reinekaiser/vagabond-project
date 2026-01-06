@@ -4,15 +4,9 @@ import { apiSlice } from "./apiSlice";
 export const hotelBookingApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getMyHotelBookings: builder.query({
-            query: () => {
-                const token = localStorage.getItem("token");
-                return {
-                    url: `${HOTEL_BOOKING_URL}/`,
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                };
-            },
+            query: () => ({
+                url: `${HOTEL_BOOKING_URL}/my`,
+            })
         }),
         cancelBooking: builder.mutation({
             query: (id) => ({

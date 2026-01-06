@@ -85,19 +85,19 @@ const HotelBooking = () => {
                     {hotelBokings?.bookings?.length > 0 ? (
                         hotelBokings?.bookings?.map((booking) => (
                             <div key={booking._id} className='grid grid-cols-10 gap-2 border-b pl-11 py-4 text-[14px] hover:bg-slate-50 duration-300'>
-                                <div className='col-span-2'>{booking.hotelId.name}</div>
+                                <div className='col-span-2'>{booking.hotelName}</div>
                                 <Tooltip
-                                    title={booking.roomTypeId.name}
+                                    title={booking.roomTypeName}
                                     placement="top"
                                     trigger="hover"
                                 >
                                     <div className='col-span-2'>
-                                        {booking.roomTypeId.name.length > 50 ? booking.roomTypeId.name.slice(0, 50) + '...'
-                                            : booking.roomTypeId.name}
+                                        {booking.roomTypeName.length > 50 ? booking.roomTypeName.slice(0, 50) + '...'
+                                            : booking.roomTypeName}
                                     </div>
                                 </Tooltip>
-                                <div className='col-span-1'>{booking.name}</div>
-                                {/* <div className='col-span-1'>{booking.userId?.firstName} {booking.userId.lastName}</div> */}
+                                {/* <div className='col-span-1'>{booking.name}</div> */}
+                                <div className='col-span-1'>{booking.userFirstName} {booking.userLastName}</div>
                                 <div className='col-span-1'>{dayjs(booking.checkin).format('DD/MM/YYYY')}</div>
                                 <div className='col-span-1'>{dayjs(booking.checkout).format('DD/MM/YYYY')}</div>
                                 <div className='col-span-1'>{booking.totalPrice.toLocaleString()} ₫</div>

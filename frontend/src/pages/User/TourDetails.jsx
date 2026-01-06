@@ -45,8 +45,8 @@ const TourDetails = () => {
     const [isCalendarModal, setIsCalendarModal] = useState(false);
 
     const { data: tourRiview, isLoading: isLoadingTourReviews } = useGetReviewByProductIdQuery({
-        reviewableId: params._id,
-        reviewableType: "Tour",
+        productId: params._id,
+        productType: "Tour",
     });
 
     const CalendarSelection = () => {

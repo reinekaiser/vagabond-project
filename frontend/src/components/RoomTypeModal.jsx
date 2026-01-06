@@ -21,6 +21,7 @@ const RoomTypeModal = ({
   const [uploadKey, setUploadKey] = useState(0);
   const [roomTypeImgs, setRoomTypeImages] = useState([]);
   const [roomTypeImagesBase64, setRoomTypeImagesBase64] = useState([]);
+  const [deletedImgs, setDeletedImgs] = useState([]);
   const [uploadHotelImages, { isLoading: isUploadLoading, isError: isUploadError, isSuccess }] = useUploadImagesMutation();
   const [deleteHotelImage, { isLoading: isDeleting, isSuccess: isDeteted }] = useDeleteImageMutation();
   const {
@@ -57,14 +58,21 @@ const RoomTypeModal = ({
   ];
 
   const handleRoomTypeImagesChange = async ({ newImages, deletedExisting }) => {
-    if (deletedExisting) {
-      await deleteImagesFromCloudinary(deletedExisting);
+    console.log("newImages - ", newImages, "-", deletedExisting);
+    if (deletedExisting != undefined) {
+      const currentImgs = getValues("img");
+      const deletedId = currentImgs[deletedExisting];
+      const updatedImgs = currentImgs.filter((_, i) => i !== deletedExisting);
+      setValue("img", updatedImgs);
+
+      setDeletedImgs(prev => [...prev, deletedId]);
     }
     if (newImages) {
       setRoomTypeImages(newImages);
       setRoomTypeImagesBase64(newImages.map((img) => img.base64));
     }
   }
+  
   const uploadImagesToCloudinary = async (imagesBase64) => {
     if (imagesBase64.length === 0) return [];
     try {
@@ -92,9 +100,10 @@ const RoomTypeModal = ({
         const allImgs = [...getValues("img"), ...uploadedImgs]
         setValue("img", allImgs, { shouldValidate: true });
       }
-      onUpdateRoomType(getValues())
+      onUpdateRoomType(getValues(), deletedImgs);
       setRoomTypeImages([]);
       setRoomTypeImagesBase64([]);
+      setDeletedImgs([]);
       setUploadKey(prev => prev + 1);
       // console.log("roomtype - ", getValues())
     }

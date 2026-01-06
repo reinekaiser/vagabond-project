@@ -11,10 +11,14 @@ import com.ie207.vagabond.response.HotelSearchSuggestionResponse;
 import com.ie207.vagabond.service.CityService;
 import com.ie207.vagabond.service.HotelService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/hotel")
@@ -32,17 +36,23 @@ public class HotelController {
             @RequestParam(required = false) List<String> roomFacilities,
             @RequestParam(required = false) String key,
             @RequestParam(required = false, defaultValue = "") String sort,
-            @RequestParam(required = false, defaultValue = "2") int page,
-            @RequestParam(required = false, defaultValue = "1") int limit
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "6") int limit
     ) {
-        return hotelService.getHotels(type, minPrice, maxPrice, hotelFacilities, roomFacilities, key, sort, page, limit);
+        return hotelService.getSearchResults(type, minPrice, maxPrice, hotelFacilities, roomFacilities, key, sort, page, limit);
     }
 
     @GetMapping("/search")
     public ResponseEntity<HotelSearchSuggestionResponse> getHotelSuggestions(
             @RequestParam String key
     ) {
-        return ResponseEntity.ok(cityService.getSearchHotelSuggestion(key));
+        try {
+            HotelSearchSuggestionResponse response = hotelService.getHotelSearchSuggestion(key);
+            return ResponseEntity.ok(response);
+        } catch (Exception e){
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @GetMapping("/{hotelId}/room-types")
@@ -200,4 +210,25 @@ public class HotelController {
             return ResponseEntity.status(500).body(null);
         }
     }
+
+    @GetMapping("/{id}/available-rooms")
+    public ResponseEntity<?> getAvailableRooms(
+            @PathVariable String id,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkInDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkOutDate,
+            @RequestParam int numRooms,
+            @RequestParam int numAdults
+    ) {
+        try {
+            List<Map<String, Object>> availableRooms = hotelService.getAvailableRooms(
+                    id, checkInDate, checkOutDate, numRooms, numAdults
+            );
+            return ResponseEntity.ok(availableRooms);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Đã xảy ra lỗi khi lấy danh sách phòng trống"));
+        }
+    }
+
 }

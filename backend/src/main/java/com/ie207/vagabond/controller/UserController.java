@@ -3,6 +3,7 @@ package com.ie207.vagabond.controller;
 import com.ie207.vagabond.model.User;
 import com.ie207.vagabond.model.enums.Role;
 import com.ie207.vagabond.repository.UserRepository;
+import com.ie207.vagabond.response.UserResponse;
 import com.ie207.vagabond.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -10,13 +11,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -26,7 +28,7 @@ public class UserController {
     private final UserRepository userRepository;
 
     @GetMapping("/")
-    public ResponseEntity<Page<User>> getAllUsers(
+    public ResponseEntity<Page<UserResponse>> getAllUsers(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "2") int size,
             @RequestParam(defaultValue = "id") String sortBy,
@@ -35,5 +37,38 @@ public class UserController {
         Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page - 1, size, sort);
         return ResponseEntity.ok(userService.getAllUsers(Role.USER, pageable));
+    }
+
+    @PutMapping("/update")
+    public ResponseEntity<UserResponse> updateUser(
+            Authentication authentication,
+            @RequestBody User user
+    ) {
+        String userId = (String) authentication.getPrincipal();
+        UserResponse updatedUser = userService.updateUser(userId, user);
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    @PutMapping("/change-password")
+    public ResponseEntity<Map<String, Object>> changePassword(
+            Authentication authentication,
+            @RequestBody Map<String, String> passwords
+    ) {
+        try {
+            String oldPassword = passwords.get("oldPassword");
+            String newPassword = passwords.get("newPassword");
+            String userId = (String) authentication.getPrincipal();
+            UserResponse updatedUser = userService.changePassword(userId, oldPassword, newPassword);
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Đổi mật khẩu thành công",
+                    "user", updatedUser
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "message", "Đổi mật khẩu thất bại",
+                    "error", e.getMessage()
+            ));
+        }
     }
 }

@@ -6,6 +6,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { MdRateReview } from "react-icons/md";
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { useLogoutMutation } from '../redux/api/authApiSlice';
 
 
 const sidebarItems = [
@@ -31,6 +32,7 @@ const UserSidebar = ({ onLogout }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [ logoutApi ] = useLogoutMutation();
 
   const [userInfo, setUserInfo] = useState(() => {
     try {
@@ -40,29 +42,19 @@ const UserSidebar = ({ onLogout }) => {
     }
   });
 
-  // Khi đăng xuất, set userInfo về null
   const handleLogout = async () => {
-    localStorage.clear();
-    dispatch(logout());
-    // if (onLogout) onLogout();
-    navigate('/');
     try {
       setIsLoggingOut(true);
-      await axios.post('/api/users/logout');
-      localStorage.removeItem('userInfo');
-      localStorage.removeItem('token');
-      setUserInfo(null);
-      toast.success('Đăng xuất thành công!');
-      if (onLogout) onLogout();
-      // Force reload để xóa mọi state cũ
-      window.location.href = '/';
-    } catch (error) {
-      console.error('Lỗi khi đăng xuất:', error);
-      toast.error('Có lỗi xảy ra khi đăng xuất. Vui lòng thử lại!');
+      await logoutApi().unwrap();
+    } catch (err) {
+      console.error("Logout API failed:", err);
     } finally {
+      dispatch(logout());
+      navigate("/");
       setIsLoggingOut(false);
     }
   };
+
 
   useEffect(() => {
     const syncUserInfo = () => {

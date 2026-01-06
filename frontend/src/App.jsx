@@ -11,7 +11,6 @@ import "react-toastify/dist/ReactToastify.css";
 import PublicRoutes from "./routes/PublicRoutes";
 import { useDispatch, useSelector } from "react-redux";
 import { setOnlineUsers } from "./redux/features/authSlice";
-import WebsocketService from "./services/websocket.js"
 import ScrollToTop from "./components/ScrollToTop";
 import { useGetFacilitiesByCategoryQuery, useGetFacilitiesQuery, useGetHotelByIdQuery, useGetHotelsQuery, useGetRoomTypesQuery } from "./redux/api/hotelApiSlice";
 import WebSocketService from "./services/websocket.js";
