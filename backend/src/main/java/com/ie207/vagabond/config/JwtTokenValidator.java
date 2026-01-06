@@ -31,9 +31,9 @@ public class JwtTokenValidator extends OncePerRequestFilter {
                     "/api/auth/send-otp"
             ),
             "GET", List.of(
-                    "/api/hotels/**",
+                    "/api/hotel/**",
                     "/api/tours/**",
-                    "/api/cites/**"
+                    "/api/cities/**"
             )
     );
 

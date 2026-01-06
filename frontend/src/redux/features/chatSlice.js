@@ -20,11 +20,15 @@ const chatSlice = createSlice({
             }
         },
         setMessages: (state, action) => {
-            state.messages = action.payload;
+            state.messages = action.payload.map(mess => ({senderId: mess.sender._id, ...mess}));
         },
         addMessage: (state, action) => {
             const message = action.payload;
-            const { sender, newMessage, currentUserId } = message;
+            const { sender, receiver, ...content } = message;
+            const newMessage = {
+                senderId: sender._id,
+                ...content
+            }
             state.messages.push(newMessage);
 
             if (!state.unreadCount[sender._id]) {

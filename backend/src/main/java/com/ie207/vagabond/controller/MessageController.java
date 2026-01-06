@@ -4,6 +4,7 @@ import com.ie207.vagabond.exception.ReceiverNotFound;
 import com.ie207.vagabond.exception.SenderNotFound;
 import com.ie207.vagabond.model.Message;
 import com.ie207.vagabond.model.User;
+import com.ie207.vagabond.request.SendMessageRequest;
 import com.ie207.vagabond.response.UserWithMessageResponse;
 import com.ie207.vagabond.service.ChatService;
 import lombok.RequiredArgsConstructor;
@@ -23,35 +24,49 @@ public class MessageController {
     private final ChatService chatService;
 
     @GetMapping("/users")
-    public ResponseEntity<?> getAllUsers(@AuthenticationPrincipal User currentUser)  {
-        if (currentUser == null) {
+    public ResponseEntity<?> getAllUsers(@AuthenticationPrincipal String currentUserId)  {
+        if (currentUserId == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("Something went wrong...");
         }
 
-        List<User> users = chatService.getAllUsers(currentUser);
+        List<User> users = chatService.getAllUsers(currentUserId);
         return ResponseEntity.ok(users);
     }
 
     @GetMapping("/users/chat")
-    public ResponseEntity<?> getUsersToChat(@AuthenticationPrincipal User currentUser) {
-        if (currentUser == null) {
+    public ResponseEntity<?> getUsersToChat(@AuthenticationPrincipal String currentUserId) {
+        if (currentUserId == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("Something went wrong...");
         }
-        List<UserWithMessageResponse> users = chatService.getUsersToChat(currentUser);
+        List<UserWithMessageResponse> users = chatService.getUsersToChat(currentUserId);
         return ResponseEntity.ok(users);
     }
 
     @PutMapping("/read/{id}")
-    public ResponseEntity<?> markMessageAsRead(@AuthenticationPrincipal User currentUser, @PathVariable String id) throws SenderNotFound, ReceiverNotFound {
-        chatService.markMessageAsRead(currentUser.get_id(), id);
+    public ResponseEntity<?> markMessageAsRead(@AuthenticationPrincipal String currentUserId, @PathVariable String id) throws SenderNotFound, ReceiverNotFound {
+        chatService.markMessageAsRead(currentUserId, id);
         return ResponseEntity.ok(Map.of("message", "Messages marked as read"));
     }
 
     @GetMapping("/history/{userId}")
-    public ResponseEntity<?> getChatHistory(@AuthenticationPrincipal User currentUser, @PathVariable String userId){
-        List<Message> messages = chatService.getChatHistory(currentUser.get_id(), userId);
+    public ResponseEntity<?> getChatHistory(@AuthenticationPrincipal String currentUserId, @PathVariable String userId) throws SenderNotFound, ReceiverNotFound{
+        List<Message> messages = chatService.getChatHistory(currentUserId, userId);
         return ResponseEntity.ok(messages);
+    }
+
+    @PostMapping("/send/{id}")
+    public ResponseEntity<?> sendMessage(
+            @AuthenticationPrincipal String currentUserId,
+            @PathVariable String id,
+            @RequestBody SendMessageRequest request) throws SenderNotFound, ReceiverNotFound {
+        Message response = chatService.sendMessage(
+                currentUserId,
+                id,
+                request.getText()
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

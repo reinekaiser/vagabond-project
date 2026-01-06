@@ -11,31 +11,33 @@ import "react-toastify/dist/ReactToastify.css";
 import PublicRoutes from "./routes/PublicRoutes";
 import { useDispatch, useSelector } from "react-redux";
 import { setOnlineUsers } from "./redux/features/authSlice";
-import { connectSocket, disconnectSocket } from "./Utils/socket";
+import WebsocketService from "./services/websocket.js"
 import ScrollToTop from "./components/ScrollToTop";
 import { useGetFacilitiesByCategoryQuery, useGetFacilitiesQuery, useGetHotelByIdQuery, useGetHotelsQuery, useGetRoomTypesQuery } from "./redux/api/hotelApiSlice";
+import WebSocketService from "./services/websocket.js";
 
 function App() {
-
     const dispatch = useDispatch();
     const { user } = useSelector((state) => state.auth);
     console.log("User in App:", user);
 
-    // useEffect(() => {
-    //     if (user?._id) {
-    //         const socket = connectSocket(user._id, user.role);
-    //         socket.on("connect", () => {
-    //             console.log("Connected with ID:", socket.id);
-    //         });
-    //         socket.on("getOnlineUsers", (users) => {
-    //             dispatch(setOnlineUsers(users));
-    //             console.log("Online users", users);
-    //         });
-    //     }
-    //     return () => {
-    //         disconnectSocket();
-    //     };
-    // }, [user?._id]);
+    useEffect(() => {
+        if (user?._id) {
+            const handleConnect = () => {
+                WebSocketService.subscribe('/topic/admin/onlineUsers', (users) => {
+                    console.log("Online users", users);
+                    dispatch(setOnlineUsers(users))
+                });
+            }
+
+            WebSocketService.connect(user._id, user.role, handleConnect);
+        }
+
+        return () => {
+            WebSocketService.disconnect();
+        };
+    }, [user?._id])
+
 
     return (
         <>
@@ -51,7 +53,7 @@ function App() {
                     /> */}
                     {/* <Route path="/reset-password" element={<ResetPassword />} /> */}
                     <Route path="/admin/*" element={<AdminRoutes />} />
-                    {/* <Route path="/user/*" element={<UserRoutes />} /> */}
+                    <Route path="/user/*" element={<UserRoutes />} />
                     <Route path="*" element={<PublicRoutes />} />
                 </Routes>
             </BrowserRouter>

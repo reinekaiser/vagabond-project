@@ -28,6 +28,8 @@ public class Message {
     private User receiver;
 
     private String text;
+
+    @Builder.Default
     private Boolean isRead =  false;
 
     @CreatedDate

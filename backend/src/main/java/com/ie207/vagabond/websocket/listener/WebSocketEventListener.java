@@ -1,7 +1,7 @@
 package com.ie207.vagabond.websocket.listener;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.support.GenericMessage;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
@@ -28,24 +28,38 @@ public class WebSocketEventListener {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
         String sessionId = headerAccessor.getSessionId();
 
-        Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
-        if (sessionAttributes != null) {
-            String userId = (String) sessionAttributes.get("userId");
-            String role = (String) sessionAttributes.get("role");
+        String userId = null;
+        String role = null;
 
-            System.out.println("A user connected at " + sessionId + ": " + userId + " with role: " + role);
+        GenericMessage<?> connectMessage = (GenericMessage<?>) headerAccessor.getHeader("simpConnectMessage");
+        if (connectMessage != null) {
 
-            if (userId != null) {
-                userSocketMap.put(userId, sessionId);
+            Map<String, Object> connectHeaders = connectMessage.getHeaders();
+            @SuppressWarnings("unchecked")
+            Map<String, Object> sessionAttributes = (Map<String, Object>) connectHeaders.get("simpSessionAttributes");
 
-                if ("admin".equals(role)) {
-                    adminSessions.add(sessionId);
-                }
+            if (sessionAttributes != null) {
+                userId = (String) sessionAttributes.get("userId");
+                role = (String) sessionAttributes.get("role");
+                System.out.println("✅ Got from simpSessionAttributes: userId=" + userId + ", role=" + role);
+            }
+        }
+
+        if (userId != null) {
+            System.out.println("✅ User connected: sessionId=" + sessionId + ", userId=" + userId + ", role=" + role);
+
+            // Lưu vào maps
+            userSocketMap.put(userId, sessionId);
+
+            if ("admin".equalsIgnoreCase(role) || "ADMIN".equals(role)) {
+                adminSessions.add(sessionId);
+                System.out.println("✅ Added to admin sessions");
             }
 
             sendOnlineUsersToAdmins();
+        } else {
+            System.out.println("❌ Cannot get userId");
         }
-
     }
 
     @EventListener
@@ -74,13 +88,10 @@ public class WebSocketEventListener {
     private void sendOnlineUsersToAdmins() {
         Set<String> onlineUserIds = userSocketMap.keySet();
 
-        for (String adminSessionId : adminSessions) {
-            messagingTemplate.convertAndSendToUser(
-                    adminSessionId,
-                    "/queue/onlineUsers",
-                    onlineUserIds
-            );
-        }
+        messagingTemplate.convertAndSend(
+                "/topic/admin/onlineUsers",
+                onlineUserIds
+        );
     }
 
     public String getReceiverSocketId(String userId) {
