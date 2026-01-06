@@ -317,7 +317,7 @@ const HotelCard = ({ pageSize, hotel, refetch, page, setPage }) => {
                     {/* Nội dung chính */}
                     <ImageGalleryFromCloudinary existingImages={imgs} option={3} />
                     <div onClick={() => navigate(`/admin/manage-hotels/hotel-detail/${hotel._id}`)}>
-                        <p className='text-[13px] text-gray-400 p-2 pt-4'>
+                        <p className='text-[13px] text-gray-600 p-2 pt-4'>
                             Ngày thêm: {new Date(hotel.createdAt).toLocaleDateString('vi-VN')}
                         </p>
                         <h3 className="text-[20px] font-semibold hover:underline duration-300 px-2 pb-3 w-fit max-w-[325px] overflow-hidden text-ellipsis whitespace-nowrap">

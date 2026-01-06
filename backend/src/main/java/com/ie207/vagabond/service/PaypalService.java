@@ -2,9 +2,13 @@ package com.ie207.vagabond.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.ie207.vagabond.model.HotelBooking;
+import com.ie207.vagabond.model.TourBooking;
 import com.ie207.vagabond.repository.HotelBookingRepository;
+import com.ie207.vagabond.repository.TourBookingRepository;
 import com.ie207.vagabond.request.HotelBookingRequest;
 import com.ie207.vagabond.request.HotelPaypalOrderRequest;
+import com.ie207.vagabond.request.TourBookingRequest;
+import com.ie207.vagabond.request.TourPayPalOrderRequest;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,7 +22,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +47,7 @@ public class PaypalService {
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final HotelBookingRepository hotelBookingRepository;
+    private final TourBookingRepository tourBookingRepository;
 
     public String getAccessToken() {
         String auth = Base64.encodeBase64String((clientId + ":" + clientSecret).getBytes());
@@ -196,6 +203,60 @@ public class PaypalService {
         hotelBookingRepository.save(hotelBooking);
 
         return hotelBooking;
+    }
+
+    @Transactional
+    public String createTourPaypalOrder(TourPayPalOrderRequest request) {
+        if (request.getAmount() == null || request.getAmount() < 0) {
+            throw new IllegalArgumentException("Amount must be greater than 0");
+        }
+
+        String cancelUrl = UriComponentsBuilder
+                .fromHttpUrl(CLIENT_URL + "/tour/" + request.getTourId())
+                .toUriString();
+
+        String returnUrl = CLIENT_URL + "/tour-checkout-success";
+        String approvalUrl = createOrder(request.getAmount(), returnUrl, cancelUrl);
+        return approvalUrl;
+    }
+
+    @Transactional
+    public TourBooking captureTourPaypalOrder(TourBookingRequest request) {
+        Map<String, Object> captureData = captureOrder(request.getOrderID());
+
+        if (captureData == null || !captureData.containsKey("status")) {
+            throw new RuntimeException("Không nhận được trạng thái từ PayPal");
+        }
+
+        LocalDate useDate = Instant.parse(request.getUseDate())
+                .atZone(ZoneId.systemDefault()).toLocalDate();
+
+        TourBooking tourBooking = new TourBooking();
+        tourBooking.setUserId(request.getUserId());
+        tourBooking.setTourId(request.getTourId());
+        tourBooking.setTicketId(request.getTicketId());
+
+        tourBooking.setTourImg(request.getTourImg());
+        tourBooking.setName(request.getName());
+        tourBooking.setEmail(request.getEmail());
+        tourBooking.setPhone(request.getPhone());
+        tourBooking.setUseDate(useDate);
+        tourBooking.setAdults(request.getAdults());
+        tourBooking.setChilds(request.getChilds());
+        tourBooking.setPaymentMethod(request.getPaymentMethod());
+        tourBooking.setTotalPrice(request.getTotalPrice());
+
+        if ("COMPLETED".equals(captureData.get("status"))) {
+            tourBooking.setBookingStatus("pending");
+        } else {
+            tourBooking.setBookingStatus("failed");
+            tourBookingRepository.save(tourBooking);
+            throw new RuntimeException("Thanh toán chưa hoàn tất");
+        }
+
+        tourBookingRepository.save(tourBooking);
+
+        return tourBooking;
     }
 
 }

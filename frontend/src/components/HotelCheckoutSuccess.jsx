@@ -1,38 +1,57 @@
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { BsCheckCircle } from "react-icons/bs";
 import dayjs from 'dayjs';
-import { useCaptureHotelPaypalOrderAndSaveHotelBookingMutation } from "../redux/api/hotelBookingApiSlice";
+import { useCaptureHotelPaypalOrderAndSaveHotelBookingMutation, useCaptureHotelVnpayOrderMutation } from "../redux/api/hotelBookingApiSlice";
+import { CircularProgress, Box } from "@mui/material";
+
 const HotelCheckoutSuccess = () => {
+    const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const orderID = searchParams.get("token");
+    const orderID = searchParams.get("token") || searchParams.get("vnp_TxnRef");
 
     const [booking, setBooking] = useState(null);
 
-    const [capturePaypalOrder, { isLoading, data, error }] =
+    const [capturePaypalOrder, { isLoading: loadingPaypal, error: paypalError }] =
         useCaptureHotelPaypalOrderAndSaveHotelBookingMutation();
+    const [captureVnpayOrder, { isLoading: loadingVnpay, error: vnpayError }] =
+        useCaptureHotelVnpayOrderMutation();
 
-    console.log(data)
-    
+    const localHotelBooingData = JSON.parse(
+        localStorage.getItem("pendingHotelBooking")
+    );
+
     useEffect(() => {
         const confirmOrder = async () => {
             try {
-                const localHotelBooingData = JSON.parse(
-                    localStorage.getItem("pendingHotelBooking")
-                );
-
-                console.log(localHotelBooingData);
-
                 if (!orderID || !localHotelBooingData) return;
 
-                const res = await capturePaypalOrder({
-                    orderID,
-                    ...localHotelBooingData,
-                }).unwrap();
+                if (localHotelBooingData?.paymentMethod === "paypal") {
 
-                setBooking(res.order);
+                    const res = await capturePaypalOrder({
+                        orderID,
+                        ...localHotelBooingData,
+                    }).unwrap();
 
-                localStorage.removeItem("pendingHotelBooking");
+                    setBooking(res.order);
+
+                    localStorage.removeItem("pendingHotelBooking");
+                }
+                else if (localHotelBooingData?.paymentMethod === "vnpay") {
+
+                    const allParams = Object.fromEntries(searchParams.entries());
+                    const res = await captureVnpayOrder({
+                        allParams, request: localHotelBooingData
+                    }).unwrap();
+
+                    if (res.success) {
+                        setBooking(res.order);
+                    }
+                    else {
+                        window.location.href = res.url;
+                    }
+                }
+
             } catch (err) {
                 console.error("Lỗi khi lưu đơn hàng:", err);
             }
@@ -41,8 +60,19 @@ const HotelCheckoutSuccess = () => {
         confirmOrder();
     }, [orderID]);
 
-    if (isLoading) return <p>Đang xác nhận thanh toán...</p>;
-    if (error) return <p>Đã có lỗi xảy ra khi xác nhận thanh toán.</p>;
+    if (loadingPaypal || loadingVnpay) {
+        return (
+            <Box
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                minHeight="100vh"
+            >
+                <CircularProgress />
+            </Box>
+        );
+    };
+    if (paypalError || vnpayError) return <p>Đã có lỗi xảy ra khi xác nhận thanh toán.</p>;
     if (!booking) return null;
 
     return (
@@ -66,7 +96,7 @@ const HotelCheckoutSuccess = () => {
                     <div className="flex justify-between">
                         <span className="font-medium">Phương thức thanh toán:</span>
                         <span className="font-semibold">
-                           {booking.paymentMethod.charAt(0).toUpperCase() + booking.paymentMethod.slice(1)}
+                            {booking.paymentMethod.charAt(0).toUpperCase() + booking.paymentMethod.slice(1)}
                         </span>
                     </div>
                     <div className="flex justify-between">

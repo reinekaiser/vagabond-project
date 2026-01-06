@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 const TourReviewCard = ({ userId, booking, modalKey, setModalKey, refetch}) => {
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
-    const [addReview] = useAddReviewMutation();
+    const [addReview, { isLoading: isAddingReview }] = useAddReviewMutation();
 
     const handleOpenReviewModal = () => {
         setIsReviewModalOpen(true);
@@ -22,13 +22,13 @@ const TourReviewCard = ({ userId, booking, modalKey, setModalKey, refetch}) => {
         const reviewData = {
             userId,
             ...review,
-            reviewableId: booking.tourId._id,
-            reviewableType: "Tour",
+            productId: booking.tourId,
+            productType: "Tour",
             bookingId: booking._id,
         };
         try {
             const res = await addReview(reviewData).unwrap();
-            console.log("Review added successfully:", reviewData);
+            console.log("Review added successfully:", res);
             toast.success("Thêm review thành công");
             refetch()
         } catch (error) {
@@ -43,7 +43,7 @@ const TourReviewCard = ({ userId, booking, modalKey, setModalKey, refetch}) => {
                 <IoTicketSharp className="text-[18px] mr-2 mt-2 text-blue-400" />
                 <div>
                     <p className="font-semibold text-[18px]">
-                        {booking.tourId.name}
+                        {booking.tourName}
                     </p>
                     <p className="text-gray-500 text-sm">
                         {dayjs(booking.useDate).format("DD/MM/YYYY")}
@@ -62,12 +62,13 @@ const TourReviewCard = ({ userId, booking, modalKey, setModalKey, refetch}) => {
                         onCancel={handleCloseReviewModal}
                         onAddReview={handleAddReview}
                         key={modalKey}
+                        isLoading={isAddingReview}
                     />
                 </div>
             </div>
             <div className="rounded-xl overflow-hidden h-[100px] w-[140px]">
                 <img
-                    src={`${CLOUDINARY_BASE_URL}/${booking.tourId.images[0]}`}
+                    src={`${CLOUDINARY_BASE_URL}/${booking.tourImg[0]}`}
                     alt=""
                     className="w-full h-full object-cover"
                 />

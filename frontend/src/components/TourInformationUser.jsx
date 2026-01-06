@@ -27,6 +27,7 @@ const customIcon = new L.Icon({
 });
 
 const TourInformationUser = ({ tourData, scrollToTicket, scrollToReview }) => {
+    console.log(tourData);
     const [isModalExpOpen, setIsModalExpOpen] = useState(false);
     const showModalExp = () => {
         setIsModalExpOpen(true);
@@ -319,15 +320,15 @@ const TourInformationUser = ({ tourData, scrollToTicket, scrollToReview }) => {
                         <div className="p-3 bg-[#f7f9fa] flex flex-col flex-1 ">
                             <div className="flex items-start gap-2">
                                 <div className="flex items-center gap-2">
-                                    {tourData.reviews[0].userId.profilePicture ? (
+                                    {tourData.reviews[0].userAvatar ? (
                                         <img
-                                            src={tourData.reviews[0].userId.profilePicture}
+                                            src={tourData.reviews[0].userAvatar}
                                             className="w-6 h-6 rounded-full"
                                         ></img>
                                     ) : (
                                         <div className="w-7 h-7 text-sm rounded-full flex items-center justify-center bg-[#8dbd8b] text-gray-200 gap-[2px]">
-                                            <span>{tourData.reviews[0].userId.firstName[0]}</span>
-                                            <span>{tourData.reviews[0].userId.lastName[0]}</span>
+                                            <span>{tourData.reviews[0].userFirstName}</span>
+                                            <span>{tourData.reviews[0].userLastName[0]}</span>
                                         </div>
                                     )}
 

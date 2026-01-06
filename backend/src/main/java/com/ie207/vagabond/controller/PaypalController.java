@@ -1,8 +1,11 @@
 package com.ie207.vagabond.controller;
 
 import com.ie207.vagabond.model.HotelBooking;
+import com.ie207.vagabond.model.TourBooking;
 import com.ie207.vagabond.request.HotelBookingRequest;
 import com.ie207.vagabond.request.HotelPaypalOrderRequest;
+import com.ie207.vagabond.request.TourBookingRequest;
+import com.ie207.vagabond.request.TourPayPalOrderRequest;
 import com.ie207.vagabond.service.PaypalService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -45,6 +48,38 @@ public class PaypalController {
         try {
             HotelBooking booking = paypalService.captureHotelPaypalOrder(
                     request
+            );
+            Map<String, Object> response = new HashMap<>();
+            response.put("order", booking);
+            if ("pending".equals(booking.getBookingStatus())) {
+                response.put("message", "Đã thanh toán và lưu đơn hàng");
+            }
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", ex.getMessage()));
+        }
+    }
+
+    @PostMapping("/create-tour-booking")
+    public ResponseEntity<?> createTourOrder(@RequestBody TourPayPalOrderRequest paypalOrder) {
+        try {
+            String approvalUrl = paypalService.createTourPaypalOrder(paypalOrder);
+            return ResponseEntity.ok(Map.of("approvalUrl", approvalUrl));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Có lỗi xảy ra khi tạo PayPal order"));
+        }
+    }
+
+    @PostMapping("/capture-tour-booking")
+    public ResponseEntity<?> captureTourOrder(@RequestBody TourBookingRequest bookingData){
+        try {
+            TourBooking booking = paypalService.captureTourPaypalOrder(
+                    bookingData
             );
             Map<String, Object> response = new HashMap<>();
             response.put("order", booking);

@@ -1,4 +1,4 @@
-import { HOTEL_BOOKING_URL, PAYOS_URL, PAYPAL_URL, STRIPE_URL } from "../constants";
+import { HOTEL_BOOKING_URL, PAYOS_URL, PAYPAL_URL, STRIPE_URL, VNPAY_URL } from "../constants";
 import { apiSlice } from "./apiSlice";
 
 export const hotelBookingApiSlice = apiSlice.injectEndpoints({
@@ -46,7 +46,7 @@ export const hotelBookingApiSlice = apiSlice.injectEndpoints({
             query: ({ id, bookingStatus }) => ({
                 url: `${HOTEL_BOOKING_URL}/${id}/status`,
                 method: "PUT",
-                body: { bookingStatus },
+                body: bookingStatus,
             }),
         }),
         getHotelBookings: builder.query({
@@ -71,6 +71,21 @@ export const hotelBookingApiSlice = apiSlice.injectEndpoints({
                     bookingData,
                 },
             })
+        }),
+        createHotelVnpayOrder: builder.mutation({
+            query: (vnpayOrder) => ({
+                url: `${VNPAY_URL}/create-hotel-order`,
+                method: "POST",
+                body: vnpayOrder,
+            }),
+        }),
+        captureHotelVnpayOrder: builder.mutation({
+            query: ({ allParams, request }) => ({
+                url: `${VNPAY_URL}/capture-hotel-booking`,
+                method: "POST",
+                params: allParams, 
+                body: request,    
+            }),
         })
     }),
 });
@@ -86,4 +101,6 @@ export const {
     useGetHotelBookingsQuery,
     useCreateHotelPayOSLinkMutation,
     useSaveHotelBookingMutation,
+    useCreateHotelVnpayOrderMutation,
+    useCaptureHotelVnpayOrderMutation
 } = hotelBookingApiSlice;

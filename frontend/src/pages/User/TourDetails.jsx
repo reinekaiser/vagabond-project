@@ -48,6 +48,7 @@ const TourDetails = () => {
         productId: params._id,
         productType: "Tour",
     });
+    console.log(tourRiview);
 
     const CalendarSelection = () => {
         const generateMonthDays = (baseMonth) => {
@@ -303,14 +304,14 @@ const TourDetails = () => {
                                             if (!selectedDate) {
                                                 setIsCalendarModal(true);
                                             } else {
-                                                navigate(`/tour/${data.tour._id}/${ticket._id}`, {
+                                                navigate(`/tour/${data._id}/${ticket._id}`, {
                                                     state: {
                                                         ticket,
 
                                                         tour: {
-                                                            id: data.tour._id,
-                                                            name: data.tour.name,
-                                                            img: `${CLOUDINARY_BASE_URL}/${data.tour.images[0]}`,
+                                                            id: data._id,
+                                                            name: data.name,
+                                                            img: `${CLOUDINARY_BASE_URL}/${data.images[0]}`,
                                                         },
                                                     },
                                                 });
@@ -494,13 +495,13 @@ const TourDetails = () => {
                             if (!selectedDate) {
                                 setIsCalendarModal(true);
                             } else {
-                                navigate(`/tour/${data.tour._id}/${ticket._id}`, {
+                                navigate(`/tour/${data._id}/${ticket._id}`, {
                                     state: {
                                         ticket,
                                         tour: {
-                                            id: data.tour._id,
-                                            name: data.tour.name,
-                                            img: `${CLOUDINARY_BASE_URL}/${data.tour.images[0]}`,
+                                            id: data._id,
+                                            name: data.name,
+                                            img: `${CLOUDINARY_BASE_URL}/${data.images[0]}`,
                                         },
                                     },
                                 });
@@ -536,8 +537,8 @@ const TourDetails = () => {
 
     const latestByUser = new Map();
 
-    for (const item of tourRiview.reviews) {
-        const userId = item.userId._id;
+    for (const item of tourRiview) {
+        const userId = item.userId;
         const existing = latestByUser.get(userId);
 
         if (!existing || new Date(item.createdAt) > new Date(existing.createdAt)) {
@@ -552,8 +553,8 @@ const TourDetails = () => {
             <div className="w-[80%] mx-auto bg-transparent">
                 <TourInformationUser
                     tourData={{
-                        ...data.tour,
-                        numReview: tourRiview.reviews.length,
+                        ...data,
+                        numReview: tourRiview?.length,
                         reviews: latestReview,
                     }}
                     scrollToTicket={scrollToTicketSection}
@@ -574,17 +575,17 @@ const TourDetails = () => {
                     <p className="text-2xl font-bold">Đánh giá</p>
                     <div className="flex mt-4 gap-4 items-center">
                         <div className="text-3xl font-bold">
-                            {tourRiview.averageRating}
+                            {data.avgRating}
                             <span className="text-gray-400 text-sm ">/5</span>
                         </div>
                         <div className=" text-yellow-400 flex items-center gap-2">
                             <StarRating
-                                rating={tourRiview.averageRating}
+                                rating={data.avgRating}
                                 className={"text-yellow-400 flex items-center gap-2"}
                             ></StarRating>
                         </div>
                         <p className="text-base">
-                            Dựa trên {tourRiview.reviews.length} lượt đánh giá
+                            Dựa trên {tourRiview?.length} lượt đánh giá
                         </p>
                     </div>{" "}
                     <div className="flex flex-col gap-5 mt-5">
@@ -600,7 +601,7 @@ const TourDetails = () => {
                                         ) : (
                                             <div className="w-[44px] h-[44px] rounded-full flex items-center justify-center bg-[#8dbd8b] text-gray-200">
                                                 <span>
-                                                    {r.userId.firstName[0]} {r.userId.lastName[0]}
+                                                    {r.userFirstName} {r.userLastName}
                                                 </span>
                                             </div>
                                         )}
@@ -648,7 +649,7 @@ const TourDetails = () => {
     );
 };
 
-const StarRating = ({ rating, className }) => {
+const StarRating = ({ rating = 0, className }) => {
     const fullStars = Math.floor(rating);
     const hasHalf = rating % 1 >= 0.5;
     const emptyStars = 5 - fullStars - (hasHalf ? 1 : 0);
