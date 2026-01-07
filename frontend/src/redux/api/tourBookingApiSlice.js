@@ -1,5 +1,5 @@
 import { apiSlice } from "./apiSlice";
-import { TOUR_BOOKING_URL, PAYPAL_URL, STRIPE_URL, PAYOS_URL } from "../constants";
+import { TOUR_BOOKING_URL, PAYPAL_URL, STRIPE_URL, PAYOS_URL, VNPAY_URL } from "../constants";
 
 export const tourBookingSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
@@ -68,7 +68,21 @@ export const tourBookingSlice = apiSlice.injectEndpoints({
                 },
             })
         }),
-        
+        createTourVnpayOrder: builder.mutation({
+            query: (vnpayOrder) => ({
+                url: `${VNPAY_URL}/create-tour-order`,
+                method: "POST",
+                body: vnpayOrder,
+            })
+        }),
+        captureTourVnpayOrder: builder.mutation({
+            query: ({ allParams, request }) => ({
+                url: `${VNPAY_URL}/capture-tour-booking`,
+                method: "POST",
+                params: allParams, 
+                body: request,
+            })
+        })
     }),
 });
 
@@ -83,4 +97,6 @@ export const {
     useGetTourBookingsQuery,
     useCreateTourPayOSLinkMutation,
     useSaveTourBookingMutation,
+    useCreateTourVnpayOrderMutation,
+    useCaptureTourVnpayOrderMutation,
 } = tourBookingSlice;

@@ -40,7 +40,7 @@ public class PaypalService {
     @Value("${paypal.client-secret}")
     private String clientSecret;
 
-    private String CLIENT_URL = "http://localhost:5173";
+    private String CLIENT_URL = "http://localhost:5174";
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -241,8 +241,6 @@ public class PaypalService {
         tourBooking.setEmail(request.getEmail());
         tourBooking.setPhone(request.getPhone());
         tourBooking.setUseDate(useDate);
-        tourBooking.setAdults(request.getAdults());
-        tourBooking.setChilds(request.getChilds());
         tourBooking.setPaymentMethod(request.getPaymentMethod());
         tourBooking.setTotalPrice(request.getTotalPrice());
 

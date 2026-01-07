@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { CLOUDINARY_BASE_URL } from "../../constants/hotel";
 import { CATEGORY_OPTIONS, DURATION_OPTIONS, LANGUAGE_OPTIONS } from "../../constants/tour";
-import { IoIosStar } from "react-icons/io";
 import { Checkbox, Collapse, Slider } from "antd";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { useGetToursQuery } from "../../redux/api/tourApiSlice";
@@ -12,13 +11,12 @@ import { Box, CircularProgress } from "@mui/material";
 import { useGetReviewByCityQuery } from "../../redux/api/reviewApiSlice";
 import GeneralCarousel from "../../components/GeneralCarousel";
 import { FaStar } from "react-icons/fa6";
+import { useGetCityQuery } from "../../redux/api/cityApiSlice";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const CityDetail = () => {
     const { cityId } = useParams();
-    const [city, setCity] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const { data: city, isLoading: loading } = useGetCityQuery(cityId);
     const [showFullDescription, setShowFullDescription] = useState(false);
     const [showImageGallery, setShowImageGallery] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -47,44 +45,10 @@ const CityDetail = () => {
         },
     };
 
-    useEffect(() => {
-        // Lấy thông tin thành phố
-        const fetchCity = async () => {
-            try {
-                setLoading(true);
-                console.log("Fetching city with ID:", cityId);
-                const res = await fetch(`${API_URL}/api/cities/${cityId}`);
-                console.log("API response status:", res.status);
-
-                if (!res.ok) {
-                    throw new Error(`HTTP error! status: ${res.status}`);
-                }
-
-                const data = await res.json();
-                console.log("City API result:", data);
-
-                if (data.success) {
-                    setCity(data.data);
-                } else {
-                    console.error("API returned error:", data.message);
-                }
-            } catch (error) {
-                console.error("Error fetching city:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        if (cityId) {
-            fetchCity();
-        }
-    }, [cityId]);
-
     const { data: reviews, isLoading: isLoadingReview } = useGetReviewByCityQuery({
         cityId: cityId,
     });
-
-    console.log(reviews);
+    console.log(reviews)
 
     const panelStyle = {
         background: "#fff",
@@ -97,13 +61,13 @@ const CityDetail = () => {
             const childStyle = !isLast
                 ? style
                 : {
-                      ...style,
-                      borderRadius: "0 0 8px 8px",
-                  };
+                    ...style,
+                    borderRadius: "0 0 8px 8px",
+                };
 
             return {
                 key: index,
-                label: <p className="text-xl py-2 font-semibold ">{fqa.Question}</p>,
+                label: <p className="text-xl py-2 font-semibold ">{fqa.question}</p>,
                 children: <p className="text-base p-6 bg-gray-100">{fqa.answer}</p>,
                 style: childStyle,
             };
@@ -215,11 +179,10 @@ const CityDetail = () => {
                                 <div
                                     onClick={() => handleFiler(languageOption.value, setLanguage)}
                                     key={languageOption.value}
-                                    className={`cursor-pointer px-2 py-2 border rounded-lg ${
-                                        language.includes(languageOption.value)
+                                    className={`cursor-pointer px-2 py-2 border rounded-lg ${language.includes(languageOption.value)
                                             ? " border-blue-500 text-blue-500 bg-white"
                                             : ""
-                                    }`}
+                                        }`}
                                 >
                                     {languageOption.label}
                                 </div>
@@ -232,11 +195,10 @@ const CityDetail = () => {
                             {DURATION_OPTIONS.map((durationOption) => (
                                 <div
                                     key={durationOption.value}
-                                    className={`cursor-pointer border px-2 py-2 rounded-lg ${
-                                        duration.includes(durationOption.value)
+                                    className={`cursor-pointer border px-2 py-2 rounded-lg ${duration.includes(durationOption.value)
                                             ? " border-blue-500 text-blue-500 bg-white"
                                             : ""
-                                    }`}
+                                        }`}
                                     onClick={() => handleFiler(durationOption.value, setDuration)}
                                 >
                                     {durationOption.label}
@@ -337,7 +299,7 @@ const CityDetail = () => {
 
                     {/* Hình ảnh thành phố - bên phải */}
                     <div className="lg:w-1/2 relative">
-                        {city.img && city.img.length > 0 && (
+                        {city.images && city.images.length > 0 && (
                             <div className="relative h-80 lg:h-full">
                                 {/* Layout ảnh: 1 ảnh lớn bên trái, 2 ảnh nhỏ bên phải */}
                                 <div className="flex gap-2 h-full">
@@ -347,16 +309,16 @@ const CityDetail = () => {
                                         onClick={() => setShowImageGallery(true)}
                                     >
                                         <img
-                                            src={city.img[0]}
+                                            src={`${CLOUDINARY_BASE_URL}/${city.images[0]}`}
                                             alt={city.name}
                                             className="w-full h-full object-cover rounded-l-lg"
                                         />
                                     </div>
 
                                     {/* 2 ảnh nhỏ bên phải */}
-                                    {city.img.length > 1 && (
+                                    {city.images.length > 1 && (
                                         <div className="w-1/3 flex flex-col gap-2">
-                                            {city.img[1] && (
+                                            {city.images[1] && (
                                                 <div
                                                     className="flex-1 relative cursor-pointer"
                                                     onClick={() => {
@@ -365,13 +327,13 @@ const CityDetail = () => {
                                                     }}
                                                 >
                                                     <img
-                                                        src={city.img[1]}
+                                                        src={`${CLOUDINARY_BASE_URL}/${city.images[1]}`}
                                                         alt={`${city.name} - 2`}
                                                         className="w-full h-full object-cover rounded-tr-lg"
                                                     />
                                                 </div>
                                             )}
-                                            {city.img[2] && (
+                                            {city.images[2] && (
                                                 <div
                                                     className="flex-1 relative cursor-pointer"
                                                     onClick={() => {
@@ -380,16 +342,16 @@ const CityDetail = () => {
                                                     }}
                                                 >
                                                     <img
-                                                        src={city.img[2]}
+                                                        src={`${CLOUDINARY_BASE_URL}/${city.images[2]}`}
                                                         alt={`${city.name} - 3`}
                                                         className="w-full h-full object-cover rounded-br-lg"
                                                     />
 
                                                     {/* Overlay với số ảnh còn lại nếu có nhiều hơn 3 ảnh */}
-                                                    {city.img.length > 3 && (
+                                                    {city.images.length > 3 && (
                                                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-br-lg">
                                                             <span className="text-white font-semibold text-lg">
-                                                                +{city.img.length - 3}
+                                                                +{city.images.length - 3}
                                                             </span>
                                                         </div>
                                                     )}
@@ -397,14 +359,14 @@ const CityDetail = () => {
                                             )}
 
                                             {/* Nếu chỉ có 2 ảnh, tạo placeholder cho ảnh thứ 3 */}
-                                            {city.img.length === 2 && (
+                                            {city.images.length === 2 && (
                                                 <div className="flex-1 bg-gray-200 rounded-br-lg"></div>
                                             )}
                                         </div>
                                     )}
 
                                     {/* Nếu chỉ có 1 ảnh, hiển thị ảnh đó full width */}
-                                    {city.img.length === 1 && (
+                                    {city.images.length === 1 && (
                                         <div className="w-1/3 bg-gray-200 rounded-r-lg"></div>
                                     )}
                                 </div>
@@ -439,8 +401,8 @@ const CityDetail = () => {
             <div className="mb-8">
                 <h2 className="text-2xl font-semibold mb-6">Địa điểm nổi bật</h2>
                 <div className="grid grid-cols-2 gap-6">
-                    {city.popularPlace &&
-                        city.popularPlace.map((place, idx) => (
+                    {city.popularPlaces &&
+                        city.popularPlaces.map((place, idx) => (
                             <div
                                 key={idx}
                                 className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
@@ -448,9 +410,9 @@ const CityDetail = () => {
                                 <div className="flex flex-col md:flex-row">
                                     {/* Hình ảnh địa điểm */}
                                     <div className="md:w-1/3 flex-1">
-                                        {place.img ? (
+                                        {place.image ? (
                                             <img
-                                                src={place.img}
+                                                src={`${CLOUDINARY_BASE_URL}/${place.image}`}
                                                 alt={place.name}
                                                 className="w-full h-full object-cover block"
                                             />
@@ -503,7 +465,7 @@ const CityDetail = () => {
                         ))}
 
                     {/* Nếu không có địa điểm nổi bật */}
-                    {(!city.popularPlace || city.popularPlace.length === 0) && (
+                    {(!city.popularPlaces || city.popularPlaces.length === 0) && (
                         <div className="text-center py-12 bg-gray-50 rounded-xl">
                             <svg
                                 className="w-16 h-16 text-gray-400 mx-auto mb-4"
@@ -541,31 +503,70 @@ const CityDetail = () => {
 
             {/* Review */}
             <div className="mb-8">
-                <p className="text-2xl font-semibold mb-6" >Mọi người nghĩ gì về các dịch vụ ở {city.name}</p>
+                <p className="text-2xl font-semibold mb-6">
+                    Mọi người nghĩ gì về các dịch vụ ở {city.name}
+                </p>
                 <GeneralCarousel responsive={responsive}>
-                    {reviews.data.map((review, index) => (
-                        <div className="h-[250px] p-6 border border-gray-200 rounded-lg">
-                            <div className="flex gap-1 text-yellow-400">
-                                {Array(5)
-                                    .fill(1)
-                                    .map((_, index) => (
-                                        <FaStar key={index}></FaStar>
-                                    ))}
+                    {reviews.map((review, index) => (
+                        <div
+                            key={index}
+                            className="max-h-[250px] p-6 border border-gray-200 rounded-lg flex flex-col justify-between"
+                        >
+                            <div className="flex items-center gap-3">
+                                {review.userAvatar ? (
+                                    <img
+                                        src={review.userAvatar}
+                                        alt="avatar"
+                                        className="w-10 h-10 rounded-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-semibold text-gray-700">
+                                        {review.userFirstName?.charAt(0)?.toUpperCase() || "?"}
+                                    </div>
+                                )}
+
+                                <div>
+                                    <p className="font-medium text-gray-800">
+                                        {review.userFirstName} {review.userLastName}
+                                    </p>
+                                    <p className="text-xs text-gray-400">
+                                        {new Date(review.createdAt).toLocaleDateString("vi-VN")}
+                                    </p>
+                                </div>
                             </div>
-                            <p className="text-gray-400 mt-1">
+
+                            <div className="flex items-center gap-1 text-sm mt-2">
+                                {Array(5)
+                                    .fill(0)
+                                    .map((_, i) => (
+                                        <FaStar
+                                            key={i}
+                                            className={
+                                                i < review.rating
+                                                    ? "text-yellow-400"
+                                                    : "text-gray-300"
+                                            }
+                                        />
+                                    ))}
+                                <span className="ml-1 text-gray-500">
+                                    ({review.rating}/5)
+                                </span>
+                            </div>
+
+                            <p className="text-gray-400 text-sm mt-1">
                                 Đánh giá cho:{" "}
-                                <Link to={`/tour/${review.tour.id}`} className="text-blue-400">
-                                    {review.tour.name}
+                                <Link
+                                    to={`/tour/${review.tourId}`}
+                                    className="text-blue-500 hover:underline"
+                                >
+                                    {review.tourName}
                                 </Link>
                             </p>
-                            <div className="flex gap-2 text-gray-400">
-                                <span>
-                                    {review.user.firstName} {review.user.lastName}
-                                </span>
-                                <span>{review.reviewTime}</span>
-                            </div>
-                            <div className="max-h-[140px] overflow-auto">
-                                <p className="mt-2 ">{review.review.content}</p>
+
+                            <div className="max-h-[90px] overflow-auto">
+                                <p className="mt-2 text-gray-700 text-sm">
+                                    {review.comment}
+                                </p>
                             </div>
                         </div>
                     ))}
@@ -575,7 +576,7 @@ const CityDetail = () => {
             <div>
                 <h2 className="text-2xl font-semibold mb-6">Du lịch {city.name} cần lưu ý gì</h2>
 
-                {city.popularQuestion && city.popularQuestion.length > 0 ? (
+                {city.popularQuestions && city.popularQuestions.length > 0 ? (
                     <Collapse
                         accordion
                         bordered={false}
@@ -587,7 +588,7 @@ const CityDetail = () => {
                         )}
                         className="rounded-lg"
                         expandIconPosition="end"
-                        items={getItems(panelStyle, city.popularQuestion)}
+                        items={getItems(panelStyle, city.popularQuestions)}
                     ></Collapse>
                 ) : (
                     <div className="text-gray-400 text-center py-8">Chưa có câu hỏi nào.</div>
@@ -621,13 +622,13 @@ const CityDetail = () => {
                         {/* Ảnh chính */}
                         <div className="relative">
                             <img
-                                src={city.img[currentImageIndex]}
+                                src={`${CLOUDINARY_BASE_URL}/${city.images[currentImageIndex]}`}
                                 alt={`${city.name} - ${currentImageIndex + 1}`}
                                 className="w-[600px] h-[320px] object-cover mx-auto"
                             />
 
                             {/* Nút previous */}
-                            {city.img.length > 1 && currentImageIndex > 0 && (
+                            {city.images.length > 1 && currentImageIndex > 0 && (
                                 <button
                                     className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300"
                                     onClick={() => setCurrentImageIndex(currentImageIndex - 1)}
@@ -649,7 +650,7 @@ const CityDetail = () => {
                             )}
 
                             {/* Nút next */}
-                            {city.img.length > 1 && currentImageIndex < city.img.length - 1 && (
+                            {city.images.length > 1 && currentImageIndex < city.images.length - 1 && (
                                 <button
                                     className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300"
                                     onClick={() => setCurrentImageIndex(currentImageIndex + 1)}
@@ -672,20 +673,19 @@ const CityDetail = () => {
                         </div>
 
                         {/* Thumbnails */}
-                        {city.img.length > 1 && (
+                        {city.images.length > 1 && (
                             <div className="flex justify-center mt-4 space-x-2 overflow-x-auto">
-                                {city.img.map((img, idx) => (
+                                {city.images.map((img, idx) => (
                                     <button
                                         key={idx}
-                                        className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 ${
-                                            idx === currentImageIndex
+                                        className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 ${idx === currentImageIndex
                                                 ? "border-white"
                                                 : "border-transparent"
-                                        }`}
+                                            }`}
                                         onClick={() => setCurrentImageIndex(idx)}
                                     >
                                         <img
-                                            src={img}
+                                            src={`${CLOUDINARY_BASE_URL}/${img}`}
                                             alt={`Thumbnail ${idx + 1}`}
                                             className="w-full h-full object-cover"
                                         />
@@ -696,7 +696,7 @@ const CityDetail = () => {
 
                         {/* Chỉ số ảnh */}
                         <div className="text-center text-white mt-4">
-                            {currentImageIndex + 1} / {city.img.length}
+                            {currentImageIndex + 1} / {city.images.length}
                         </div>
                     </div>
                 </div>

@@ -81,7 +81,7 @@ const PublicRoutes = () => {
             <Route
                 path="/tour-checkout-payos-success"
                 element={<TourCheckOutPayOSSuccess/>}
-            />
+            /> */}
 
         </Routes>
     );

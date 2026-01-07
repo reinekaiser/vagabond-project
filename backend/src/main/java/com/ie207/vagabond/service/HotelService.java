@@ -98,129 +98,255 @@ public class HotelService {
         return response;
     }
 
+//    @Transactional
+//    public HotelFilterResponse getSearchResults (
+//            String type, Double minPrice, Double maxPrice,
+//            List<String> hotelFacilities, List<String> roomFacilities,
+//            String key, String sort, int page, int limit
+//    ) {
+//        List<Document> pipeline = new ArrayList<>();
+//
+//        if (key != null && !key.isEmpty() && type != null) {
+//            switch (type) {
+//                case "hotel":
+//                    pipeline.add(
+//                            new Document("$match", new Document()
+//                                    .append("name", key)
+//                            )
+//                    );
+//                    break;
+//                case "city":
+//                    City city = mongoTemplate.findOne(
+//                            Query.query(Criteria.where("name").is(key)),
+//                            City.class
+//                    );
+//                    if (city != null) {
+//                        pipeline.add(new Document("$match",
+//                                new Document("city.$id", new ObjectId(city.get_id()))
+//                        ));
+//                    }
+//                    break;
+//            };
+//        }
+//
+//        List<Document> orConditions = new ArrayList<>();
+//
+//        if (hotelFacilities != null && !hotelFacilities.isEmpty()) {
+//            List<ObjectId> facilityIds = hotelFacilities.stream()
+//                    .map(ObjectId::new)
+//                    .collect(Collectors.toList());
+//            orConditions.add(
+//                    new Document("serviceFacilities.$id",
+//                            new Document("$in", facilityIds))
+//            );
+//        }
+//
+//        if (roomFacilities != null && !roomFacilities.isEmpty()) {
+//            List<ObjectId> matchedRoomTypeIds = mongoTemplate
+//                    .getCollection("hotelroomtypes")
+//                    .find(new Document("roomFacilities", new Document("$in", roomFacilities)))
+//                    .map(doc -> doc.getObjectId("_id"))
+//                    .into(new ArrayList<>());
+//            orConditions.add(
+//                    new Document("roomTypes.$id", new Document("$in", matchedRoomTypeIds))
+//            );
+//        }
+//
+//        if (!orConditions.isEmpty()) {
+//            pipeline.add(new Document("$match", new Document("$or", orConditions)));
+//        }
+//
+//        if (minPrice != null || maxPrice != null) {
+//            double min = minPrice != null ? minPrice : 0;
+//            double max = maxPrice != null ? maxPrice : Double.MAX_VALUE;
+//            List<ObjectId> matchedRoomTypeIds = mongoTemplate
+//                    .getCollection("hotelroomtypes")
+//                    .find(new Document("rooms.price",
+//                            new Document("$gte", min).append("$lte", max)))
+//                    .map(doc -> doc.getObjectId("_id"))
+//                    .into(new ArrayList<>());
+//            pipeline.add(new Document("$match",
+//                    new Document("roomTypes.$id", new Document("$in", matchedRoomTypeIds))
+//            ));
+//        }
+//
+//        if (sort != null) {
+//            switch (sort) {
+//                case "newest":
+//                    pipeline.add(new Document("$sort", new Document("createdAt", -1)));
+//                    break;
+//                case "oldest":
+//                    pipeline.add(new Document("$sort", new Document("createdAt", 1)));
+//                    break;
+//                case "priceAsc":
+//                    pipeline.add(new Document("$sort", new Document("fromPrice", 1)));
+//                    break;
+//                case "priceDesc":
+//                    pipeline.add(new Document("$sort", new Document("fromPrice", -1)));
+//                    break;
+//                default:
+//                    pipeline.add(new Document("$sort", new Document("createdAt", 1)));
+//                    break;
+//            }
+//        }
+//
+//        int currentPage = Math.max(page, 1);
+//        int skip = (currentPage - 1) * limit;
+//
+//        pipeline.add(new Document("$facet", new Document()
+//                .append("metadata", Arrays.asList(
+//                        new Document("$count", "total")
+//                ))
+//                .append("data", Arrays.asList(
+//                        new Document("$skip", skip),
+//                        new Document("$limit", limit)
+//                ))
+//        ));
+//
+//        List<Document> aggregated = mongoTemplate
+//                .getCollection("hotels")
+//                .aggregate(pipeline)
+//                .into(new ArrayList<>());
+//
+//        List<Hotel> hotels = new ArrayList<>();
+//        long totalHotels = 0;
+//
+//        if (!aggregated.isEmpty()) {
+//            Document doc = aggregated.get(0);
+//            List<Document> metadata = (List<Document>) doc.get("metadata");
+//            if (!metadata.isEmpty()) {
+//                totalHotels = metadata.get(0).getInteger("total", 0);
+//            }
+//            List<Document> data = (List<Document>) doc.get("data");
+//            for (Document d : data) {
+//                hotels.add(mapDocumentToHotel(d));
+//            }
+//        }
+//
+//        int totalPages = (int) Math.ceil((double) totalHotels / limit);
+//
+//        return new HotelFilterResponse(
+//                (int) totalHotels,
+//                totalPages,
+//                currentPage,
+//                limit,
+//                hotels
+//        );
+//    }
+
     @Transactional
-    public HotelFilterResponse getSearchResults (
+    public HotelFilterResponse getSearchHotelResults (
             String type, Double minPrice, Double maxPrice,
             List<String> hotelFacilities, List<String> roomFacilities,
             String key, String sort, int page, int limit
-    ) {
+    ){
         List<Document> pipeline = new ArrayList<>();
 
         if (key != null && !key.isEmpty() && type != null) {
-            switch (type) {
-                case "hotel":
-                    pipeline.add(
-                            new Document("$match", new Document()
-                                    .append("name", key)
-                            )
-                    );
-                    break;
-                case "city":
-                    City city = mongoTemplate.findOne(
-                            Query.query(Criteria.where("name").is(key)),
-                            City.class
-                    );
-                    if (city != null) {
-                        pipeline.add(new Document("$match",
-                                new Document("city.$id", new ObjectId(city.get_id()))
-                        ));
-                    }
-                    break;
-            };
+            if ("hotel".equals(type)) {
+                pipeline.add(new Document("$match",
+                        new Document("name",
+                                new Document("$regex", key).append("$options", "i")
+                        )));
+            } else if ("city".equals(type)) {
+                City city = mongoTemplate.findOne(
+                        Query.query(Criteria.where("name").is(key)), City.class);
+                if (city != null) {
+                    pipeline.add(new Document("$match",
+                            new Document("city.$id", new ObjectId(city.get_id()))));
+                } else {
+                    return new HotelFilterResponse(0, 0, page, limit, new ArrayList<>());
+                }
+            }
         }
 
-        List<Document> orConditions = new ArrayList<>();
+        pipeline = convertId(pipeline);
 
         if (hotelFacilities != null && !hotelFacilities.isEmpty()) {
-            List<ObjectId> facilityIds = hotelFacilities.stream()
-                    .map(ObjectId::new)
-                    .collect(Collectors.toList());
-            orConditions.add(
-                    new Document("serviceFacilities.$id",
-                            new Document("$in", facilityIds))
-            );
-        }
-
-        if (roomFacilities != null && !roomFacilities.isEmpty()) {
-            List<ObjectId> matchedRoomTypeIds = mongoTemplate
-                    .getCollection("hotelroomtypes")
-                    .find(new Document("roomFacilities", new Document("$in", roomFacilities)))
-                    .map(doc -> doc.getObjectId("_id"))
-                    .into(new ArrayList<>());
-            orConditions.add(
-                    new Document("roomTypes.$id", new Document("$in", matchedRoomTypeIds))
-            );
-        }
-
-        if (!orConditions.isEmpty()) {
-            pipeline.add(new Document("$match", new Document("$or", orConditions)));
-        }
-
-        if (minPrice != null || maxPrice != null) {
-            double min = minPrice != null ? minPrice : 0;
-            double max = maxPrice != null ? maxPrice : Double.MAX_VALUE;
-            List<ObjectId> matchedRoomTypeIds = mongoTemplate
-                    .getCollection("hotelroomtypes")
-                    .find(new Document("rooms.price",
-                            new Document("$gte", min).append("$lte", max)))
-                    .map(doc -> doc.getObjectId("_id"))
-                    .into(new ArrayList<>());
             pipeline.add(new Document("$match",
-                    new Document("roomTypes.$id", new Document("$in", matchedRoomTypeIds))
+                    new Document("serviceFacilitiesStr",
+                            new Document("$in", hotelFacilities)
+                    )
             ));
         }
 
+        boolean needFilterRoom = (roomFacilities != null && !roomFacilities.isEmpty());
+        boolean needFilterPrice = (minPrice != null || maxPrice != null);
+
+        if (needFilterRoom || needFilterPrice) {
+            pipeline.add(new Document("$lookup", new Document()
+                    .append("from", "hotelroomtypes")
+                    .append("localField", "roomTypesObj")
+                    .append("foreignField", "_id")
+                    .append("as", "joinedRoomTypes")
+            ));
+
+            List<Document> matchConditions = new ArrayList<>();
+            if (needFilterRoom) {
+                matchConditions.add(
+                        new Document("joinedRoomTypes.roomFacilities",
+                                new Document("$in", roomFacilities))
+                );
+            }
+
+            if (needFilterPrice) {
+                double min = minPrice != null ? minPrice : 0;
+                double max = maxPrice != null ? maxPrice : Double.MAX_VALUE;
+
+                matchConditions.add(new Document("joinedRoomTypes.rooms", new Document("$elemMatch",
+                        new Document("price", new Document("$gte", min).append("$lte", max))
+                )));
+            }
+
+            if (!matchConditions.isEmpty()) {
+                pipeline.add(new Document("$match", new Document("$and", matchConditions)));
+            }
+
+            pipeline.add(new Document("$project", new Document("joinedRoomTypes", 0)));
+        }
+
+        String sortField = "createdAt";
+        int sortDir = 1;
         if (sort != null) {
             switch (sort) {
-                case "newest":
-                    pipeline.add(new Document("$sort", new Document("createdAt", -1)));
-                    break;
-                case "oldest":
-                    pipeline.add(new Document("$sort", new Document("createdAt", 1)));
-                    break;
-                case "priceAsc":
-                    pipeline.add(new Document("$sort", new Document("fromPrice", 1)));
-                    break;
-                case "priceDesc":
-                    pipeline.add(new Document("$sort", new Document("fromPrice", -1)));
-                    break;
-                default:
-                    pipeline.add(new Document("$sort", new Document("createdAt", 1)));
-                    break;
+                case "newest": sortField = "createdAt"; sortDir = -1; break;
+                case "oldest": sortField = "createdAt"; sortDir = 1; break;
+                case "priceAsc": sortField = "fromPrice"; sortDir = 1; break;
+                case "priceDesc": sortField = "fromPrice"; sortDir = -1; break;
             }
         }
+        pipeline.add(new Document("$sort", new Document(sortField, sortDir)));
 
         int currentPage = Math.max(page, 1);
         int skip = (currentPage - 1) * limit;
 
         pipeline.add(new Document("$facet", new Document()
-                .append("metadata", Arrays.asList(
-                        new Document("$count", "total")
-                ))
-                .append("data", Arrays.asList(
+                .append("metadata", List.of(new Document("$count", "total")))
+                .append("data", List.of(
                         new Document("$skip", skip),
                         new Document("$limit", limit)
                 ))
         ));
 
+        // ===== EXECUTE =====
         List<Document> aggregated = mongoTemplate
                 .getCollection("hotels")
                 .aggregate(pipeline)
                 .into(new ArrayList<>());
 
-        List<Hotel> hotels = new ArrayList<>();
         long totalHotels = 0;
+        List<Document> data = List.of();
 
         if (!aggregated.isEmpty()) {
             Document doc = aggregated.get(0);
-            List<Document> metadata = (List<Document>) doc.get("metadata");
-            if (!metadata.isEmpty()) {
-                totalHotels = metadata.get(0).getInteger("total", 0);
-            }
-            List<Document> data = (List<Document>) doc.get("data");
-            for (Document d : data) {
-                hotels.add(mapDocumentToHotel(d));
-            }
+
+            totalHotels = doc.getList("metadata", Document.class)
+                    .stream()
+                    .findFirst()
+                    .map(m -> ((Number) m.get("total")).longValue())
+                    .orElse(0L);
+
+            data = doc.getList("data", Document.class);
         }
 
         int totalPages = (int) Math.ceil((double) totalHotels / limit);
@@ -230,9 +356,78 @@ public class HotelService {
                 totalPages,
                 currentPage,
                 limit,
-                hotels
+                data
         );
     }
+
+    private List<Document> convertId(List<Document> pipeline) {
+        pipeline.add(new Document("$addFields",
+                new Document("_id", new Document("$toString", "$_id"))
+        ));
+        pipeline.add(new Document("$addFields",
+                new Document("city",
+                        new Document("$toString", "$city.$id")
+                )
+        ));
+        pipeline.add(new Document("$addFields",
+                new Document("roomTypes",
+                        new Document("$map",
+                                new Document("input", "$roomTypes")
+                                        .append("as", "rt")
+                                        .append("in",
+                                                new Document("$toString", "$$rt.$id")
+                                        )
+                        )
+                )
+        ));
+
+        pipeline.add(new Document("$addFields",
+                new Document("roomTypesObj",
+                        new Document("$map",
+                                new Document("input", "$roomTypes")
+                                        .append("as", "rt")
+                                        .append("in",
+                                                new Document("$toObjectId", "$$rt"))
+                        )
+                )
+        ));
+
+        pipeline.add(new Document("$addFields",
+                new Document("serviceFacilitiesStr",
+                        new Document("$map",
+                                new Document("input", "$serviceFacilities")
+                                        .append("as", "sf")
+                                        .append("in",
+                                                new Document("$toString", "$$sf.$id")
+                                        )
+                        )
+                )
+        ));
+
+        pipeline.add(new Document("$addFields",
+                new Document("serviceFacilitiesObj",
+                        new Document("$map",
+                                new Document("input", "$serviceFacilities")
+                                        .append("as", "sf")
+                                        .append("in", "$$sf.$id")
+                        )
+                )
+        ));
+
+        pipeline.add(new Document("$lookup", new Document()
+                .append("from", "hotelfacilities")
+                .append("localField", "serviceFacilitiesObj")
+                .append("foreignField", "_id")
+                .append("as", "serviceFacilities")
+        ));
+
+        pipeline.add(new Document("$project",
+                new Document("_class", 0)
+        ));
+        return pipeline;
+    }
+
+
 
     private Hotel mapDocumentToHotel(Document doc) {
         Hotel hotel = new Hotel();
@@ -300,89 +495,89 @@ public class HotelService {
         return hotel.getRoomTypes();
     }
 
-    public HotelFilterResponse getHotels(
-            String type, Double minPrice, Double maxPrice,
-            List<String> hotelFacilities, List<String> roomFacilities,
-            String key, String sort, int page, int limit
-    ) {
-        List<Hotel> hotels = hotelRepository.findAll();
-
-        if (key != null && !key.isEmpty() && type != null) {
-            switch (type.toLowerCase()) {
-                case "city" -> {
-                    hotels = hotels.stream()
-                            .filter(h -> h.getCity() != null && h.getCity().getName() != null &&
-                                    h.getCity().getName().equals(key))
-                            .toList();
-                }
-                case "hotel" -> {
-                    hotels = hotels.stream()
-                            .filter(h -> h.getName() != null &&
-                                    h.getName().contains(key))
-                            .toList();
-                }
-            }
-        }
-
-        if (hotelFacilities != null && !hotelFacilities.isEmpty()) {
-            hotels = hotels.stream()
-                    .filter(h -> h.getServiceFacilities().stream()
-                            .anyMatch(f -> hotelFacilities.contains(f.get_id()))
-                    )
-                    .collect(Collectors.toList());
-        }
-
-        if (roomFacilities != null && !roomFacilities.isEmpty()) {
-            hotels = hotels.stream()
-                    .filter(h -> h.getRoomTypes().stream()
-                            .anyMatch(rt -> rt.getRoomFacilities().stream()
-                                    .anyMatch(roomFacilities::contains)
-                            )
-                    )
-                    .collect(Collectors.toList());
-        }
-
-        if (minPrice != null || maxPrice != null) {
-            double min = minPrice != null ? minPrice : 0;
-            double max = maxPrice != null ? maxPrice : Double.MAX_VALUE;
-
-            hotels = hotels.stream()
-                    .filter(h -> h.getRoomTypes().stream()
-                            .anyMatch(rt -> rt.getRooms().stream()
-                                    .anyMatch(r -> r.getPrice() >= min && r.getPrice() <= max)
-                            )
-                    )
-                    .collect(Collectors.toList());
-        }
-
-        if (sort != null) {
-            switch (sort) {
-                case "priceAsc":
-                    hotels.sort(Comparator.comparingDouble(this::getMinPrice));
-                    break;
-                case "priceDesc":
-                    hotels.sort((a, b) -> Double.compare(getMinPrice(b), getMinPrice(a)));
-                    break;
-                case "newest":
-                    hotels.sort(Comparator.comparing(Hotel::getCreatedAt).reversed());
-                    break;
-            }
-        }
-
-        int pageNumber = Math.max(page, 1);
-        int pageSize = limit;
-        int skip = (pageNumber - 1) * pageSize;
-        int toIndex = Math.min(skip + pageSize, hotels.size());
-        List<Hotel> paginated = skip >= hotels.size() ? new ArrayList<>() : hotels.subList(skip, toIndex);
-
-        return new HotelFilterResponse(
-                hotels.size(),
-                (int) Math.ceil((double) hotels.size() / pageSize),
-                pageNumber,
-                pageSize,
-                paginated
-        );
-    }
+//    public HotelFilterResponse getHotels(
+//            String type, Double minPrice, Double maxPrice,
+//            List<String> hotelFacilities, List<String> roomFacilities,
+//            String key, String sort, int page, int limit
+//    ) {
+//        List<Hotel> hotels = hotelRepository.findAll();
+//
+//        if (key != null && !key.isEmpty() && type != null) {
+//            switch (type.toLowerCase()) {
+//                case "city" -> {
+//                    hotels = hotels.stream()
+//                            .filter(h -> h.getCity() != null && h.getCity().getName() != null &&
+//                                    h.getCity().getName().equals(key))
+//                            .toList();
+//                }
+//                case "hotel" -> {
+//                    hotels = hotels.stream()
+//                            .filter(h -> h.getName() != null &&
+//                                    h.getName().contains(key))
+//                            .toList();
+//                }
+//            }
+//        }
+//
+//        if (hotelFacilities != null && !hotelFacilities.isEmpty()) {
+//            hotels = hotels.stream()
+//                    .filter(h -> h.getServiceFacilities().stream()
+//                            .anyMatch(f -> hotelFacilities.contains(f.get_id()))
+//                    )
+//                    .collect(Collectors.toList());
+//        }
+//
+//        if (roomFacilities != null && !roomFacilities.isEmpty()) {
+//            hotels = hotels.stream()
+//                    .filter(h -> h.getRoomTypes().stream()
+//                            .anyMatch(rt -> rt.getRoomFacilities().stream()
+//                                    .anyMatch(roomFacilities::contains)
+//                            )
+//                    )
+//                    .collect(Collectors.toList());
+//        }
+//
+//        if (minPrice != null || maxPrice != null) {
+//            double min = minPrice != null ? minPrice : 0;
+//            double max = maxPrice != null ? maxPrice : Double.MAX_VALUE;
+//
+//            hotels = hotels.stream()
+//                    .filter(h -> h.getRoomTypes().stream()
+//                            .anyMatch(rt -> rt.getRooms().stream()
+//                                    .anyMatch(r -> r.getPrice() >= min && r.getPrice() <= max)
+//                            )
+//                    )
+//                    .collect(Collectors.toList());
+//        }
+//
+//        if (sort != null) {
+//            switch (sort) {
+//                case "priceAsc":
+//                    hotels.sort(Comparator.comparingDouble(this::getMinPrice));
+//                    break;
+//                case "priceDesc":
+//                    hotels.sort((a, b) -> Double.compare(getMinPrice(b), getMinPrice(a)));
+//                    break;
+//                case "newest":
+//                    hotels.sort(Comparator.comparing(Hotel::getCreatedAt).reversed());
+//                    break;
+//            }
+//        }
+//
+//        int pageNumber = Math.max(page, 1);
+//        int pageSize = limit;
+//        int skip = (pageNumber - 1) * pageSize;
+//        int toIndex = Math.min(skip + pageSize, hotels.size());
+//        List<Hotel> paginated = skip >= hotels.size() ? new ArrayList<>() : hotels.subList(skip, toIndex);
+//
+//        return new HotelFilterResponse(
+//                hotels.size(),
+//                (int) Math.ceil((double) hotels.size() / pageSize),
+//                pageNumber,
+//                pageSize,
+//                paginated
+//        );
+//    }
 
 //    room
     @Transactional

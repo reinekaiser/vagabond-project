@@ -2,10 +2,15 @@ package com.ie207.vagabond.service;
 
 import com.ie207.vagabond.model.Hotel;
 import com.ie207.vagabond.model.HotelBooking;
+import com.ie207.vagabond.model.Tour;
+import com.ie207.vagabond.model.TourBooking;
 import com.ie207.vagabond.repository.HotelBookingRepository;
 import com.ie207.vagabond.repository.HotelRepository;
+import com.ie207.vagabond.repository.TourBookingRepository;
 import com.ie207.vagabond.request.HotelBookingRequest;
 import com.ie207.vagabond.request.HotelPaypalOrderRequest;
+import com.ie207.vagabond.request.TourBookingRequest;
+import com.ie207.vagabond.request.TourPayPalOrderRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -16,8 +21,10 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -32,12 +39,13 @@ public class VnpayService {
     private String hashSecret;
 
     private String payUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    private String CLIENT_URL = "http://localhost:5173";
+    private String CLIENT_URL = "http://localhost:5174";
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final HotelBookingRepository hotelBookingRepository;
     private final HotelRepository hotelRepository;
+    private final TourBookingRepository tourBookingRepository;
 
     public static String hashAllFields(Map<String, String> fields, String secretKey) {
         List<String> fieldNames = new ArrayList<>(fields.keySet());
@@ -156,6 +164,73 @@ public class VnpayService {
                 .queryParam("adults", request.getNumGuests())
                 .queryParam("roomTypeId", request.getRoomTypeId())
                 .queryParam("roomId", request.getRoomId())
+                .toUriString();
+
+        return cancelUrl;
+    }
+
+    @Transactional
+    public String createTourVnpayOrder(TourPayPalOrderRequest req){
+        long vnpAmount = Math.round(req.getAmount() * 100);
+        String returnUrl = CLIENT_URL + "/tour-checkout-success";
+
+        Map<String, String> params = new HashMap<>();
+        params.put("vnp_Version", "2.1.0");
+        params.put("vnp_Command", "pay");
+        params.put("vnp_TmnCode", tmnCode);
+        params.put("vnp_Amount", String.valueOf(vnpAmount));
+        params.put("vnp_CurrCode", "VND");
+        params.put("vnp_TxnRef", UUID.randomUUID().toString());
+        params.put("vnp_OrderInfo", "Thanh toan cho booking " + req.getTourId());
+        params.put("vnp_OrderType", "tour");
+        params.put("vnp_Locale", "vn");
+        params.put("vnp_ReturnUrl", returnUrl);
+        params.put("vnp_IpAddr", "127.0.0.1");
+        params.put("vnp_CreateDate",
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
+
+        String vnpSecureHash = hashAllFields(params, hashSecret);
+        params.put("vnp_SecureHash", vnpSecureHash);
+
+        StringBuilder url = new StringBuilder(payUrl + "?");
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            url.append(entry.getKey())
+                    .append("=")
+                    .append(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8))
+                    .append("&");
+        }
+        url.deleteCharAt(url.length() - 1);
+
+        return url.toString();
+    }
+
+    @Transactional
+    public TourBooking captureTourVnpayOrder(TourBookingRequest request){
+        LocalDate useDate = Instant.parse(request.getUseDate())
+                .atZone(ZoneId.systemDefault()).toLocalDate();
+
+        TourBooking tourBooking = new TourBooking();
+        tourBooking.setUserId(request.getUserId());
+        tourBooking.setTourId(request.getTourId());
+        tourBooking.setTicketId(request.getTicketId());
+
+        tourBooking.setTourImg(request.getTourImg());
+        tourBooking.setName(request.getName());
+        tourBooking.setEmail(request.getEmail());
+        tourBooking.setPhone(request.getPhone());
+        tourBooking.setUseDate(useDate);
+        tourBooking.setPaymentMethod(request.getPaymentMethod());
+        tourBooking.setTotalPrice(request.getTotalPrice());
+
+        tourBooking.setBookingStatus("pending");
+
+        tourBookingRepository.save(tourBooking);
+        return tourBooking;
+    }
+
+    public String createTourCancelUrl(TourBookingRequest request){
+        String cancelUrl = UriComponentsBuilder
+                .fromHttpUrl(CLIENT_URL + "/tour/" + request.getTourId())
                 .toUriString();
 
         return cancelUrl;
