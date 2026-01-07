@@ -77,15 +77,13 @@ const HotelSearchResults = () => {
         refetchOnReconnect: false,
         keepUnusedDataFor: 0,
     });
-
+    console.log('Hotels filter response:', hotelsFilter);
     useEffect(() => {
         if (!isSearching && hotelsFilter) {
             setHotels(hotelsFilter.data);
             setPage(hotelsFilter.currentPage);
         }
     }, [hotelsFilter]);
-
-    console.log('Hotels filter data:', hotelsFilter);
 
     const [location, setLocation] = useState({
         type: initType || '',
@@ -545,7 +543,7 @@ const GuestRoomSelector = ({ rooms, setRooms, adults, setAdults }) => {
                 className="text-[16px] font-semibold w-full text-left"
                 onClick={() => setOpen((prev) => !prev)}
             >
-                {`${adults} Người lớn, ${rooms} Phòng`}
+                {`${adults} Người, ${rooms} Phòng`}
             </button>
             {open && (
                 <div className="absolute z-10 bg-white rounded-xl shadow-lg w-[300px] p-4 space-y-3 mt-2">

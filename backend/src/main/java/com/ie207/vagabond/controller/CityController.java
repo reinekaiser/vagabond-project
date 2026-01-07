@@ -22,6 +22,11 @@ public class CityController {
         return ResponseEntity.ok(cityService.getAll());
     }
 
+    @GetMapping("/{cityId}")
+    public ResponseEntity<City> getCity(@PathVariable String cityId) {
+        return ResponseEntity.ok(cityService.getById(cityId));
+    }
+
     @PostMapping("/")
     public ResponseEntity<City> createCity(@RequestBody CityRequest request) {
         City city = cityService.createCity(request);

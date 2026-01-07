@@ -329,7 +329,7 @@ const GuestRoomSelector = ({ rooms, setRooms, adults, setAdults }) => {
                 className="text-[16px] font-semibold w-full text-left"
                 onClick={() => setOpen((prev) => !prev)}
             >
-                {`${adults} Người lớn, ${rooms} Phòng`}
+                {`${adults} Người, ${rooms} Phòng`}
             </button>
             {open && (
                 <div className="absolute z-10 bg-white rounded-xl shadow-lg w-[300px] p-4 space-y-3 mt-2">

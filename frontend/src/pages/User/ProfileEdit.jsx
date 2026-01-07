@@ -4,6 +4,7 @@ import { FaUser, FaLock, FaEdit, FaSave, FaEye, FaEyeSlash, FaCalendarAlt, FaMap
 import { useChangePasswordMutation, useUpdateUserMutation } from '../../redux/api/authApiSlice';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '../../redux/features/authSlice';
+import UpdateAvatar from '../../components/UpdateAvatar';
 
 const GENDERS = [
   { value: '', label: 'Chọn giới tính' },
@@ -30,7 +31,7 @@ const ProfileEdit = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(false);
   const [updateUser] = useUpdateUserMutation();
-  const [changePassword ] = useChangePasswordMutation();
+  const [changePassword] = useChangePasswordMutation();
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('userInfo'));
@@ -223,9 +224,9 @@ const ProfileEdit = () => {
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-6 text-white">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-2xl font-bold">
+              {/* <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-2xl font-bold">
                 {form.firstName?.charAt(0) || 'U'}
-              </div>
+              </div> */}
               <div>
                 <h1 className="text-2xl font-bold">Cài đặt tài khoản</h1>
                 <p className="text-blue-100">Quản lý thông tin cá nhân và bảo mật</p>
@@ -259,14 +260,17 @@ const ProfileEdit = () => {
             </div>
 
             <div className="p-8">
+              <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2 mb-6">
+                <FaEdit className="text-blue-500" />
+                Thông tin cơ bản
+              </h3>
+
+              <UpdateAvatar />
               {activeTab === 'profile' && (
-                <form onSubmit={handleSubmit} className="space-y-8">
+                <form onSubmit={handleSubmit} className="space-y-8 mt-6">
                   {/* Name Section */}
                   <div className="space-y-6">
-                    <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                      <FaEdit className="text-blue-500" />
-                      Thông tin cơ bản
-                    </h3>
+
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
@@ -420,13 +424,13 @@ const ProfileEdit = () => {
 
                   {/* Submit Buttons */}
                   <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
-                    <button
+                    {/* <button
                       type="button"
                       className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-medium transition-colors"
                       onClick={() => window.history.back()}
                     >
                       Hủy bỏ
-                    </button>
+                    </button> */}
                     <button
                       type="submit"
                       disabled={loading}

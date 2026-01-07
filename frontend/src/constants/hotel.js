@@ -9,7 +9,7 @@ export const PET_POLICIES = [
     }
 ];
 
-export const CLOUDINARY_BASE_URL = "https://res.cloudinary.com/dytiq61hf/image/upload/v1744375449";
+export const CLOUDINARY_BASE_URL = "https://res.cloudinary.com/dytiq61hf/image/upload/v1767436125";
 
 export const BREAKFAST_OPTIONS = [
     { _id: "Bao gồm bữa sáng", name: "Bao gồm bữa sáng" },

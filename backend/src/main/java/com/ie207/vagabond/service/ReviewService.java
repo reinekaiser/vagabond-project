@@ -10,12 +10,10 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.print.Doc;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -485,4 +483,76 @@ public class ReviewService {
 
         return reviews;
     }
+
+
+    public List<Document> getReviewByCities(String cityId) {
+        List<Tour> tours = tourRepository.findToursByCityId(cityId);
+
+        Map<String, String> tourMap = new HashMap<>();
+        List<String> tourIds = new ArrayList<>();
+
+        for (Tour tour : tours) {
+            tourMap.put(tour.get_id(), tour.getName());
+            tourIds.add(tour.get_id());
+        }
+
+        List<Document> pipeline = new ArrayList<>();
+
+        pipeline.add(new Document("$match",
+                new Document("tourId", new Document("$in", tourIds))
+        ));
+
+        pipeline.add(new Document("$sort", new Document("createdAt", -1)));
+        pipeline.add(new Document("$group", new Document()
+                .append("_id", "$userId")
+                .append("review", new Document("$first", "$$ROOT"))
+        ));
+        pipeline.add(new Document("$replaceRoot",
+                new Document("newRoot", "$review")
+        ));
+
+        pipeline.add(new Document("$addFields", new Document("userObjectId", new Document("$toObjectId", "$userId"))));
+        pipeline.add(new Document("$lookup", new Document()
+                .append("from", "users")
+                .append("localField", "userObjectId")
+                .append("foreignField", "_id")
+                .append("as", "user")
+        ));
+        pipeline.add(new Document("$unwind", new Document("path", "$user").append("preserveNullAndEmptyArrays", true)));
+
+        pipeline.add(new Document("$project", new Document()
+                .append("_id", 1)
+                .append("tourId", 1)
+                .append("rating", 1)
+                .append("comment", 1)
+                .append("images", 1)
+                .append("createdAt", 1)
+                .append("updatedAt", 1)
+                .append("userId", 1)
+                .append("userFirstName", "$user.firstName")
+                .append("userLastName", "$user.lastName")
+                .append("userEmail", "$user.email")
+                .append("userAvatar", "$user.avatarUrl")
+        ));
+
+        List<Document> reviews = mongoTemplate
+                .getCollection("tourreviews")
+                .aggregate(pipeline)
+                .into(new ArrayList<>());
+
+        reviews.forEach(doc -> {
+            if (doc.get("_id") instanceof ObjectId) {
+                doc.put("_id", ((ObjectId) doc.get("_id")).toHexString());
+            }
+
+            String tourId = doc.getString("tourId");
+            if (tourId != null) {
+                doc.put("tourName", tourMap.get(tourId));
+            }
+        });
+
+        return reviews;
+    }
+
+
 }

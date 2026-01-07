@@ -141,4 +141,18 @@ public class ReviewController {
         }
     }
 
+    @GetMapping("/review-city")
+    public ResponseEntity<?> getReviewsByCity(@RequestParam String cityId) {
+        if (cityId == null || cityId.isBlank()) {
+            return ResponseEntity.badRequest().body("Missing cityId");
+        }
+        try {
+            List<Document> reviews = reviewService.getReviewByCities(cityId);
+            return ResponseEntity.ok(reviews);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("Internal server error");
+        }
+    }
+
 }

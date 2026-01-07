@@ -46,7 +46,7 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 url: `${USER_URL}/update`,
                 method: "PUT",
                 body: user
-            }) 
+            })
         }),
         changePassword: builder.mutation({
             query: ({ oldPassword, newPassword }) => ({
@@ -55,17 +55,32 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 body: { oldPassword, newPassword },
             }),
         }),
+        updateUserAvatar: builder.mutation({
+            query: ({ userId, avatar }) => ({
+                url: `${USER_URL}/update-avatar`,
+                method: "PUT",
+                body: { avatar },
+            })
+        }),
+        deleteUserAvatar: builder.mutation({
+            query: () => ({
+                url: `${USER_URL}/delete-avatar`,
+                method: "DELETE",
+            })
+        })
     }),
 });
 
-export const { 
-    useSendOtpMutation, 
-    useRegisterMutation, 
+export const {
+    useSendOtpMutation,
+    useRegisterMutation,
     useLoginMutation,
     useLogoutMutation,
     useGetUserQuery,
     useLazyGetUserQuery,
     useGetAllUsersQuery,
     useUpdateUserMutation,
-    useChangePasswordMutation
+    useChangePasswordMutation,
+    useUpdateUserAvatarMutation,
+    useDeleteUserAvatarMutation
 } = authApiSlice;

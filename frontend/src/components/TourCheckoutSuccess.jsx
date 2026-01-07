@@ -1,16 +1,21 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { useCapturePaypalOrderAndSaveTourBookingMutation } from "../redux/api/tourBookingApiSlice";
+import { useCapturePaypalOrderAndSaveTourBookingMutation, useCaptureTourVnpayOrderMutation } from "../redux/api/tourBookingApiSlice";
 import { BsCheckCircle } from "react-icons/bs";
 import dayjs from 'dayjs';
+
+import { CircularProgress, Box } from "@mui/material";
+
 const TourCheckoutSuccess = () => {
     const [searchParams] = useSearchParams();
     const orderID = searchParams.get("token") || searchParams.get("vnp_TxnRef");
 
     const [booking, setBooking] = useState(null);
 
-    const [capturePaypalOrder, { isLoading, data, error }] =
+    const [capturePaypalOrder, { isLoading: loadingPaypal, data, error: paypalError }] =
         useCapturePaypalOrderAndSaveTourBookingMutation();
+    const [captureVnpayOrder, { isLoading: loadingVnpay, error: vnpayError }] =
+        useCaptureTourVnpayOrderMutation();
 
     const localTourBooingData = JSON.parse(
         localStorage.getItem("pendingTourBooking")
@@ -27,16 +32,26 @@ const TourCheckoutSuccess = () => {
 
                     const res = await capturePaypalOrder({
                         orderID,
-                        ...rest,
-                        adults: quantities["Người lớn"] || 0,
-                        childs: quantities["Trẻ em"] || 0,
+                        ...rest
                     }).unwrap();
 
                     setBooking(res.order);
 
                     localStorage.removeItem("pendingTourBooking");
                 }
+                else if (localTourBooingData?.paymentMethod === "vnpay") {
+                    const allParams = Object.fromEntries(searchParams.entries());
+                    const res = await captureVnpayOrder({
+                        allParams, request: localTourBooingData
+                    }).unwrap();
 
+                    if (res.success) {
+                        setBooking(res.order);
+                    }
+                    else {
+                        window.location.href = res.url;
+                    }
+                }
             } catch (err) {
                 console.error("Lỗi khi lưu đơn hàng:", err);
             }
@@ -45,8 +60,20 @@ const TourCheckoutSuccess = () => {
         confirmOrder();
     }, [orderID]);
 
-    if (isLoading) return <p>Đang xác nhận thanh toán...</p>;
-    if (error) return <p>Đã có lỗi xảy ra khi xác nhận thanh toán.</p>;
+    if (loadingPaypal || loadingVnpay) {
+            return (
+                <Box
+                    display="flex"
+                    justifyContent="center"
+                    alignItems="center"
+                    minHeight="100vh"
+                >
+                    <CircularProgress />
+                </Box>
+            );
+        };
+
+    if (paypalError || vnpayError) return <p>Đã có lỗi xảy ra khi xác nhận thanh toán.</p>;
     if (!booking) return null;
 
     return (

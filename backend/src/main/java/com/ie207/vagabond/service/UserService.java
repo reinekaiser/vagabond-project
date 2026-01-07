@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -21,6 +23,7 @@ import java.util.Optional;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CloudinaryService cloudinaryService;
 
     public UserResponse getCurrentUser(Authentication authentication) throws Exception {
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -36,6 +39,53 @@ public class UserService {
     public Page<UserResponse> getAllUsers(Role role, Pageable pageable) {
         Page<User> usersPage = userRepository.findAllByRole(role, pageable);
         return usersPage.map(this::mapToUserResponse);
+    }
+
+    @Transactional
+    public UserResponse updateUserAvatar(String userId, String base64Avatar) throws IOException {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (user.getAvatarPublicId() != null && !user.getAvatarPublicId().isBlank()) {
+            cloudinaryService.deleteImage(user.getAvatarPublicId());
+        }
+        List<String> uploadedIds = cloudinaryService.uploadImages(List.of(base64Avatar));
+        if (uploadedIds == null || uploadedIds.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Upload avatar failed"
+            );
+        }
+
+        String publicId = uploadedIds.get(0);
+        String avatarUrl = "https://res.cloudinary.com/dytiq61hf/image/upload/v1767436125/"
+                + publicId;
+        user.setAvatarPublicId(publicId);
+        user.setAvatarUrl(avatarUrl);
+
+        User updatedUser = userRepository.save(user);
+        return mapToUserResponse(updatedUser);
+    }
+
+    @Transactional
+    public UserResponse deleteUserAvatar(String userId) throws IOException {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (user.getAvatarPublicId() == null || user.getAvatarPublicId().isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "User has no avatar to delete"
+            );
+        }
+
+        cloudinaryService.deleteImage(user.getAvatarPublicId());
+        user.setAvatarPublicId(null);
+        user.setAvatarUrl(null);
+
+        User updatedUser = userRepository.save(user);
+        return mapToUserResponse(updatedUser);
     }
 
     @Transactional

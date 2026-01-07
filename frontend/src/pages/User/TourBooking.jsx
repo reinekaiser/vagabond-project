@@ -11,10 +11,8 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 import FormTextArea from "../../components/FormTextArea";
 import { useSelector } from "react-redux";
 import {
-    useCapturePaypalOrderAndSaveTourBookingMutation,
     useCreatePaypalOrderMutation,
-    useCreateTourCheckoutSessionMutation,
-    useCreateTourPayOSLinkMutation
+    useCreateTourVnpayOrderMutation,
 } from "../../redux/api/tourBookingApiSlice";
 dayjs.extend(customParseFormat);
 dayjs.locale("vi");
@@ -83,7 +81,8 @@ const TourBooking = () => {
 
     const [createPaypalOrder, { isLoading: loadingCreatePaypal }] =
         useCreatePaypalOrderMutation();
-
+    const [createTourVnpayOrder, { isLoading: loadingCreateVnpay }] =
+        useCreateTourVnpayOrderMutation();
 
     const { user } = useSelector((state) => state.auth);
 
@@ -117,6 +116,17 @@ const TourBooking = () => {
                 window.location.href = res.approvalUrl;
             } catch (err) {
                 console.error("PayPal redirect error", err);
+            }
+        } else if (selectedMethod === "vnpay") {
+            try {
+                const res = await createTourVnpayOrder({
+                    amount: totalPrice,
+                    tourId: tour.id,
+                }).unwrap();
+
+                window.location.href = res.url;
+            } catch (err) {
+                console.error("VNPay redirect error", err);
             }
         }
         // else if (selectedMethod === "stripe") {
@@ -165,7 +175,7 @@ const TourBooking = () => {
         // }
     };
 
-    const isLoadingCheckoutButton = loadingCreatePaypal;
+    const isLoadingCheckoutButton = loadingCreatePaypal || loadingCreateVnpay;
     return (
         <div className="bg-gray-100">
             <MainHeader />

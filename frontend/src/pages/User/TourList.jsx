@@ -73,6 +73,8 @@ const TourList = () => {
         skip: debouncedQuery.trim() === "",
     });
 
+    console.log("s", data)
+
     const handleSearch = () => {
         if (!query.trim()) return;
         dispatch(addSearch(query));
@@ -109,7 +111,7 @@ const TourList = () => {
             const first_ct = cities.map((city) => ({
                 _id: city._id,
                 name: city.name,
-                img: city.img[0],
+                img: city.images[0],
             }));
             const final = first_ct.concat(first_ct.slice(0, 2));
             setCityOptions(final);
@@ -295,7 +297,7 @@ const TourList = () => {
                             <Link to={`/city/${city._id}`} className="flex-1" key={index}>
                                 <div className="p-3 bg-white rounded-3xl h-full border">
                                     <img
-                                        src={city.img}
+                                        src={`${CLOUDINARY_BASE_URL}/${city.img}`}
                                         className="h-[130px] object-cover w-full rounded-3xl"
                                     ></img>
                                     <h3 className="font-semibold text-base mt-3">

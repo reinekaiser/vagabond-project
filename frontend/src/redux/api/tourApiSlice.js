@@ -65,7 +65,7 @@ export const tourApiSlice = apiSlice.injectEndpoints({
         }),
         getSearchSuggestions: builder.query({
             query: (keyword) => ({
-                url: `${TOUR_URL}/suggestion?q=${encodeURIComponent(keyword)}`
+                url: `${TOUR_URL}/suggestions?q=${encodeURIComponent(keyword)}`
             })
         }),
         getSearchResults: builder.query({
