@@ -23,27 +23,26 @@ import {
   useUpdateAdminPasswordMutation
 } from '../../redux/api/adminApiSlice';
 import { useSelector, useDispatch } from 'react-redux';
-import { logout } from '../../redux/features/authSlice';
+import { logout, setCredentials } from '../../redux/features/authSlice';
 import { useNavigate } from "react-router-dom";
-import { useGetUserQuery, useLogoutMutation } from '../../redux/api/authApiSlice';
+import { useChangePasswordMutation, useGetUserQuery, useLogoutMutation, useUpdateUserAvatarMutation, useUpdateUserMutation } from '../../redux/api/authApiSlice';
 
 const Profile = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user } = useSelector((state) => state.auth);
 
   const { data: adminData, isLoading: isLoadingProfile } = useGetUserQuery();
-  const [updateProfile, { isLoading: isUpdatingProfile }] = useUpdateAdminProfileMutation();
-  const [updateAvatar, { isLoading: isUpdatingAvatar }] = useUpdateAdminAvatarMutation();
-  const [updatePassword, { isLoading: isUpdatingPassword }] = useUpdateAdminPasswordMutation();
-  const [ logoutUser ] = useLogoutMutation();
+  const [updateProfile, { isLoading: isUpdatingProfile }] = useUpdateUserMutation();
+  const [updateAvatar, { isLoading: isUpdatingAvatar }] = useUpdateUserAvatarMutation();
+  const [updatePassword, { isLoading: isUpdatingPassword }] = useChangePasswordMutation();
+  const [logoutUser] = useLogoutMutation();
 
   const [openEdit, setOpenEdit] = useState(false);
   const [openPassword, setOpenPassword] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   const [editData, setEditData] = useState({});
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -84,30 +83,58 @@ const Profile = () => {
     });
   };
 
-  const handleAvatarChange = async (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('File ảnh không được vượt quá 5MB');
-        return;
-      }
+  // const handleAvatarChange = async (event) => {
+  //   const file = event.target.files[0];
+  //   if (file) {
+  //     if (file.size > 5 * 1024 * 1024) {
+  //       toast.error('File ảnh không được vượt quá 5MB');
+  //       return;
+  //     }
 
-      const formData = new FormData();
-      formData.append('avatar', file);
+  //     const formData = new FormData();
+  //     formData.append('avatar', file);
 
-      try {
-        await updateAvatar(formData).unwrap();
-        toast.success('Cập nhật avatar thành công');
-      } catch (error) {
-        toast.error(error.data?.message || 'Có lỗi xảy ra khi cập nhật avatar');
-      }
+  //     try {
+  //       await updateAvatar(formData).unwrap();
+  //       toast.success('Cập nhật avatar thành công');
+  //     } catch (error) {
+  //       toast.error(error.data?.message || 'Có lỗi xảy ra khi cập nhật avatar');
+  //     }
+  //   }
+  // };
+
+  const toBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+    });
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file");
+      return;
+    }
+
+    try {
+      const base64 = await toBase64(file);
+      const res = await updateAvatar({
+        userId: editData._id,
+        avatar: base64,
+      }).unwrap();
+      dispatch(setCredentials(res));
+    } catch (err) {
+      console.error("Update avatar failed:", err);
     }
   };
 
   const handleUpdateProfile = async () => {
     try {
-      console.log('Updating profile with data:', editData);
-      // await updateProfile(editData).unwrap();
+      await updateProfile({ user: editData }).unwrap();
       toast.success('Cập nhật thông tin thành công');
       setOpenEdit(false);
     } catch (error) {
@@ -128,9 +155,8 @@ const Profile = () => {
 
     try {
       await updatePassword({
-        currentPassword: passwordData.currentPassword,
+        oldPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword,
-        confirmPassword: passwordData.confirmPassword
       }).unwrap();
 
       toast.success('Đổi mật khẩu thành công');
@@ -139,6 +165,17 @@ const Profile = () => {
     } catch (error) {
       toast.error(error.data?.message || 'Có lỗi xảy ra khi đổi mật khẩu');
     }
+  };
+
+  const handleCloseEdit = () => {
+    setOpenEdit(false);
+    setEditData(adminData);
+  }
+
+  const getInitial = () => {
+    if (editData.firstName) return editData.firstName.charAt(0).toUpperCase();
+    if (editData.lastName) return editData.lastName.charAt(0).toUpperCase();
+    return "?";
   };
 
   if (isLoadingProfile) {
@@ -161,21 +198,30 @@ const Profile = () => {
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="absolute -top-4 -right-4 w-32 h-32 bg-white/10 rounded-full"></div>
           <div className="absolute -bottom-8 -left-8 w-40 h-40 bg-white/5 rounded-full"></div>
-          
+
           <div className="relative z-10 flex flex-col md:flex-row items-center text-center md:text-left">
             {/* Avatar Section */}
             <div className="relative group mb-6 md:mb-0 md:mr-8">
               <div className="relative">
-                <img
-                  src={adminData?.avatarUrl || '/ava.jpg'}
-                  alt={adminData?.lastName}
-                  className="w-32 h-32 rounded-full border-4 border-white/30 shadow-lg object-cover transition-transform group-hover:scale-105"
-                />
+                {adminData?.avatarUrl ? (
+                  <img
+                    src={adminData?.avatarUrl}
+                    alt={adminData?.lastName}
+                    className="w-32 h-32 rounded-full border-4 border-white/30 shadow-lg object-cover transition-transform group-hover:scale-105"
+                  />
+                ) : (
+                  <span className='w-32 h-32 rounded-full bg-white border-4 border-white/30 shadow-lg
+                        overflow-hidden flex items-center justify-center
+                        text-blue-500 text-4xl font-semibold
+                        transition-transform group-hover:scale-105'
+                  >{getInitial()}</span>
+                )}
+
                 <label className="absolute bottom-2 right-2 bg-white/90 hover:bg-white text-gray-700 p-2 rounded-full cursor-pointer shadow-lg transition-all duration-200 hover:scale-110">
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={handleAvatarChange}
+                    onChange={handleFileChange}
                     className="hidden"
                     disabled={isUpdatingAvatar}
                   />
@@ -202,7 +248,7 @@ const Profile = () => {
               <p className="text-blue-100 mb-6">
                 Quản lý hệ thống du lịch và điều hành các hoạt động kinh doanh
               </p>
-              
+
               <button
                 onClick={() => setOpenEdit(true)}
                 disabled={isUpdatingProfile}
@@ -360,7 +406,7 @@ const Profile = () => {
                     <h3 className="text-xl font-bold">Cập nhật thông tin</h3>
                   </div>
                   <button
-                    onClick={() => setOpenEdit(false)}
+                    onClick={handleCloseEdit}
                     className="p-2 hover:bg-white/20 rounded-lg transition-colors"
                   >
                     <XMarkIcon className="w-5 h-5" />
@@ -376,7 +422,7 @@ const Profile = () => {
                     </label>
                     <input
                       type="text"
-                      name="username"
+                      name="lastName"
                       value={editData?.lastName || ''}
                       onChange={handleEditChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -390,7 +436,7 @@ const Profile = () => {
                     </label>
                     <input
                       type="text"
-                      name="username"
+                      name="firstName"
                       value={editData?.firstName || ''}
                       onChange={handleEditChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -418,8 +464,8 @@ const Profile = () => {
                     </label>
                     <input
                       type="tel"
-                      name="phone"
-                      value={editData?.phone || ''}
+                      name="phoneNumber"
+                      value={editData?.phoneNumber || ''}
                       onChange={handleEditChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                       placeholder="Nhập số điện thoại"
@@ -457,7 +503,7 @@ const Profile = () => {
 
                 <div className="flex gap-4 mt-8">
                   <button
-                    onClick={() => setOpenEdit(false)}
+                    onClick={handleCloseEdit}
                     className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors"
                   >
                     Hủy

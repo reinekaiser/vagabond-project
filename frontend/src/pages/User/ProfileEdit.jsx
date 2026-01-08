@@ -115,7 +115,7 @@ const ProfileEdit = () => {
     };
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 mt-6">
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
           <div className="flex items-center gap-2 text-yellow-800">
             <FaLock className="text-yellow-600" />
@@ -265,7 +265,8 @@ const ProfileEdit = () => {
                 Thông tin cơ bản
               </h3>
 
-              <UpdateAvatar />
+              {activeTab === 'profile' && (<UpdateAvatar />)}
+              
               {activeTab === 'profile' && (
                 <form onSubmit={handleSubmit} className="space-y-8 mt-6">
                   {/* Name Section */}

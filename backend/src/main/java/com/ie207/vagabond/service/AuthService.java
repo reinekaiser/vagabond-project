@@ -6,6 +6,7 @@ import com.ie207.vagabond.model.enums.Role;
 import com.ie207.vagabond.repository.UserRepository;
 import com.ie207.vagabond.request.LogInRequest;
 import com.ie207.vagabond.request.RegisterRequest;
+import com.ie207.vagabond.response.GoogleUserInfo;
 import com.ie207.vagabond.utils.OtpUtils;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -21,6 +22,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.WebUtils;
 
 import javax.crypto.SecretKey;
@@ -36,6 +38,7 @@ public class AuthService {
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+    private final GoogleAuthService googleAuthService;
 
     private static final String OTP_SECRET = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGH123456";
     private static final long OTP_EXPIRATION = 3 * 60 * 1000;
@@ -150,5 +153,85 @@ public class AuthService {
 
 
         return "Đăng xuất thành công!";
+    }
+
+    private String CLIENT_URL = "http://localhost:5174";
+    public String generateResetPasswordToken(User user) {
+        return Jwts.builder()
+                .setSubject(user.getEmail())
+                .claim("type", "RESET_PASSWORD")
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 15 * 60 * 1000)) // 15 phút
+                .signWith(Keys.hmacShaKeyFor(OTP_SECRET.getBytes()), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String extractEmail(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(OTP_SECRET.getBytes())
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();
+    }
+
+    @Transactional
+    public void resetPassword(String email) throws MessagingException {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email không tồn tại"));
+
+        String token = generateResetPasswordToken(user);
+        String resetLink = CLIENT_URL+ "/reset-password?token=" + token;
+        emailService.sendResetPasswordEmail(email, resetLink);
+    }
+
+    @Transactional
+    public void confirmResetPassword(String token, String newPassword) throws RuntimeException {
+        String email;
+
+        try {
+            email = extractEmail(token);
+        } catch (ExpiredJwtException e) {
+            throw new RuntimeException("Link reset password đã hết hạn");
+        } catch (JwtException e) {
+            throw new RuntimeException("Token không hợp lệ");
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User không tồn tại"));
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
+    public String loginWithGoogle(String authCode, HttpServletResponse response) {
+        GoogleUserInfo googleUser = googleAuthService.getUserInfo(authCode);
+
+        Optional<User> existingUser = userRepository.findByEmail(googleUser.getEmail());
+        User user;
+
+        if (existingUser.isPresent()) {
+            user = existingUser.get();
+            user.setFirstName(googleUser.getFamilyName());
+            user.setLastName(googleUser.getGivenName());
+        } else {
+            user = new User();
+            user.setEmail(googleUser.getEmail());
+            user.setFirstName(googleUser.getFamilyName());
+            user.setLastName(googleUser.getGivenName());
+            user.setGender("Unknown");
+            user.setRole(Role.USER);
+
+            user.setPassword(passwordEncoder.encode("123456"));
+            user = userRepository.save(user);
+        }
+
+        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(user.getRole().toString()));
+        String userId = String.valueOf(user.get_id());
+        Authentication authentication = new UsernamePasswordAuthenticationToken(userId, null, authorities);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        jwtProvider.generateToken(authentication, response);
+
+        return "Đăng nhập Google thành công!";
     }
 }

@@ -33,7 +33,8 @@ export const authApiSlice = apiSlice.injectEndpoints({
         getUser: builder.query({
             query: () => ({
                 url: `${AUTH_URL}/`
-            })
+            }),
+            providesTags: ["User"],
         }),
         getAllUsers: builder.query({
             query: (params = {}) => ({
@@ -46,7 +47,8 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 url: `${USER_URL}/update`,
                 method: "PUT",
                 body: user
-            })
+            }),
+            invalidatesTags: ["User"],
         }),
         changePassword: builder.mutation({
             query: ({ oldPassword, newPassword }) => ({
@@ -60,13 +62,39 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 url: `${USER_URL}/update-avatar`,
                 method: "PUT",
                 body: { avatar },
-            })
+            }),
+            invalidatesTags: ["User"],
         }),
         deleteUserAvatar: builder.mutation({
             query: () => ({
                 url: `${USER_URL}/delete-avatar`,
                 method: "DELETE",
+            }),
+            invalidatesTags: ["User"],
+        }),
+        sendResetPasswordLink: builder.mutation({
+            query: (email) => ({
+                url: `${AUTH_URL}/forgot-password`,
+                method: "POST",
+                body: email,
             })
+        }),
+        resetPassword: builder.mutation({
+            query: ({ token, newPassword }) => ({
+                url: `${AUTH_URL}/reset-password`,
+                method: "POST",
+                body: {
+                    token,
+                    newPassword,
+                },
+            }),
+        }),
+        loginWithGoogle: builder.mutation({
+            query: (data) => ({
+                url: `${AUTH_URL}/google`, 
+                method: "POST",
+                body: data, 
+            }),
         })
     }),
 });
@@ -82,5 +110,8 @@ export const {
     useUpdateUserMutation,
     useChangePasswordMutation,
     useUpdateUserAvatarMutation,
-    useDeleteUserAvatarMutation
+    useDeleteUserAvatarMutation,
+    useSendResetPasswordLinkMutation,
+    useResetPasswordMutation,
+    useLoginWithGoogleMutation
 } = authApiSlice;

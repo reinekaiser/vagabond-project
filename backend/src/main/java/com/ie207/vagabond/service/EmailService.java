@@ -5,6 +5,7 @@ import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailException;
 import org.springframework.mail.MailSendException;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,24 @@ public class EmailService {
             javaMailSender.send(mimeMessage);
         } catch (MailSendException e) {
             throw new MailSendException("Lỗi khi gửi email! Kiểm tra lại SMTP config.");
+        } catch (MailException e) {
+            throw new IllegalArgumentException("Không thể gửi email! " + e.getMessage());
+        }
+    }
+
+    public void sendResetPasswordEmail(String to, String link) throws MessagingException {
+        try {
+
+            MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+            MimeMessageHelper message = new MimeMessageHelper(mimeMessage, "utf-8");
+
+            message.setTo(to);
+            message.setSubject("Reset your password");
+            message.setText("Click vào link sau để reset password:\n" + link);
+            javaMailSender.send(mimeMessage);
+
+        } catch (MailSendException e) {
+            throw new MailSendException("Lỗi khi gửi email! ");
         } catch (MailException e) {
             throw new IllegalArgumentException("Không thể gửi email! " + e.getMessage());
         }

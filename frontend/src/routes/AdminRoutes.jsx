@@ -21,10 +21,10 @@ const AdminRoutes = () => {
         <Routes>
             <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
                 <Route element={<AdminLayout />}>
-                     <Route index element={<Navigate to="/admin/dashboard" replace />} />
-                     <Route path="dashboard" element={<Dashboard />} />
-                     <Route path="profile" element={<Profile />} />
-                     <Route path="/chat" element={<AdminChat/>} />
+                    <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                    <Route path="dashboard" element={<Dashboard />} />
+                    <Route path="profile" element={<Profile />} />
+                    <Route path="/chat" element={<AdminChat />} />
                     <Route path="manage-tours">
                         <Route index element={<ManageTours />} />
                         <Route path="create-tour" element={<CreateTour />} />
@@ -53,8 +53,8 @@ const AdminRoutes = () => {
                     </Route>
 
 
-                    <Route path="booking/tour" element={<TourBooking/>} />
-                    <Route path="booking/hotel" element={<HotelBooking/>} />
+                    <Route path="booking/tour" element={<TourBooking />} />
+                    <Route path="booking/hotel" element={<HotelBooking />} />
                 </Route>
             </Route>
         </Routes>

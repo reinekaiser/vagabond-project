@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "../../redux/features/authSlice";
 import { useLazyGetUserQuery, useRegisterMutation, useSendOtpMutation } from "../../redux/api/authApiSlice";
+import GoogleLoginButton from "../../components/GoogleLoginButton";
 
 const SignUp = () => {
     const navigate = useNavigate();
@@ -114,7 +115,7 @@ const SignUp = () => {
                     </p>
                     {!otpSent ? (
                         <form onSubmit={handleSendOtp} className="w-2/3 mx-auto">
-                            <div className="mb-4">
+                            <div className="mb-3">
                                 <label
                                     htmlFor="firstName"
                                     className="block text-sm font-medium text-gray-700 mb-1"
@@ -131,7 +132,7 @@ const SignUp = () => {
                                     required
                                 />
                             </div>
-                            <div className="mb-4">
+                            <div className="mb-3">
                                 <label
                                     htmlFor="lastName"
                                     className="block text-sm font-medium text-gray-700 mb-1"
@@ -148,7 +149,7 @@ const SignUp = () => {
                                     required
                                 />
                             </div>
-                            <div className="mb-4">
+                            <div className="mb-3">
                                 <label
                                     htmlFor="email"
                                     className="block text-sm font-medium text-gray-700 mb-1"
@@ -166,7 +167,7 @@ const SignUp = () => {
                                 />
                             </div>
 
-                            <div className="mb-4">
+                            <div className="mb-3">
                                 <label
                                     htmlFor="password"
                                     className="block text-sm font-medium text-gray-700 mb-1"
@@ -198,7 +199,7 @@ const SignUp = () => {
                                 </div>
                             </div>
 
-                            <div className="mb-4">
+                            <div className="mb-3">
                                 <label
                                     htmlFor="confirmPassword"
                                     className="block text-sm font-medium text-gray-700 mb-1"
@@ -216,7 +217,7 @@ const SignUp = () => {
                                 />
                             </div>
 
-                            <div className="mb-6">
+                            <div className="mb-3">
                                 <div className="flex items-center">
                                     <input
                                         type="checkbox"
@@ -254,6 +255,14 @@ const SignUp = () => {
                             >
                                 {loading ? "Đang gửi OTP..." : "Gửi mã xác thực"}
                             </button>
+
+                            <div className="relative flex py-2 items-center mb-4 mt-3">
+                                <div className="flex-grow border-t border-gray-300"></div>
+                                <span className="flex-shrink-0 mx-4 text-gray-400 text-sm">Hoặc</span>
+                                <div className="flex-grow border-t border-gray-300"></div>
+                            </div>
+
+                            <GoogleLoginButton text="Đăng ký bằng Google" />
                         </form>
                     ) : (
                         <OtpInputForm handleVerifyOtp={handleVerifyOtp} handleSendOtp={handleSendOtp} loading={loading} />
