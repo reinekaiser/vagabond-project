@@ -46,11 +46,11 @@ function App() {
                     <Route path="/*" element={<PublicRoutes></PublicRoutes>} />
                     <Route path="/sign-in" element={<SignIn />} />
                     <Route path="/sign-up" element={<SignUp />} />
-                    {/* <Route
+                    <Route
                         path="/forgot-password"
                         element={<ForgotPassword />}
-                    /> */}
-                    {/* <Route path="/reset-password" element={<ResetPassword />} /> */}
+                    />
+                    <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/admin/*" element={<AdminRoutes />} />
                     <Route path="/user/*" element={<UserRoutes />} />
                     <Route path="*" element={<PublicRoutes />} />

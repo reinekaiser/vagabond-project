@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { setCredentials } from "../../redux/features/authSlice";
 import { useLoginMutation, useLazyGetUserQuery } from "../../redux/api/authApiSlice";
+import GoogleLoginButton from "../../components/GoogleLoginButton";
 
 const SignIn = () => {
     const dispatch = useDispatch();
@@ -134,6 +135,14 @@ const SignIn = () => {
                         >
                             {loading ? "Logging in..." : "Log in"}
                         </button>
+
+                        <div className="relative flex py-2 items-center mb-4">
+                            <div className="flex-grow border-t border-gray-300"></div>
+                            <span className="flex-shrink-0 mx-4 text-gray-400 text-sm">Hoặc</span>
+                            <div className="flex-grow border-t border-gray-300"></div>
+                        </div>
+
+                        <GoogleLoginButton text="Đăng nhập bằng Google" />
                     </form>
                 </div>
             </div>
