@@ -42,20 +42,20 @@ export const tourApiSlice = apiSlice.injectEndpoints({
         }),
         addTicketToTour: builder.mutation({
             query: ({ tourId, ticketData }) => ({
-                url: `${TOUR_URL}/${tourId}/ticket`,
+                url: `${TOUR_URL}/${tourId}/tickets`,
                 method: "POST",
                 body: ticketData,
             }),
         }),
         deleteTicketFromTour: builder.mutation({
             query: ({ tourId, ticketId }) => ({
-                url: `${TOUR_URL}/${tourId}/ticket/${ticketId}`,
+                url: `${TOUR_URL}/${tourId}/tickets/${ticketId}`,
                 method: "DELETE",
             }),
         }),
         updateTicketInTour: builder.mutation({
             query: ({ tourId, ticketId, ticketData }) => ({
-                url: `${TOUR_URL}/${tourId}/ticket/${ticketId}`,
+                url: `${TOUR_URL}/${tourId}/tickets/${ticketId}`,
                 method: "PUT",
                 body: ticketData,
             }),

@@ -46,7 +46,6 @@ const TicketEditModal = ({ open, onCancel, ticket, tourId, refetch }) => {
         },
     });
 
-
     useEffect(() => {
         if (ticket && open) {
             reset({
@@ -57,13 +56,14 @@ const TicketEditModal = ({ open, onCancel, ticket, tourId, refetch }) => {
 
     const onSubmit = async (data) => {
         try {
+            console.log(data);
             await updateTicketInTour({
                 tourId,
                 ticketId: ticket._id,
                 ticketData: data,
             }).unwrap();
             toast.success("Cập nhật vé thành công");
-            refetch()
+            refetch();
             onCancel();
         } catch (err) {
             toast.error("Cập nhật thất bại");
@@ -96,35 +96,43 @@ const TicketEditModal = ({ open, onCancel, ticket, tourId, refetch }) => {
 
     const addRefundPolicyField = () => {
         setRefundPolicyCount((prev) => prev + 1);
-        setValue(
-            `cancellationPolicy.refundPolicy.refundPercentage.${refundPolicyCount}`,
-            { daysBefore: "", percent: "" }
-        );
+        setValue(`cancellationPolicy.refundPolicy.refundPercentage.${refundPolicyCount}`, {
+            daysBefore: "",
+            percent: "",
+        });
     };
 
     const removeRefundPolicyField = (index) => {
         setRefundPolicyCount((prev) => prev - 1);
-        const refundPolicies = getValues(
-            "cancellationPolicy.refundPolicy.refundPercentage"
-        );
+        const refundPolicies = getValues("cancellationPolicy.refundPolicy.refundPercentage");
         refundPolicies.splice(index, 1);
-        setValue(
-            "cancellationPolicy.refundPolicy.refundPercentage",
-            refundPolicies
-        );
+        setValue("cancellationPolicy.refundPolicy.refundPercentage", refundPolicies);
     };
 
     return (
         <Modal
-            title="Cập nhật vé"
+            title={<p className="px-5 pb-2 pt-4 text-[18px]">Cập nhật vé</p>}
             open={open}
             onCancel={onCancel}
-            onOk={handleSubmit(onSubmit)}
             confirmLoading={isLoading}
             okText="Cập nhật"
             width={"60%"}
+            centered
+            styles={{
+                content: {
+                    padding: 0,
+                    overflow: "hidden",
+                },
+                body: {
+                    fontSize: "16px",
+                },
+                footer: {
+                    padding: "16px",
+                },
+            }}
+            footer={null}
         >
-            <form className="space-y-4 text-base">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 text-base h-[450px] overflow-auto px-5 pb-2">
                 <FormInput
                     label={"Tên vé"}
                     name={"title"}
@@ -155,14 +163,9 @@ const TicketEditModal = ({ open, onCancel, ticket, tourId, refetch }) => {
                 ></FormTextArea>
 
                 <div className="">
-                    <h3 className="text-base font-medium text-gray-900">
-                        Giá vé
-                    </h3>
+                    <h3 className="text-base font-medium text-gray-900">Giá vé</h3>
                     {Array.from({ length: priceCount }).map((_, index) => (
-                        <div
-                            key={index}
-                            className="mt-4 space-y-2 border p-2 rounded-md relative"
-                        >
+                        <div key={index} className="mt-4 space-y-2 border p-2 rounded-md relative">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormInput
                                     label={"Loại giá"}
@@ -269,9 +272,7 @@ const TicketEditModal = ({ open, onCancel, ticket, tourId, refetch }) => {
                 ></FormTextArea>
 
                 <div className="">
-                    <h3 className="text-base font-medium text-gray-900">
-                        Phương thức quy đổi
-                    </h3>
+                    <h3 className="text-base font-medium text-gray-900">Phương thức quy đổi</h3>
 
                     <TextEditor
                         label={"Cách đổi phiếu"}
@@ -300,9 +301,7 @@ const TicketEditModal = ({ open, onCancel, ticket, tourId, refetch }) => {
                 </div>
 
                 <div className="border-t border-gray-200 pt-4">
-                    <h3 className="text-base font-medium text-gray-900">
-                        Hoàn tiền và đổi lịch
-                    </h3>
+                    <h3 className="text-base font-medium text-gray-900">Hoàn tiền và đổi lịch</h3>
 
                     <div className="mt-4 space-y-4">
                         <div className="flex items-center">
@@ -341,49 +340,41 @@ const TicketEditModal = ({ open, onCancel, ticket, tourId, refetch }) => {
                             </h4>
                             <h5>Các mức hoàn tiền</h5>
                             <div className="grid grid-cols-2 gap-2">
-                                {Array.from({ length: refundPolicyCount }).map(
-                                    (_, index) => (
-                                        <div
-                                            key={index}
-                                            className="grid grid-cols-1 md:grid-cols-2 gap-4 border p-2 rounded-md relative"
-                                        >
-                                            <FormInput
-                                                label={
-                                                    "Số ngày trước khi hủy vé"
-                                                }
-                                                name={`cancellationPolicy.refundPolicy.refundPercentage.${index}.daysBefore`}
-                                                register={register}
-                                                errors={errors}
-                                                isSmall
-                                                type="number"
-                                            ></FormInput>
+                                {Array.from({ length: refundPolicyCount }).map((_, index) => (
+                                    <div
+                                        key={index}
+                                        className="grid grid-cols-1 md:grid-cols-2 gap-4 border p-2 rounded-md relative"
+                                    >
+                                        <FormInput
+                                            label={"Số ngày trước khi hủy vé"}
+                                            name={`cancellationPolicy.refundPolicy.refundPercentage.${index}.daysBefore`}
+                                            register={register}
+                                            errors={errors}
+                                            isSmall
+                                            type="number"
+                                        ></FormInput>
 
-                                            <FormInput
-                                                label={"Phần trăm hoàn tiền"}
-                                                name={`cancellationPolicy.refundPolicy.refundPercentage.${index}.percent`}
-                                                register={register}
-                                                errors={errors}
-                                                isSmall
-                                                type="number"
-                                            ></FormInput>
-                                            {refundPolicyCount > 1 && (
-                                                <div className="flex items-end">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            removeRefundPolicyField(
-                                                                index
-                                                            )
-                                                        }
-                                                        className="inline-flex items-center gap-2 text-sm text-red-500 hover:bg-red-100 rounded-full absolute right-2 top-2"
-                                                    >
-                                                        <FaRegTimesCircle className="w-[18px] h-[18px]"></FaRegTimesCircle>
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )
-                                )}
+                                        <FormInput
+                                            label={"Phần trăm hoàn tiền"}
+                                            name={`cancellationPolicy.refundPolicy.refundPercentage.${index}.percent`}
+                                            register={register}
+                                            errors={errors}
+                                            isSmall
+                                            type="number"
+                                        ></FormInput>
+                                        {refundPolicyCount > 1 && (
+                                            <div className="flex items-end">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeRefundPolicyField(index)}
+                                                    className="inline-flex items-center gap-2 text-sm text-red-500 hover:bg-red-100 rounded-full absolute right-2 top-2"
+                                                >
+                                                    <FaRegTimesCircle className="w-[18px] h-[18px]"></FaRegTimesCircle>
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
                             </div>
 
                             <button
@@ -416,6 +407,21 @@ const TicketEditModal = ({ open, onCancel, ticket, tourId, refetch }) => {
                     control={control}
                     errors={errors}
                 ></TextEditor>
+                <div className="flex justify-end space-x-4">
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                        Hủy
+                    </button>
+                    <button
+                        type="submit"
+                        className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/70 "
+                    >
+                        Cập nhật
+                    </button>
+                </div>
             </form>
         </Modal>
     );

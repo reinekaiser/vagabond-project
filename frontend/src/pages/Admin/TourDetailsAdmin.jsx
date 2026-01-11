@@ -42,6 +42,10 @@ const TourDetailsAdmin = () => {
         setIsAddTicketModalOpen(false);
     };
 
+    const handleUpdateTicket = (ticketData) => {
+        setEditTicket(ticketData);
+    };
+
     const [editTicket, setEditTicket] = useState(null);
     const [formKey, setFormKey] = useState(0);
 
@@ -101,7 +105,9 @@ const TourDetailsAdmin = () => {
                     </p>
                     <Modal
                         title={
-                            <div className="font-semibold text-xl w-[650px] px-4 pt-2">{ticket.title}</div>
+                            <div className="font-semibold text-xl w-[650px] px-4 pt-2">
+                                {ticket.title}
+                            </div>
                         }
                         open={isViewModalOpen}
                         onCancel={handleCancelViewModal}
@@ -310,14 +316,6 @@ const TourDetailsAdmin = () => {
 
     if (isLoading) return <div>Loading...</div>;
 
-    const { voucherValidity, redemptionPolicy, cancellationPolicy, termsAndConditions } =
-        tour.tickets[0];
-    const defaultPolicy = {
-        voucherValidity,
-        redemptionPolicy,
-        cancellationPolicy,
-        termsAndConditions,
-    };
 
     return (
         <div className="bg-softBlue min-h-screen p-4 md:p-8">
@@ -395,7 +393,6 @@ const TourDetailsAdmin = () => {
                                     setEditTicket(null);
                                     handleCancel();
                                 }}
-                                defaultPolicyValues={defaultPolicy}
                             />
                         </Modal>
                     </div>

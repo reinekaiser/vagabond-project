@@ -13,7 +13,7 @@ import { useGetUserToChatQuery } from "../../redux/api/messageApiSlice";
 import { addUser, setUsers } from "../../redux/features/chatSlice";
 import { Tooltip, Dropdown } from "antd";
 import { RiCustomerServiceFill, RiCustomerService2Fill } from "react-icons/ri";
-import WebSocketService from "../../services/websocket.js"
+import WebSocketService from "../../services/websocket.js";
 const Home = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
@@ -34,13 +34,14 @@ const Home = () => {
         return () => {
             WebSocketService.disconnect();
         };
-
     }, [userInfo?._id, userInfo?.role]);
+
     useEffect(() => {
         if (admin) {
             dispatch(setUsers(admin));
         }
     }, [admin]);
+
     console.log("unread: ", unreadCount);
 
     const responsivePromotion = {
@@ -67,30 +68,7 @@ const Home = () => {
         },
     };
 
-    const items = [
-        {
-            key: "1",
-            label: (
-                <div
-                    className="flex items-center min-w-[150px] text-base"
-                    onClick={() => navigate(`/user/chatbot`)}
-                >
-                    Chat với Vagabond bot
-                </div>
-            ),
-        },
-        {
-            key: "2",
-            label: (
-                <div
-                    className="flex items-center min-w-[150px] text-base"
-                    onClick={() => navigate(`/user/customer-support`)}
-                >
-                    Chat với nhân viên
-                </div>
-            ),
-        },
-    ];
+
     return (
         <div className="mb-20">
             <div className="bg-gradient-to-b from-[#00a4ff] to-white ">
@@ -112,7 +90,7 @@ const Home = () => {
                         </div>
                     </div>
                 </div>
-                {/* <TourSearch></TourSearch> */}
+                <TourSearch></TourSearch>
             </div>
             {/*  */}
 
@@ -143,18 +121,14 @@ const Home = () => {
                 placement="leftTop"
                 color={"#108ee9"}
             >
-                <Dropdown
-                    menu={{ items }}
-                    placement="topRight"
-                    arrow
-                    popupRender={(menu) => React.cloneElement(menu)}
+                <div
+                    onClick={() => navigate(`/user/customer-support`)}
+                    className="fixed bottom-1/4 right-14 w-14 h-14 bg-white text-white flex items-center justify-center rounded-full cursor-pointer shadow-md hover:shadow-lg transition duration-300 z-50"
                 >
-                    <div className="fixed bottom-1/4 right-14 w-14 h-14 bg-white text-white flex items-center justify-center rounded-full cursor-pointer shadow-md hover:shadow-lg transition duration-300 z-50">
-                        <span className="text-[32px] text-blue-700">
-                            <RiCustomerService2Fill />
-                        </span>
-                    </div>
-                </Dropdown>
+                    <span className="text-[32px] text-blue-700">
+                        <RiCustomerService2Fill />
+                    </span>
+                </div>
             </Tooltip>
         </div>
     );

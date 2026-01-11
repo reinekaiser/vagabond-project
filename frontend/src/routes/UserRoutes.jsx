@@ -16,7 +16,7 @@ const UserRoutes = () => {
             <Route element={<ProtectedRoute allowedRoles={["USER"]} />}>
                 <Route path="/profile" element={<div>User Profile</div>} />
                 <Route path="/favorites" element={<div>Favorite Hotels</div>} />
-                {/* <Route path="/customer-support" element={<Chat/>}/> */}
+                <Route path="/customer-support" element={<Chat/>}/>
                 {/* <Route path="/chatbot" element={<ChatBot />}></Route> */}
 
                 <Route element={<UserSidebarLayout />}>

@@ -4,11 +4,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import java.security.Principal;
+import java.util.Collections;
 import java.util.Map;
 
 @Component
@@ -34,7 +37,10 @@ public class UserHandshakeInterceptor implements HandshakeInterceptor {
                 attributes.put("userId", userId);
                 attributes.put("role", role != null ? role : "user");
                 Principal principal = () -> userId;
-                attributes.put("user", principal);
+                Authentication auth = new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList());
+                attributes.put("authentication", auth);
+
+                System.out.println("attributes" + attributes);
             }
         }
 

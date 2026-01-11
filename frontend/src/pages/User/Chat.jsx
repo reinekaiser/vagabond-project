@@ -22,6 +22,8 @@ const Chat = () => {
         refetchOnMountOrArgChange: true,
     })
     const { data: admin, isLoading: isLoadingAdmin } = useGetUserToChatQuery();
+    console.log(admin)
+    console.log("unreadCount", unreadCount)
     const messageEndRef = useRef(null);
     const [markSent] = useMarkMessagesAsReadMutation();
 
@@ -41,7 +43,6 @@ const Chat = () => {
         initializeChat();
     }, [admin]);
 
-    console.log("messages", messages)
 
     useEffect(() => {
         if (adminId && messages) {

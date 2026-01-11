@@ -113,12 +113,6 @@ const RecentBookings = ({ bookings }) => {
             <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-semibold text-gray-900">Đơn Hàng Gần Đây</h3>
-                    <button 
-                        onClick={handleViewAllBookings}
-                        className="text-blue-600 text-sm font-medium hover:text-blue-700 transition-colors"
-                    >
-                        Xem Tất Cả
-                    </button>
                 </div>
 
                 <div className="overflow-hidden">
