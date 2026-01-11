@@ -31,6 +31,7 @@ const AdminChat = () => {
                     currentUserId: userInfo._id,
                 };
 
+                console.log(message)
                 dispatch(addUser(message))
             })
         }

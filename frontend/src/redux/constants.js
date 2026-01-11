@@ -14,3 +14,4 @@ export const HOTEL_BOOKING_URL = "/api/hotelBooking";
 export const AUTH_URL = "/api/auth"
 export const USER_URL = "/api/users"
 export const VNPAY_URL = "/api/vnpay"
+export const DASHBOARD_URL = "/api/dashboard"

@@ -10,10 +10,7 @@ const TicketForm = ({
     onAddTicket = () => {},
     onUpdateTicket = () => {},
     editingTicket = null,
-    onCancelEdit = () => {},
-    useDefaultPolicy = false,
-    setUseDefaultPolicy = () => {},
-    defaultPolicyValues = {},
+    onCancelEdit = () => {},    
 }) => {
     const {
         register,
@@ -59,18 +56,17 @@ const TicketForm = ({
             },
             termsAndConditions: 
                 '<h3><strong style="color: rgb(0, 0, 0);">Thông tin chung</strong></h3><p><span style="color: rgb(3, 18, 26);">Chính sách miễn phí vé</span></p><ol><li data-list="bullet"><span class="ql-ui" contenteditable="false"></span><span style="color: rgb(3, 18, 26);">Trẻ em dưới 5 tuổi được miễn phí vé vào cửa. Nếu ngồi riêng trên xe buýt, phụ thu 200.000 VND/trẻ.</span></li></ol><p><span style="color: rgb(3, 18, 26);">Hiệu lực và chuyển nhượng vé</span></p><ol><li data-list="bullet"><span class="ql-ui" contenteditable="false"></span><span style="color: rgb(3, 18, 26);">Vé trẻ em áp dụng cho du khách từ 5 – 9 tuổi.</span></li><li data-list="bullet"><span class="ql-ui" contenteditable="false"></span><span style="color: rgb(3, 18, 26);">Vé người lớn áp dụng cho du khách từ 10 tuổi trở lên.</span></li><li data-list="bullet"><span class="ql-ui" contenteditable="false"></span><span style="color: rgb(3, 18, 26);">Yêu cầu giấy tờ tùy thân</span></li><li data-list="bullet"><span class="ql-ui" contenteditable="false"></span><span style="color: rgb(3, 18, 26);">SST Travel có quyền từ chối nhập cảnh nếu du khách không xuất trình giấy tờ tùy thân hợp lệ (CMND, hộ chiếu, v.v.).</span></li></ol><p><span style="color: rgb(3, 18, 26);">Điều kiện tham gia</span></p><ol><li data-list="bullet"><span class="ql-ui" contenteditable="false"></span><span style="color: rgb(3, 18, 26);">Trẻ em phải luôn đi cùng người lớn trong suốt chuyến tham quan.</span></li></ol><p><span style="color: rgb(3, 18, 26);">Lựa chọn thời gian tham gia</span></p><ol><li data-list="bullet"><span class="ql-ui" contenteditable="false"></span><span style="color: rgb(3, 18, 26);">Nhà điều hành tour sẽ liên hệ với du khách trong vòng 24 giờ sau khi đặt vé để xác nhận và cung cấp thông tin chi tiết. Nếu đặt vé vào ngày lễ/cuối tuần, thông tin sẽ được gửi vào ngày làm việc tiếp theo.</span></li></ol><p><span style="color: rgb(3, 18, 26);">Không có mặt khi đón khách</span></p><ol><li data-list="bullet"><span class="ql-ui" contenteditable="false"></span><span style="color: rgb(3, 18, 26);">Nếu du khách vắng mặt tại điểm đón, tour sẽ khởi hành và đặt chỗ bị hủy. Việc dời lịch có thể được xem xét dựa trên sự chấp thuận và tình trạng chỗ trống của nhà điều hành.</span></li></ol><p><span style="color: rgb(3, 18, 26);">Thời tiết và bảo trì</span></p><ol><li data-list="bullet"><span class="ql-ui" contenteditable="false"></span><span style="color: rgb(3, 18, 26);">Lịch trình có thể thay đổi tùy theo điều kiện thời tiết, giao thông hoặc các tình huống bất khả kháng khác.</span></li></ol><p><span style="color: rgb(3, 18, 26);">Quy tắc an toàn và hành vi</span></p><ol><li data-list="bullet"><span class="ql-ui" contenteditable="false"></span><span style="color: rgb(3, 18, 26);">Trong mọi loại hình tour, du khách phải tuân thủ lịch trình và hướng dẫn của trưởng đoàn.</span></li></ol><p><span style="color: rgb(3, 18, 26);">Các điều khoản khác</span></p><ol><li data-list="bullet"><span class="ql-ui" contenteditable="false"></span><span style="color: rgb(3, 18, 26);">Tour ghép có thể có những du khách khác mà bạn chưa quen biết, trong khi tour riêng chỉ dành cho nhóm của bạn.</span></li><li data-list="bullet"><span class="ql-ui" contenteditable="false"></span><span style="color: rgb(3, 18, 26);">Phương tiện di chuyển có thể thay đổi, nhà điều hành sẽ thay thế bằng dịch vụ tương đương dựa trên tình trạng sẵn có và tiêu chuẩn cam kết.</span></li></ol>',
-            ...defaultPolicyValues,
+            
         },
     });
 
     useEffect(() => {
-        if (useDefaultPolicy && !editingTicket && defaultPolicyValues) {
+        if (useDefaultPolicy && !editingTicket) {
             reset({
                 ...getValues(),
-                ...defaultPolicyValues,
             });
         }
-    }, [useDefaultPolicy, defaultPolicyValues, reset]);
+    }, [ reset]);
 
     const [priceCount, setPriceCount] = useState(
         editingTicket?.prices?.length || 1
@@ -258,14 +254,6 @@ const TicketForm = ({
                 control={control}
                 errors={errors}
             ></TextEditor>
-            <label className="flex items-center gap-2 text-base font-semibold">
-                <input
-                    type="checkbox"
-                    className="h-4 w-4"
-                    onChange={(e) => setUseDefaultPolicy(e.target.checked)}
-                />
-                Sử dụng các chính sách sau làm giá trị cho các vé tiếp theo
-            </label>
             <FormTextArea
                 name="voucherValidity"
                 label={"Hiệu lực voucher"}
@@ -419,14 +407,14 @@ const TicketForm = ({
                     <button
                         type="button"
                         onClick={onCancelEdit}
-                        className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                     >
                         Hủy
                     </button>
                 )}
                 <button
                     type="submit"
-                    className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/70 "
                 >
                     {editingTicket ? "Cập nhật vé" : "Thêm vé"}
                 </button>

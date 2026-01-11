@@ -90,42 +90,14 @@ const CreateTour = () => {
     const [editingIndex, setEditingIndex] = useState(null);
     const [formKey, setFormKey] = useState(0);
 
-    const [defaultPolicy, setDefaultPolicy] = useState(null);
-    const [useDefaultPolicy, setUseDefaultPolicy] = useState(false);
-
     const handleAddTicket = (ticket) => {
         setTickets([...tickets, ticket]);
-
-        if (useDefaultPolicy) {
-            const { voucherValidity, redemptionPolicy, cancellationPolicy, termsAndConditions } =
-                ticket;
-            setDefaultPolicy({
-                voucherValidity,
-                redemptionPolicy,
-                cancellationPolicy,
-                termsAndConditions,
-            });
-        }
-
-        setUseDefaultPolicy(false);
     };
 
     const handleUpdateTicket = (updatedTicket) => {
         const updatedTickets = [...tickets];
         updatedTickets[editingIndex] = updatedTicket;
         setTickets(updatedTickets);
-        if (useDefaultPolicy) {
-            const { voucherValidity, redemptionPolicy, cancellationPolicy, termsAndConditions } =
-                updatedTicket;
-            setDefaultPolicy({
-                voucherValidity,
-                redemptionPolicy,
-                cancellationPolicy,
-                termsAndConditions,
-            });
-        }
-
-        setUseDefaultPolicy(false);
     };
 
     const handleEditTicket = (ticket, index) => {
@@ -450,9 +422,6 @@ const CreateTour = () => {
                                 handleCancelEdit();
                                 handleCancel();
                             }}
-                            useDefaultPolicy={useDefaultPolicy}
-                            setUseDefaultPolicy={setUseDefaultPolicy}
-                            defaultPolicyValues={defaultPolicy}
                         />
                     </Modal>
                 </div>
