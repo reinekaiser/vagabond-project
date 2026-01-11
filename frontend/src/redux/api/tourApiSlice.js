@@ -71,7 +71,7 @@ export const tourApiSlice = apiSlice.injectEndpoints({
         getSearchResults: builder.query({
             query: (params) => {
                 const queryString = new URLSearchParams(params).toString()
-                return `${TOUR_URL}/search?${queryString}`
+                return `${TOUR_URL}/search/results?${queryString}`
             }
         }),
         getTourStats: builder.query({

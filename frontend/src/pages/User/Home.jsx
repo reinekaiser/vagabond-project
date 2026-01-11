@@ -22,7 +22,20 @@ const Home = () => {
     const { data: admin, isLoading: isLoadingAdmin } = useGetUserToChatQuery();
     useEffect(() => {
         if (!userInfo?._id || !userInfo?.role) return;
-        WebSocketService.connect(userInfo._id, userInfo.role);
+        const handleConnect = () => {
+            console.log('WebSocket connected successfully')
+
+            WebSocketService.subscribe('/user/queue/messages', (newMessage) => {
+                const message = {
+                    ...newMessage,
+                    currentUserId: userInfo._id,
+                };
+
+                dispatch(addUser(message))
+            })
+        }
+
+        WebSocketService.connect(userInfo._id, userInfo.role, handleConnect);
         // socket.on("newMessage", (newMessage) => {
         //     const message = {
         //         ...newMessage,

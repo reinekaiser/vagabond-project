@@ -448,6 +448,7 @@ public class TourService {
     @Transactional
     public SearchResultResponse getSearchResults(String query, Double minPrice, Double maxPrice, String category,
                                                                       String language, String duration, String sort, int page, int pageSize) {
+        System.out.println(query);
         List<Document> pipeline = buildPipeline(query, minPrice, maxPrice, category, language, duration, sort, page, pageSize);
 
         Document result = mongoTemplate
@@ -456,6 +457,7 @@ public class TourService {
                 .first();
 
         assert result != null;
+        System.out.println(result);
         return mapToSearchResultResponse(result, page, pageSize);
     }
 
@@ -463,7 +465,7 @@ public class TourService {
         List<Document> pipeline = new ArrayList<>();
 
         assert query != null;
-        if (query != null & !query.trim().isEmpty()) {
+        if (query != null && !query.trim().isEmpty()) {
             pipeline.add(new Document("$search", new Document()
                     .append("index", "search_tour")
                     .append("text", new Document()
@@ -479,7 +481,7 @@ public class TourService {
                 .append("searchScore", new Document("$meta", "searchScore"))
         ));
 
-        Document matchStage = buildMatchStage(minPrice, maxPrice, category, language, duration);
+        Document matchStage = buildMatchStage(minPrice, maxPrice, category, language, duration, query != null && !query.trim().isEmpty());
         if (!matchStage.isEmpty()) {
             pipeline.add(new Document("$match", matchStage));
         }
@@ -499,6 +501,7 @@ public class TourService {
                 .append("languageService", 1)
                 .append("duration", 1)
                 .append("fromPrice", 1)
+                .append("searchScore", 1)
         ));
 
         pipeline.add(new Document("$facet", new Document()
@@ -509,30 +512,54 @@ public class TourService {
         return pipeline;
     }
 
-    private Document buildMatchStage(Double minPrice, Double maxPrice, String category, String language, String duration) {
+    private Document buildMatchStage(Double minPrice, Double maxPrice, String category,
+                                     String language, String duration, boolean hasSearchQuery) {
         Document match = new Document();
-        match.append("searchScore", new Document("$gte", 0.8));
+
+        // CHỈ thêm searchScore khi có search query
+        if (hasSearchQuery) {
+            match.append("searchScore", new Document("$gte", 0.2));
+        }
+
         if (minPrice != null || maxPrice != null) {
             Document priceMatch = new Document();
             if (minPrice != null) priceMatch.append("$gte", minPrice);
             if (maxPrice != null) priceMatch.append("$lte", maxPrice);
             match.append("fromPrice", priceMatch);
         }
+
         if (category != null && !category.trim().isEmpty()) {
-            match.append("category", new Document("$in", Arrays.asList(category.split(","))));
+            String[] categories = category.split(",");
+            List<String> trimmedCategories = Arrays.stream(categories)
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.toList());
+            if (!trimmedCategories.isEmpty()) {
+                match.append("category", new Document("$in", trimmedCategories));
+            }
         }
 
         if (language != null && !language.trim().isEmpty()) {
-            match.append("languageService", new Document("$in", Arrays.asList(language.split(","))));
+            String[] languages = language.split(",");
+            List<String> trimmedLanguages = Arrays.stream(languages)
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.toList());
+            if (!trimmedLanguages.isEmpty()) {
+                match.append("languageService", new Document("$in", trimmedLanguages));
+            }
         }
 
         if (duration != null && !duration.trim().isEmpty()) {
             Document durationMatch = buildDurationCriteria(duration);
-            match.putAll(durationMatch);
+            if (!durationMatch.isEmpty()) {
+                match.putAll(durationMatch);
+            }
         }
 
         return match;
     }
+
 
     private Document buildDurationCriteria(String duration) {
         Document criteria = new Document();
@@ -641,6 +668,7 @@ public class TourService {
                 .languageService(doc.getList("languageService", String.class))
                 .duration(doc.getString("duration"))
                 .fromPrice(fromPrice)
+                .searchScore(doc.getDouble("searchScore"))
                 .build();
     }
 

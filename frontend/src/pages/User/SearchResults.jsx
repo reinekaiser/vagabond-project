@@ -24,6 +24,7 @@ const SearchResultsPage = () => {
         { label: "Giá từ thấp đến cao", value: "price" },
     ];
 
+    console.log(queryParams)
     const [sort, setSort] = useState(sortOptionList[0].value);
 
     const [priceRange, setPriceRange] = useState([0, 2000000]);

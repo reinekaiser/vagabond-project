@@ -17,4 +17,5 @@ public class TourSearchResult {
     private List<String> languageService;
     private String duration;
     private Integer fromPrice;
+    private double searchScore;
 }
