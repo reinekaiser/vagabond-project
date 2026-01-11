@@ -44,7 +44,11 @@ export const cityApiSlice = apiSlice.injectEndpoints({
                 { type: 'Cities', id: 'LIST' },
             ],
         }),
-
+        getCity: builder.query({
+            query: (cityId) => ({
+                url: `${CITY_URL}/${cityId}`
+            }),
+        })
     }),
 });
 
@@ -53,5 +57,5 @@ export const {
     useCreateCityMutation,
     useUpdateCityMutation,
     useDeleteCityMutation,
-    useDeletePopularPlaceMutation
+    useGetCityQuery,
 } = cityApiSlice;

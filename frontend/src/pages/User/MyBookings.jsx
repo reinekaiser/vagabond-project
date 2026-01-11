@@ -22,7 +22,7 @@ const statusMap = {
     color: "bg-yellow-100 text-yellow-700",
     icon: <ClockIcon className="w-5 h-5 inline mr-1 text-[12px]" />,
   },
-  cancelled: {
+  canceled: {
     label: "Đã hủy",
     color: "bg-red-100 text-red-700",
     icon: <XCircleIcon className="w-5 h-5 inline mr-1 text-[12px]" />,
@@ -37,17 +37,25 @@ const statusMap = {
 const HotelBookingsTab = () => {
   const { data: bookings = [], isLoading, refetch } = useGetMyHotelBookingsQuery();
   const [cancelBooking] = useCancelBookingMutation();
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [selectedBookingId, setSelectedBookingId] = useState(null);
 
-  const handleCancel = async (id) => {
-    const confirm = window.confirm("Xác nhận huỷ?");
-    if (!confirm) return;
+  const showCancelModal = (id) => {
+    setSelectedBookingId(id);
+    setIsCancelModalOpen(true);
+  };
+
+  const handleCancel = async () => {
     try {
-      await cancelBooking(id).unwrap();
+      await cancelBooking(selectedBookingId).unwrap();
       toast.success("Đã huỷ đơn hàng thành công!");
       refetch();
     } catch (err) {
       console.error(err);
       toast.error("Huỷ đơn hàng thất bại!");
+    } finally {
+      setIsCancelModalOpen(false);
+      setSelectedBookingId(null);
     }
   };
 
@@ -72,54 +80,69 @@ const HotelBookingsTab = () => {
     );
   }
 
-  return bookings.map((booking, index) => (
-    <div
-      key={index}
-      className="bg-white rounded-md py-6 px-8 hover:shadow-lg duration-300 flex mb-4"
-    >
-      <div className="flex items-start mb-4 flex-1">
-        <FaBuilding className="text-[18px] mr-2 mt-2 text-blue-400" />
-        <div className="space-y-2">
-          <p className="font-semibold text-[18px]">{booking.hotelName}</p>
-          <p className="font-semibold text-[16px]">{booking.roomTypeName}</p>
-          <div>
-            <p className="text-gray-500 text-sm">
-              {dayjs(booking.checkin).format("DD/MM/YYYY")} -{" "}
-              {dayjs(booking.checkout).format("DD/MM/YYYY")} (
-              {dayjs(booking.checkout).diff(dayjs(booking.checkin), "day")} đêm)
-            </p>
-            <p className='text-gray-500 text-sm'>
-              {booking.numGuests} khách, {booking.numRooms} phòng
-            </p>
-          </div>
-          <p className="text-orange-600 font-medium mt-2">Tổng giá: {Number(booking.totalPrice).toLocaleString("vi-VN")} ₫</p>
-          <div
-            className={`inline-flex items-center mt-4 px-2 py-1 rounded-md text-[12px] font-medium ${statusMap[booking.bookingStatus]?.color}`}
-          >
-            {statusMap[booking.bookingStatus]?.icon}
-            {statusMap[booking.bookingStatus]?.label}
-          </div>
-          {booking.bookingStatus === "pending" && (
-            <div>
-              <button
-                onClick={() => handleCancel(booking._id)}
-                className="text-[14px] font-medium mt-2 bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-orange-600 transition-colors duration-200"
+  return (
+    <div>
+      {bookings.map((booking, index) => (
+        <div
+          key={index}
+          className="bg-white rounded-md py-6 px-8 hover:shadow-lg duration-300 flex mb-4"
+        >
+          <div className="flex items-start mb-4 flex-1">
+            <FaBuilding className="text-[18px] mr-2 mt-2 text-blue-400" />
+            <div className="space-y-2">
+              <p className="font-semibold text-[18px]">{booking.hotelName}</p>
+              <p className="font-semibold text-[16px]">{booking.roomTypeName}</p>
+              <div>
+                <p className="text-gray-500 text-sm">
+                  {dayjs(booking.checkin).format("DD/MM/YYYY")} -{" "}
+                  {dayjs(booking.checkout).format("DD/MM/YYYY")} (
+                  {dayjs(booking.checkout).diff(dayjs(booking.checkin), "day")} đêm)
+                </p>
+                <p className='text-gray-500 text-sm'>
+                  {booking.numGuests} khách, {booking.numRooms} phòng
+                </p>
+              </div>
+              <p className="text-orange-600 font-medium mt-2">Tổng giá: {Number(booking.totalPrice).toLocaleString("vi-VN")} ₫</p>
+              <div
+                className={`inline-flex items-center mt-4 px-2 py-1 rounded-md text-[12px] font-medium ${statusMap[booking.bookingStatus]?.color}`}
               >
-                Huỷ đơn hàng
-              </button>
+                {statusMap[booking.bookingStatus]?.icon}
+                {statusMap[booking.bookingStatus]?.label}
+              </div>
+              {booking.bookingStatus === "pending" && (
+                <div>
+                  <button
+                    onClick={() => showCancelModal(booking._id)}
+                    className="text-[14px] font-medium mt-2 bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-orange-600 transition-colors duration-200"
+                  >
+                    Huỷ đơn hàng
+                  </button>
+                </div>
+              )}
             </div>
-          )}
+          </div>
+          <div className="rounded-xl overflow-hidden h-[120px] w-[180px]">
+            <img
+              src={`${CLOUDINARY_BASE_URL}/${booking.hotelImg[0]}`}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+          </div>
         </div>
-      </div>
-      <div className="rounded-xl overflow-hidden h-[120px] w-[180px]">
-        <img
-          src={`${CLOUDINARY_BASE_URL}/${booking.hotelImg[0]}`}
-          alt=""
-          className="w-full h-full object-cover"
-        />
-      </div>
+      ))}
+      <Modal
+        title="Xác nhận huỷ đơn hàng"
+        open={isCancelModalOpen}
+        onOk={handleCancel}
+        onCancel={() => setIsCancelModalOpen(false)}
+        okText="Huỷ đơn"
+        cancelText="Đóng"
+        okButtonProps={{ danger: true }}
+      >
+        <p>Bạn có chắc chắn muốn huỷ đơn hàng này?</p>
+      </Modal>
     </div>
-  ));
+  );
 };
 
 const TourBookingsTab = () => {
@@ -165,62 +188,68 @@ const TourBookingsTab = () => {
     );
   }
 
-  return bookings.map((booking, index) => (
-    <div
-      key={index}
-      className="bg-white rounded-md py-6 px-8 hover:shadow-lg duration-300 flex mb-4"
-    >
-      <div className="flex items-start mb-4 w-full">
-        <IoTicketSharp className="text-[18px] mr-2 mt-2 text-blue-400" />
-        <div>
-          <p className="font-semibold text-[18px]">{booking.name}</p>
-          <p className="text-gray-500 text-sm truncate max-w-md mb-1">
-            {booking.title}
-          </p>
-          <p className="text-gray-500 text-sm">
-            Ngày sử dụng: {dayjs(booking.useDate).format("DD/MM/YYYY")}
-          </p>
-          <p className="text-orange-600 font-medium mt-2">
-            Tổng giá: {Number(booking.totalPrice).toLocaleString("vi-VN")} ₫
-          </p>
-          <div
-            className={`inline-flex items-center mt-2 px-2 py-1 rounded-md text-[12px] font-medium ${statusMap[booking.bookingStatus]?.color}`}
-          >
-            {statusMap[booking.bookingStatus]?.icon}
-            {statusMap[booking.bookingStatus]?.label}
-          </div>
-          {booking.bookingStatus === "pending" && (
+  return (
+    <div>
+      {bookings.map((booking, index) => (
+        <div
+          key={index}
+          className="bg-white rounded-md py-6 px-8 hover:shadow-lg duration-300 flex mb-4"
+        >
+          <div className="flex items-start mb-4 w-full">
+            <IoTicketSharp className="text-[18px] mr-2 mt-2 text-blue-400" />
             <div>
-              <button
-                onClick={() => showCancelModal(booking._id)}
-                className="text-[14px] font-medium mt-2 bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-orange-600 transition-colors duration-200"
+              <p className="font-semibold text-[18px]">{booking.name}</p>
+              <p className="text-gray-500 text-sm truncate max-w-md mb-1">
+                {booking.title}
+              </p>
+              <p className="text-gray-500 text-sm">
+                Ngày sử dụng: {dayjs(booking.useDate).format("DD/MM/YYYY")}
+              </p>
+              <p className="text-orange-600 font-medium mt-2">
+                Tổng giá: {Number(booking.totalPrice).toLocaleString("vi-VN")} ₫
+              </p>
+              <div
+                className={`inline-flex items-center mt-2 px-2 py-1 rounded-md text-[12px] font-medium ${statusMap[booking.bookingStatus]?.color}`}
               >
-                Huỷ đơn hàng
-              </button>
+                {statusMap[booking.bookingStatus]?.icon}
+                {statusMap[booking.bookingStatus]?.label}
+              </div>
+              {booking.bookingStatus === "pending" && (
+                <div>
+                  <button
+                    onClick={() => showCancelModal(booking._id)}
+                    className="text-[14px] font-medium mt-2 bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-orange-600 transition-colors duration-200"
+                  >
+                    Huỷ đơn hàng
+                  </button>
+                </div>
+              )}
+
             </div>
-          )}
-          <Modal
-            title="Xác nhận huỷ đơn hàng"
-            open={isCancelModalOpen}
-            onOk={confirmCancel}
-            onCancel={() => setIsCancelModalOpen(false)}
-            okText="Huỷ đơn"
-            cancelText="Đóng"
-            okButtonProps={{ danger: true }}
-          >
-            <p>Bạn có chắc chắn muốn huỷ đơn hàng này?</p>
-          </Modal>
+          </div>
+          <div className="rounded-xl overflow-hidden h-[120px] w-[180px]">
+            <img
+              src={`${booking.tourImg}`}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+          </div>
         </div>
-      </div>
-      <div className="rounded-xl overflow-hidden h-[120px] w-[180px]">
-        <img
-          src={`${booking.tourImg}`}
-          alt=""
-          className="w-full h-full object-cover"
-        />
-      </div>
+      ))}
+
+      <Modal
+        title="Xác nhận huỷ đơn hàng"
+        open={isCancelModalOpen}
+        onOk={confirmCancel}
+        onCancel={() => setIsCancelModalOpen(false)}
+        okText="Huỷ đơn"
+        cancelText="Đóng"
+        okButtonProps={{ danger: true }}
+      >
+        <p>Bạn có chắc chắn muốn huỷ đơn hàng này?</p>
+      </Modal>
     </div>
-  ));
+  );
 };
 
 const MyBookings = () => {

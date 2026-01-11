@@ -26,8 +26,6 @@ public class TourBookingRequest {
     private String email;
     private String phone;
     private String useDate;
-    private int adults;
-    private int childs;
 
     private String paymentMethod;
     private Double totalPrice;

@@ -26,6 +26,12 @@ public class CityService {
         return cityRepository.findAll();
     }
 
+    public City getById(String cityId) {
+        City city = cityRepository.findById(cityId)
+                .orElseThrow(() -> new RuntimeException("City not found with id: " + cityId));
+        return city;
+    }
+
     public City createCity(CityRequest request) {
         if (cityRepository.existsByName(request.getName())) {
             throw new RuntimeException("City with name '" + request.getName() + "' already exists");

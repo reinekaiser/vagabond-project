@@ -32,15 +32,15 @@ const UserSidebar = ({ onLogout }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [ logoutApi ] = useLogoutMutation();
-
-  const [userInfo, setUserInfo] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('userInfo'));
-    } catch {
-      return null;
-    }
-  });
+  const [logoutApi] = useLogoutMutation();
+  const { user: userInfo } = useSelector((state) => state.auth);
+  // const [userInfo, setUserInfo] = useState(() => {
+  //   try {
+  //     return user || JSON.parse(localStorage.getItem('userInfo'));
+  //   } catch {
+  //     return null;
+  //   }
+  // });
 
   const handleLogout = async () => {
     try {
@@ -71,8 +71,18 @@ const UserSidebar = ({ onLogout }) => {
   return (
     <aside className="w-72 bg-white border-r p-6 flex flex-col gap-2 min-h-screen">
       <div className="flex flex-col items-center mb-8">
-        <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-3xl font-bold text-blue-500 mb-2">
-          {userInfo?.firstName?.charAt(0) || 'U'}
+        <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center text-3xl font-bold text-blue-500 mb-2">
+          {userInfo?.avatarUrl ? (
+            <img
+              src={userInfo?.avatarUrl}
+              alt="Avatar"
+              className="w-full h-full object-cover rounded-full"
+            />
+          ) : (
+            <span className="text-blue-500 text-lg font-bold">
+              {userInfo.firstName?.charAt(0) || userInfo.email?.charAt(0) || "U"}
+            </span>
+          )}
         </div>
         <div className="font-semibold text-lg text-blue-700 mb-1">
           {userInfo ? `${userInfo.firstName} ${userInfo.lastName}` : ''}

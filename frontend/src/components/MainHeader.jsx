@@ -8,6 +8,7 @@ import UserDropdown from "./UserDropdown";
 import { logout } from "../redux/features/authSlice";
 import { useGetCitiesQuery } from "../redux/api/cityApiSlice";
 import { useLogoutMutation } from "../redux/api/authApiSlice";
+import { CLOUDINARY_BASE_URL } from "../constants/hotel";
 
 export const MainHeader = () => {
     const dispatch = useDispatch();
@@ -16,7 +17,7 @@ export const MainHeader = () => {
     const dropdownRef = useRef(null);
     const { user } = useSelector((state) => state.auth);
 
-    const [ logoutApi ] = useLogoutMutation();
+    const [logoutApi] = useLogoutMutation();
 
     // Handle click outside to close dropdown
     useEffect(() => {
@@ -106,7 +107,7 @@ export const MainHeader = () => {
                 <nav className="flex space-x-4 items-center ml-auto font-semibold">
                     {!user ? (
                         <>
-                            
+
                             <Link
                                 to="/sign-up"
                                 className="hover:text-primary transition-colors text-[14px]"
@@ -126,9 +127,18 @@ export const MainHeader = () => {
                                 className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center cursor-pointer"
                                 onClick={() => setShowDropdown((prev) => !prev)}
                             >
-                                <span className="text-blue-500 text-lg font-bold">
-                                    {user.firstName?.charAt(0) || user.email?.charAt(0) || "U"}
-                                </span>
+                                {user.avatarUrl ? (
+                                    <img
+                                        src={user.avatarUrl}
+                                        alt="Avatar"
+                                        className="w-full h-full object-cover rounded-full"
+                                    />
+                                ) : (
+                                    <span className="text-blue-500 text-lg font-bold">
+                                        {user.firstName?.charAt(0) || user.email?.charAt(0) || "U"}
+                                    </span>
+                                )}
+
                             </div>
                             <span
                                 className="text-blue-500 font-semibold cursor-pointer"
@@ -169,7 +179,11 @@ export const MainHeader = () => {
                                                     className="flex gap-2 items-center"
                                                 >
                                                     <img
-                                                        src={city.img || "/images/about/budapest.jpg"}
+                                                        src={
+                                                            city?.img
+                                                                ? `${CLOUDINARY_BASE_URL}/${city.img}`
+                                                                : "/images/about/budapest.jpg"
+                                                        }
                                                         alt=""
                                                         className="w-12 h-12 rounded-full"
                                                     />

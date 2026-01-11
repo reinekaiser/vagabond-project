@@ -39,7 +39,7 @@ public class HotelController {
             @RequestParam(required = false, defaultValue = "1") int page,
             @RequestParam(required = false, defaultValue = "6") int limit
     ) {
-        return hotelService.getSearchResults(type, minPrice, maxPrice, hotelFacilities, roomFacilities, key, sort, page, limit);
+        return hotelService.getSearchHotelResults(type, minPrice, maxPrice, hotelFacilities, roomFacilities, key, sort, page, limit);
     }
 
     @GetMapping("/search")

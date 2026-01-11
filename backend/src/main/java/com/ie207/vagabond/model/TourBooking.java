@@ -30,8 +30,6 @@ public class TourBooking {
     private String email;
     private String phone;
     private LocalDate useDate;
-    private int adults;
-    private int childs;
 
     private String paymentMethod;
     private double totalPrice;
