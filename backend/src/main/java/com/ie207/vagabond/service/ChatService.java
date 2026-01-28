@@ -86,6 +86,11 @@ public class ChatService {
             );
             System.out.println("✅ Sent to user: " + receiver.get_id());
         } else {
+            messagingTemplate.convertAndSendToUser(
+                    receiver.get_id(),
+                    "/queue/messages",
+                    message
+            );
             System.out.println("⚠️ User offline, message saved but not delivered");
         }
 

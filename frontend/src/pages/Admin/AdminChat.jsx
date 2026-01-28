@@ -18,6 +18,7 @@ const AdminChat = () => {
     useEffect(() => {
         if (users) {
             dispatch(setUsers(users));
+            dispatch(setSelectedUser(users[0]));
         }
     }, [users]);
 
@@ -31,7 +32,7 @@ const AdminChat = () => {
                     currentUserId: userInfo._id,
                 };
 
-                console.log(message)
+                console.log('add:', message);
                 dispatch(addUser(message))
             })
         }
@@ -46,10 +47,10 @@ const AdminChat = () => {
         //     dispatch(addUser(message))
         // });
 
-        return () => {
-            WebSocketService.disconnect();
-        };
-    }, [selectedUser])
+        // return () => {
+        //     WebSocketService.disconnect();
+        // };
+    }, [userInfo._id])
 
 
     const [markSent] = useMarkMessagesAsReadMutation();
@@ -118,7 +119,7 @@ const ChatSideBar = () => {
         }
     };
 
-    console.log("onlineUsers", onlineUsers)
+    // console.log("onlineUsers", onlineUsers)
     // console.log("admin - ", unreadCount)
 
     return (
@@ -126,7 +127,7 @@ const ChatSideBar = () => {
             <div className="border-b border-base-300 w-full p-4 flex items-center gap-4">
                 <div className="relative w-12 h-12">
                     <img
-                        src={user.profilePicture || "/ava.jpg"}
+                        src={user.avatarUrl || "/ava.jpg"}
                         alt={user.firstName}
                         className="w-full h-full object-cover rounded-full"
                     />
@@ -152,11 +153,13 @@ const ChatSideBar = () => {
                             ${selectedUser?._id === user._id ? "bg-slate-200" : ""}`}
                     >
                         <div className="relative mx-auto lg:mx-0">
-                            <img
-                                src={user.profilePicture || "/ava.jpg"}
-                                alt={user.firstName}
-                                className="size-12 object-cover rounded-full"
-                            />
+                            <div className="w-11 h-11 rounded-full overflow-hidden">
+                                <img
+                                    src={user.avatarUrl || "/ava.jpg"}
+                                    alt={user.firstName}
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
                             {onlineUsers.includes(user._id) && (
                                 <span className="absolute bottom-0 right-0 size-3 bg-green-500 rounded-full" />
                             )}

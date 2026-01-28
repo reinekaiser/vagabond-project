@@ -22,8 +22,7 @@ const Chat = () => {
         refetchOnMountOrArgChange: true,
     })
     const { data: admin, isLoading: isLoadingAdmin } = useGetUserToChatQuery();
-    console.log(admin)
-    console.log("unreadCount", unreadCount)
+
     const messageEndRef = useRef(null);
     const [markSent] = useMarkMessagesAsReadMutation();
 
@@ -60,9 +59,9 @@ const Chat = () => {
                             ...newMessage,
                             currentUserId: user._id,
                         };
-                        
+
+                        console.log("user:", message)
                         const isMessageSentFromAdmin = String(message.sender._id) === String(adminId);
-                        console.log(isMessageSentFromAdmin)
                         if (!isMessageSentFromAdmin) return;
                         dispatch(addMessage(message));
                     }
@@ -173,7 +172,7 @@ const MessageInput = ({ dispatch }) => {
                 currentUserId: user._id,
             };
 
-            console.log("message", message)
+            // console.log("message", message)
             dispatch(addMessage(message));
             setText("");
         } catch (error) {

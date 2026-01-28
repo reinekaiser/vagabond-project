@@ -34,7 +34,7 @@ const AdminLayout = () => {
                 (newMessage) => {
                     const message = {
                         ...newMessage,
-                        currentUserId: user._id,
+                        currentUserId: userInfo._id,
                     };
                     dispatch(addUser(message))
                 }
@@ -44,20 +44,12 @@ const AdminLayout = () => {
         const handleError = (error) => {
             console.error('❌ WebSocket connection error:', error);
         }
-        WebSocketService.connect(userInfo._id, userInfo.role);
-        // socket.on("newMessage", (newMessage) => {
-        //     dispatch(
-        //         addUser({
-        //             ...newMessage,
-        //             currentUserId: userInfo._id,
-        //         })
-        //     );
-        // });
+        WebSocketService.connect(userInfo._id, userInfo.role, handleConnect, handleError);
 
         return () => {
             WebSocketService.disconnect();
         };
-    }, [selectedUser]);
+    }, [userInfo._id, userInfo.role, dispatch]);
 
     const [openDropdown, setOpenDropdown] = useState(null);
 
