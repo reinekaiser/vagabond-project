@@ -1,14 +1,16 @@
 package com.ie207.vagabond.config;
 
-import com.ie207.vagabond.websocket.interceptor.UserChannelInterceptor;
-import com.ie207.vagabond.websocket.interceptor.UserHandshakeInterceptor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+
+import com.ie207.vagabond.websocket.interceptor.UserChannelInterceptor;
+import com.ie207.vagabond.websocket.interceptor.UserHandshakeInterceptor;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSocketMessageBroker

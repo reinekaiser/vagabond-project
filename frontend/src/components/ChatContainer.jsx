@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {useGetMessagesQuery, useSendMessageMutation} from '../redux/api/messageApiSlice'
-import { setMessages, addMessage } from '../redux/features/chatSlice'
+import { setMessages, addMessage, addUser } from '../redux/features/chatSlice'
 import { RiSendPlaneFill } from "react-icons/ri";
 import WebSocketService from '../services/websocket.js';
 
@@ -15,6 +15,12 @@ const ChatContainer = ({ onClick }) => {
         refetchOnMountOrArgChange: true,
     })
 
+    const selectedUserRef = useRef(selectedUser);
+
+    useEffect(() => {
+        selectedUserRef.current = selectedUser;
+    }, [selectedUser]);
+
     useEffect(() => {
         if (selectedUser?._id && messages) {
             dispatch(setMessages(messages));
@@ -22,19 +28,27 @@ const ChatContainer = ({ onClick }) => {
     }, [messages, selectedUser?._id]);
 
     useEffect(() => {
-        if (selectedUser?._id) {
+        if (user?._id) {
             const handleConnect = () => {
-                WebSocketService.subscribe(
+                const subscription = WebSocketService.subscribe(
                     "/user/queue/messages",
                     (newMessage) => {
                         const message = {
                             ...newMessage,
                             currentUserId: user._id,
                         };
-                        console.log('✅ Processed message:', message);
-                        const isMessageSentFromSelectedUser = String(message.sender._id) === String(selectedUser._id);
-                        console.log(isMessageSentFromSelectedUser)
-                        if (!isMessageSentFromSelectedUser) return;
+
+                        const currentSelectedUser = selectedUserRef.current;
+                        console.log('Ad message:', message, message.sender._id, selectedUser._id);
+
+                        const isMessageSentFromSelectedUser = 
+                            currentSelectedUser && 
+                            String(message.sender._id) === String(currentSelectedUser._id);
+                        
+                        if (!isMessageSentFromSelectedUser) {
+                            dispatch(addUser(message))
+                            return;
+                        }
                         dispatch(addMessage(message))
                     }
                 );
@@ -51,7 +65,7 @@ const ChatContainer = ({ onClick }) => {
                 WebSocketService.disconnect();
             };
         }
-    }, [selectedUser._id]);
+    }, [user._id]);
 
     useEffect(() => {
         if (messageEndRef.current && messages) {
@@ -92,7 +106,7 @@ const ChatContainer = ({ onClick }) => {
                                     <div className={`flex items-end ${isMine ? "justify-end" : "justify-start"}`}>
                                         {!isMine && (
                                             <img
-                                                src={selectedUser.profilePic || "/ava.jpg"}
+                                                src={selectedUser.avatarUrl || "/ava.jpg"}
                                                 alt="avatar"
                                                 className="w-8 h-8 rounded-full mr-2"
                                             />
@@ -141,7 +155,7 @@ const ChatHeader = () => {
         <div className="flex items-center gap-4 px-5 py-[18px] border-b border-base-300 bg-base-100">
             <div className="relative">
                 <img
-                    src={selectedUser?.profilePicture || "/ava.jpg"}
+                    src={selectedUser?.avatarUrl || "/ava.jpg"}
                     alt={selectedUser?.firstName}
                     className="w-10 h-10 rounded-full object-cover"
                 />
