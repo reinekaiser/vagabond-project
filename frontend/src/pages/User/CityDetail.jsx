@@ -21,6 +21,7 @@ const CityDetail = () => {
     const [showImageGallery, setShowImageGallery] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+    console.log(city)
     const responsive = {
         desktop: {
             breakpoint: {
@@ -440,7 +441,7 @@ const CityDetail = () => {
                                         <h3 className="text-xl font-bold text-gray-800 mb-3">
                                             {place.name}
                                         </h3>
-                                        <p className="text-gray-600 leading-relaxed text-base">
+                                        <p className="text-gray-600 leading-relaxed text-base line-clamp-4">
                                             {place.description}
                                         </p>
 

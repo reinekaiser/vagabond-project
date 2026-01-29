@@ -24,7 +24,7 @@ const AdminRoutes = () => {
                     <Route index element={<Navigate to="/admin/dashboard" replace />} />
                     <Route path="dashboard" element={<Dashboard />} />
                     <Route path="profile" element={<Profile />} />
-                    <Route path="/chat" element={<AdminChat />} />
+                    <Route path="chat" element={<AdminChat />} />
                     <Route path="manage-tours">
                         <Route index element={<ManageTours />} />
                         <Route path="create-tour" element={<CreateTour />} />

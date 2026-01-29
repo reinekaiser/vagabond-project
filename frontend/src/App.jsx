@@ -21,19 +21,22 @@ function App() {
     console.log("User in App:", user);
 
     useEffect(() => {
-        if (user?._id) {
-            const handleConnect = () => {
-                WebSocketService.subscribe('/topic/admin/onlineUsers', (users) => {
-                    console.log("Online users", users);
-                    dispatch(setOnlineUsers(users))
-                });
-            }
+        if (!user?._id) return
 
-            WebSocketService.connect(user._id, user.role, handleConnect);
+        let subscription = null;
+        const handleConnect = async () => {
+            subscription = await WebSocketService.subscribe('/topic/admin/onlineUsers', (users) => {
+                console.log("Online users", users);
+                dispatch(setOnlineUsers(users))
+            });
         }
 
+        WebSocketService.connect(user._id, user.role, handleConnect);
+
         return () => {
-            WebSocketService.disconnect();
+            if (subscription) {
+                subscription.unsubscribe();
+            }
         };
     }, [user?._id])
 

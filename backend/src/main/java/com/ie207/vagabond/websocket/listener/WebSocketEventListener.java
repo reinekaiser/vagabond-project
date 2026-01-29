@@ -51,10 +51,10 @@ public class WebSocketEventListener {
             // Lưu vào maps
             userSocketMap.put(userId, sessionId);
 
-            if ("admin".equalsIgnoreCase(role) || "ADMIN".equals(role)) {
-                adminSessions.add(sessionId);
-                System.out.println("✅ Added to admin sessions");
-            }
+//            if ("admin".equalsIgnoreCase(role) || "ADMIN".equals(role)) {
+//                adminSessions.add(sessionId);
+//                System.out.println("✅ Added to admin sessions");
+//            }
 
             sendOnlineUsersToAdmins();
         } else {

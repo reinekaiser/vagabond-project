@@ -320,7 +320,7 @@ const HotelCard = ({ pageSize, hotel, refetch, page, setPage }) => {
                         <p className='text-[13px] text-gray-600 p-2 pt-4'>
                             Ngày thêm: {new Date(hotel.createdAt).toLocaleDateString('vi-VN')}
                         </p>
-                        <h3 className="text-[20px] font-semibold hover:underline duration-300 px-2 pb-3 w-fit max-w-[325px] overflow-hidden text-ellipsis whitespace-nowrap">
+                        <h3 className="text-[20px] font-semibold hover:underline duration-300 px-2 pb-3 w-fit max-w-[325px] overflow-hidden text-ellipsis">
                             {hotel.name}
                         </h3>
                         <p className="flex text-[14px] mb-2">
@@ -332,7 +332,7 @@ const HotelCard = ({ pageSize, hotel, refetch, page, setPage }) => {
                             </span>
                         </p>
                     </div>
-                    <p className='flex items-center text-[14px] mb-2 text-gray-600'>
+                    <p className='flex items-center mt-auto text-[14px] mb-2 text-gray-600'>
                         <LuCircleDollarSign className='text-blue-500 text-[19px] mx-1' />
                         {Number(hotel.fromPrice).toLocaleString("vi-VN")} ₫
                     </p>

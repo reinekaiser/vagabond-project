@@ -14,12 +14,13 @@ export const messageApiSlice = apiSlice.injectEndpoints({
         getUserToChat: builder.query({
             query: () => ({
                 url: `${MESSAGE_URL}/users/chat`
-            })
+            }),
         }),
         getMessages: builder.query({
             query: (id) => ({
                 url: `${MESSAGE_URL}/history/${id}`
             }),
+            // providesTags: ['UserToChat']
         }),
         markMessagesAsRead: builder.mutation({
             query: (id) => ({

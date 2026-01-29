@@ -166,7 +166,7 @@ public class ChatService {
 
     @Transactional
     public List<Message> getChatHistory(String currentUserId, String otherUserId) {
-
+        System.out.println("currentUserId: " + currentUserId + " " + "otherUserId: " + otherUserId);
         List<Message> messages = messageRepository.findMessagesBetweenUsers(
                 currentUserId,
                 otherUserId,

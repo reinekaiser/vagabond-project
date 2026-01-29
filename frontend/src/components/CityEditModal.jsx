@@ -13,6 +13,7 @@ import {CLOUDINARY_BASE_URL} from "../constants/hotel.js";
 
 const CityEditModal = ({ open, onCancel, city }) => {
 
+    console.log(city)
     const initialValues = {
         name: city?.name || '',
         description: city?.description || '',
@@ -542,14 +543,14 @@ const CityEditModal = ({ open, onCancel, city }) => {
                                             })}
                                             className="w-full resize-none flex-1 border border-gray-300 p-2 rounded"
                                         />
-                                        {errors.popularQuestions?.[index]?.answer && (
-                                            <p className="text-red-500 text-sm mt-1">
-                                                {
-                                                    errors.popularPlaces[index].answer
-                                                        .message
-                                                }
-                                            </p>
-                                        )}
+                                        {/*{errors.popularQuestions?.[index]?.answer && (*/}
+                                        {/*    <p className="text-red-500 text-sm mt-1">*/}
+                                        {/*        {*/}
+                                        {/*            errors.popularPlaces[index].answer*/}
+                                        {/*                .message*/}
+                                        {/*        }*/}
+                                        {/*    </p>*/}
+                                        {/*)}*/}
                                     </div>
                                 </div>
                             </div>

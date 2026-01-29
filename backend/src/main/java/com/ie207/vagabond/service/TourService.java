@@ -708,11 +708,11 @@ public class TourService {
             criteria.andOperator(durationCriteria);
         }
 
-//        if (cityId != null) {
-//            City city = cityRepository.findById(cityId)
-//                    .orElseThrow(() -> new CityNotFoundException("City not found with id: " + cityId));
-//            criteria.and("city").is(city);
-//        }
+        if (cityId != null) {
+            City city = cityRepository.findById(cityId)
+                    .orElseThrow(() -> new CityNotFoundException("City not found with id: " + cityId));
+            criteria.and("city").is(city);
+        }
 
         Query query = new Query(criteria);
 

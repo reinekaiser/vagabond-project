@@ -61,7 +61,7 @@ const TicketForm = ({
     });
 
     useEffect(() => {
-        if (useDefaultPolicy && !editingTicket) {
+        if (!editingTicket) {
             reset({
                 ...getValues(),
             });

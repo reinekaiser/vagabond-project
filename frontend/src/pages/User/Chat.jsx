@@ -22,8 +22,6 @@ const Chat = () => {
         refetchOnMountOrArgChange: true,
     })
     const { data: admin, isLoading: isLoadingAdmin } = useGetUserToChatQuery();
-    console.log(admin)
-    console.log("unreadCount", unreadCount)
     const messageEndRef = useRef(null);
     const [markSent] = useMarkMessagesAsReadMutation();
 
@@ -51,34 +49,35 @@ const Chat = () => {
     }, [messages, dispatch]);
 
     useEffect(() => {
-        if (adminId) {
-            const handleConnect = () => {
-                const subscription = WebSocketService.subscribe(
-                    "/user/queue/messages",
-                    (newMessage) => {
-                        const message = {
-                            ...newMessage,
-                            currentUserId: user._id,
-                        };
-                        
-                        const isMessageSentFromAdmin = String(message.sender._id) === String(adminId);
-                        console.log(isMessageSentFromAdmin)
-                        if (!isMessageSentFromAdmin) return;
-                        dispatch(addMessage(message));
-                    }
-                );
-            };
+        if (!adminId) return;
 
-            const handleError = (error) => {
-                console.error('❌ WebSocket connection error:', error);
+        let subscription = null;
+
+        const handleConnect = async () => {
+            subscription = await  WebSocketService.subscribe(
+                "/user/queue/messages",
+                (newMessage) => {
+                    const message = {
+                        ...newMessage,
+                        currentUserId: user._id,
+                    };
+                    
+                    const isMessageSentFromAdmin = String(message.sender._id) === String(adminId);
+                    console.log(isMessageSentFromAdmin)
+                    if (!isMessageSentFromAdmin) return;
+                    dispatch(addMessage(message));
+                }
+            );
+        };
+
+
+        WebSocketService.connect(user._id, user.role, handleConnect);
+
+        return () => {
+            if (subscription) {
+                subscription.unsubscribe();
             }
-
-            WebSocketService.connect(user._id, user.role, handleConnect, handleError);
-
-            return () => {
-                WebSocketService.disconnect();
-            };
-        }
+        };
     }, [adminId])
 
     useEffect(() => {

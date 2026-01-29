@@ -12,9 +12,7 @@ const AdminChat = () => {
     const dispatch = useDispatch();
     const { user: userInfo } = useSelector((state) => state.auth);
     const { selectedUser } = useSelector((state) => state.chat);
-    const { data: users, isLoading: isLoadingUser, refetch } = useGetUserToChatQuery(undefined, {
-        refetchOnMountOrArgChange: true,
-    });
+    const { data: users, isLoading: isLoadingUser, refetch } = useGetUserToChatQuery();
     useEffect(() => {
         if (users) {
             dispatch(setUsers(users));
@@ -22,16 +20,17 @@ const AdminChat = () => {
     }, [users]);
 
     useEffect(() => {
-        const handleConnect = () => {
+        let subscription = null;
+        const handleConnect = async () => {
             console.log('WebSocket connected successfully')
 
-            WebSocketService.subscribe('/user/queue/messages', (newMessage) => {
+            subscription = await WebSocketService.subscribe('/user/queue/messages', (newMessage) => {
                 const message = {
                     ...newMessage,
                     currentUserId: userInfo._id,
                 };
 
-                console.log(message)
+                console.log("message", message)
                 dispatch(addUser(message))
             })
         }
@@ -47,9 +46,11 @@ const AdminChat = () => {
         // });
 
         return () => {
-            WebSocketService.disconnect();
+            if (subscription) {
+                subscription.unsubscribe();
+            }
         };
-    }, [selectedUser])
+    }, [])
 
 
     const [markSent] = useMarkMessagesAsReadMutation();
@@ -58,7 +59,6 @@ const AdminChat = () => {
             try {
                 dispatch(setSelectedUser(selectedUser));
                 const res = await markSent(selectedUser._id);
-                console.log(res);
             } catch (error) {
                 console.error("Error marking messages as read from ChatContainer:", error);
             }
@@ -112,7 +112,6 @@ const ChatSideBar = () => {
         dispatch(setSelectedUser(user));
         try {
             const res = await markSent(user._id);
-            console.log(res);
         } catch (error) {
             console.log(error);
         }

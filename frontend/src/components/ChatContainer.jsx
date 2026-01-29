@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {useGetMessagesQuery, useSendMessageMutation} from '../redux/api/messageApiSlice'
-import { setMessages, addMessage } from '../redux/features/chatSlice'
+import { useGetMessagesQuery, useSendMessageMutation } from "../redux/api/messageApiSlice";
+import { setMessages, addMessage } from "../redux/features/chatSlice";
 import { RiSendPlaneFill } from "react-icons/ri";
-import WebSocketService from '../services/websocket.js';
+import WebSocketService from "../services/websocket.js";
 
 const ChatContainer = ({ onClick }) => {
     const dispatch = useDispatch();
@@ -13,7 +13,7 @@ const ChatContainer = ({ onClick }) => {
     const { data: messages, isLoading: isLoadingMsg } = useGetMessagesQuery(selectedUser._id, {
         skip: !selectedUser?._id,
         refetchOnMountOrArgChange: true,
-    })
+    });
 
     useEffect(() => {
         if (selectedUser?._id && messages) {
@@ -22,36 +22,39 @@ const ChatContainer = ({ onClick }) => {
     }, [messages, selectedUser?._id]);
 
     useEffect(() => {
-        if (selectedUser?._id) {
-            const handleConnect = () => {
-                WebSocketService.subscribe(
-                    "/user/queue/messages",
-                    (newMessage) => {
-                        const message = {
-                            ...newMessage,
-                            currentUserId: user._id,
-                        };
-                        console.log('✅ Processed message:', message);
-                        const isMessageSentFromSelectedUser = String(message.sender._id) === String(selectedUser._id);
-                        console.log(isMessageSentFromSelectedUser)
-                        if (!isMessageSentFromSelectedUser) return;
-                        dispatch(addMessage(message))
-                    }
-                );
+        if (!selectedUser?._id) return;
 
-            };
+        let subscription = null;
 
-            const handleError = (error) => {
-                console.error('❌ WebSocket connection error:', error);
+
+        const handleConnect = async () => {
+            // Đợi connection và subscribe
+            console.log("Bắt đầu kết nối phía admin")
+            subscription = await WebSocketService.subscribe(
+                "/user/queue/messages",
+                (newMessage) => {
+                    const message = {
+                        ...newMessage,
+                        currentUserId: user._id,
+                    };
+                    console.log("✅ Processed message:", message);
+                    const isMessageSentFromSelectedUser =
+                        String(message.sender._id) === String(selectedUser._id);
+                    console.log(isMessageSentFromSelectedUser);
+                    if (!isMessageSentFromSelectedUser) return;
+                    dispatch(addMessage(message));
+                },
+            );
+        };
+
+        WebSocketService.connect(user._id, user.role, handleConnect);
+
+        return () => {
+            if (subscription) {
+                subscription.unsubscribe();
             }
-
-            WebSocketService.connect(user._id, user.role, handleConnect, handleError);
-
-            return () => {
-                WebSocketService.disconnect();
-            };
-        }
-    }, [selectedUser._id]);
+        };
+    }, [selectedUser]);
 
     useEffect(() => {
         if (messageEndRef.current && messages) {
@@ -66,21 +69,18 @@ const ChatContainer = ({ onClick }) => {
                     <span className="text-gray-500 text-sm">Đang tải tin nhắn...</span>
                 </div>
             ) : (
-                <div
-                    className="flex flex-col flex-1 overflow-hidden"
-                    onClick={onClick}
-                >
+                <div className="flex flex-col flex-1 overflow-hidden" onClick={onClick}>
                     <ChatHeader />
 
-                    <div
-                        className="flex-1 overflow-y-auto p-4 space-y-4"
-                        onClick={onClick}
-                    >
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4" onClick={onClick}>
                         {msg?.map((message) => {
                             const isMine = message.senderId === user._id;
                             const time = new Date(message.createdAt).toLocaleString([], {
-                                day: '2-digit', month: '2-digit', year: 'numeric',
-                                hour: '2-digit', minute: '2-digit',
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
                             });
 
                             return (
@@ -89,7 +89,9 @@ const ChatContainer = ({ onClick }) => {
                                     className={`flex flex-col ${isMine ? "items-end" : "items-start"}`}
                                     ref={messageEndRef}
                                 >
-                                    <div className={`flex items-end ${isMine ? "justify-end" : "justify-start"}`}>
+                                    <div
+                                        className={`flex items-end ${isMine ? "justify-end" : "justify-start"}`}
+                                    >
                                         {!isMine && (
                                             <img
                                                 src={selectedUser.profilePic || "/ava.jpg"}
@@ -99,15 +101,15 @@ const ChatContainer = ({ onClick }) => {
                                         )}
 
                                         <div
-                                            className={`px-4 py-2 rounded-lg max-w-xs ${isMine
-                                                ? "bg-blue-500 text-white rounded-br-none"
-                                                : "bg-gray-200 text-black rounded-bl-none"
-                                                }`}
+                                            className={`px-4 py-2 rounded-lg max-w-xs ${
+                                                isMine
+                                                    ? "bg-blue-500 text-white rounded-br-none"
+                                                    : "bg-gray-200 text-black rounded-bl-none"
+                                            }`}
                                         >
                                             {message.text}
                                         </div>
                                     </div>
-
 
                                     <div className="">
                                         {isMine ? (
@@ -129,8 +131,8 @@ const ChatContainer = ({ onClick }) => {
                 </div>
             )}
         </div>
-    )
-}
+    );
+};
 
 const ChatHeader = () => {
     const { selectedUser } = useSelector((state) => state.chat);
@@ -150,10 +152,10 @@ const ChatHeader = () => {
                 )}
             </div>
             <div>
-                <div className="font-medium">{selectedUser.firstName} {selectedUser.lastName}</div>
-                <div className="text-sm text-zinc-400">
-                    {isOnline ? "Online" : "Offline"}
+                <div className="font-medium">
+                    {selectedUser.firstName} {selectedUser.lastName}
                 </div>
+                <div className="text-sm text-zinc-400">{isOnline ? "Online" : "Offline"}</div>
             </div>
         </div>
     );
@@ -163,7 +165,7 @@ const MessageInput = ({ dispatch }) => {
     const [text, setText] = useState("");
     const { selectedUser } = useSelector((state) => state.chat);
     const { user } = useSelector((state) => state.auth);
-    const [sendMsg] = useSendMessageMutation()
+    const [sendMsg] = useSendMessageMutation();
 
     const handleChange = (e) => {
         setText(e.target.value);
@@ -176,7 +178,6 @@ const MessageInput = ({ dispatch }) => {
                 ...res,
                 currentUserId: user._id,
             };
-            console.log("message", message)
             dispatch(addMessage(message));
             setText("");
         } catch (error) {
@@ -206,10 +207,13 @@ const MessageInput = ({ dispatch }) => {
                     handleSend();
                 }}
             >
-                <RiSendPlaneFill size={25} className="text-blue-600 hover:text-blue-800 duration-200 cursor-pointer" />
+                <RiSendPlaneFill
+                    size={25}
+                    className="text-blue-600 hover:text-blue-800 duration-200 cursor-pointer"
+                />
             </button>
         </div>
     );
 };
 
-export default ChatContainer
+export default ChatContainer;

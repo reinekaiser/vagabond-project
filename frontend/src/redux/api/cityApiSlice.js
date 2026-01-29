@@ -48,6 +48,9 @@ export const cityApiSlice = apiSlice.injectEndpoints({
             query: (cityId) => ({
                 url: `${CITY_URL}/${cityId}`
             }),
+            providesTags: (result, error, cityId) => [
+                { type: 'Cities', id: cityId }
+            ],
         })
     }),
 });

@@ -119,51 +119,51 @@ const CreateCity = () => {
 
     const uploadToastId = useRef(null);
 
-    // useEffect(() => {
-    //     if (isUploadLoading) {
-    //         uploadToastId.current = toast.loading("Đang tải ảnh thành phố...");
-    //     } else if (isUploadSuccess) {
-    //         toast.update(uploadToastId.current, {
-    //             render: "Tải ảnh thành phố thành công!",
-    //             type: "success",
-    //             isLoading: false,
-    //             closeButton: true,
-    //             autoClose:3000
-    //         });
-    //     } else if (isUploadError) {
-    //         toast.update(uploadToastId.current, {
-    //             render: "Tải ảnh thành phố thất bại!",
-    //             type: "error",
-    //             isLoading: false,
-    //             closeButton: true,
-    //             autoClose:3000
-    //         });
-    //     }
-    // }, [isUploadLoading, isUploadSuccess, isUploadError]);
-    //
-    // const uploadPlaceImageToastId = useRef(null);
-    //
-    // useEffect(() => {
-    //     if (isUploadPlaceImageLoading) {
-    //         uploadPlaceImageToastId.current = toast.loading("Đang tải ảnh địa điểm...");
-    //     } else if (isUploadPlaceImageSuccess) {
-    //         toast.update(uploadPlaceImageToastId.current, {
-    //             render: "Tải ảnh địa điểm thành công!",
-    //             type: "success",
-    //             isLoading: false,
-    //             closeButton: true,
-    //             autoClose:3000
-    //         });
-    //     } else if (isUploadPlaceImageError) {
-    //         toast.update(uploadPlaceImageToastId.current, {
-    //             render: "Tải ảnh địa điểm thất bại!",
-    //             type: "error",
-    //             isLoading: false,
-    //             closeButton: true,
-    //             autoClose:3000
-    //         });
-    //     }
-    // }, [isUploadPlaceImageLoading, isUploadPlaceImageSuccess, isUploadPlaceImageError]);
+    useEffect(() => {
+        if (isUploadLoading) {
+            uploadToastId.current = toast.loading("Đang tải ảnh thành phố...");
+        } else if (isUploadSuccess) {
+            toast.update(uploadToastId.current, {
+                render: "Tải ảnh thành phố thành công!",
+                type: "success",
+                isLoading: false,
+                closeButton: true,
+                autoClose:3000
+            });
+        } else if (isUploadError) {
+            toast.update(uploadToastId.current, {
+                render: "Tải ảnh thành phố thất bại!",
+                type: "error",
+                isLoading: false,
+                closeButton: true,
+                autoClose:3000
+            });
+        }
+    }, [isUploadLoading, isUploadSuccess, isUploadError]);
+
+    const uploadPlaceImageToastId = useRef(null);
+
+    useEffect(() => {
+        if (isUploadPlaceImageLoading) {
+            uploadPlaceImageToastId.current = toast.loading("Đang tải ảnh địa điểm...");
+        } else if (isUploadPlaceImageSuccess) {
+            toast.update(uploadPlaceImageToastId.current, {
+                render: "Tải ảnh địa điểm thành công!",
+                type: "success",
+                isLoading: false,
+                closeButton: true,
+                autoClose:3000
+            });
+        } else if (isUploadPlaceImageError) {
+            toast.update(uploadPlaceImageToastId.current, {
+                render: "Tải ảnh địa điểm thất bại!",
+                type: "error",
+                isLoading: false,
+                closeButton: true,
+                autoClose:3000
+            });
+        }
+    }, [isUploadPlaceImageLoading, isUploadPlaceImageSuccess, isUploadPlaceImageError]);
 
     const [createCity, {isloading: isCreatingCity }] = useCreateCityMutation()
 
